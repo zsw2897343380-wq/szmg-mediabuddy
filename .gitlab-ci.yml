@@ -42,7 +42,7 @@ package-macos:
       - desktop/portable/release/Octop-portable-darwin-arm64-*.zip
     expire_in: 30 days
 
-deploy-testing:
+testing:
   stage: testing
   tags:
     - testing-runner
