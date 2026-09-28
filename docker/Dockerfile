@@ -113,6 +113,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
 
 COPY src/ ./src/
+RUN find ./src/octop/infra/desktop/scripts/linux -type f -name '*.sh' \
+    -exec sed -i 's/\r$//' {} +
 COPY --from=frontend-builder /build/src/octop/dashboard/ ./src/octop/dashboard/
 
 COPY .env.example ./
