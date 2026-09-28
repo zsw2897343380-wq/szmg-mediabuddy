@@ -1,0 +1,53 @@
+stages:
+  - dev
+  - testing
+  - staging
+  - prod
+
+dev:
+  stage: dev
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  dev  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/dev-.*$/'
+  except:
+    - branches
+  tags:
+    - dev-runner
+
+testing:
+  stage: testing
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  testing  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/testing-.*$/'
+  except:
+    - branches
+  tags:
+    - testing-runner
+
+staging:
+  stage: staging
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  staging  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/staging-.*$/'
+  except:
+    - branches
+  tags:
+    - staging-runner
+
+prod:
+  stage: prod
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  prod  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/prod-.*$/'
+  except:
+    - branches
+  tags:
+    - prod-runner

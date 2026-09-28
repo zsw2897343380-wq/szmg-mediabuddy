@@ -1,0 +1,7 @@
+# Python cache
+scripts/__pycache__/
+*.pyc
+*.pyo
+
+# clawhub metadata (local install tracking)
+.clawhub/
