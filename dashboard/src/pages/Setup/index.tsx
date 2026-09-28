@@ -9,7 +9,6 @@ import { storeUiLocale, type UiLocale } from "../../utils/locale";
 import { authApi } from "../../api/modules/auth";
 import { preferencesApi } from "../../api/modules/preferences";
 import BootOfflinePanel from "../../components/BootOfflinePanel";
-import { useTheme } from "../../context/ThemeContext";
 import { isNetworkFetchError } from "../../utils/networkError";
 import DatabaseStep from "./steps/DatabaseStep";
 import PasswordStep from "./steps/PasswordStep";
@@ -32,7 +31,6 @@ const { Text } = Typography;
 
 export default function SetupPage() {
   const { t, i18n } = useTranslation();
-  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [offline, setOffline] = useState(false);
@@ -257,12 +255,8 @@ export default function SetupPage() {
           <div className={styles.wizardHeaderTop}>
             <div className={styles.wizardHeaderBrand}>
               <img
-                src={
-                  isDark
-                    ? "/logo_horizontal_white.png"
-                    : "/logo_horizontal_dark.png"
-                }
-                alt="Octop"
+                src="/mediabuddy-logo.png"
+                alt="MediaBuddy"
                 className={styles.wizardHeaderLogo}
               />
               <div className={styles.wizardHeaderBrandText}>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/readme-banner-zh.png" alt="Octop Banner" width="600" />
+  <img src="docs/assets/readme-banner-zh.png" alt="MediaBuddy Banner" width="600" />
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@
 
 ---
 
-**Octop** 是一个开源、自托管的 AI 助手。它不仅是工具，更是可并行运作的数字生命体。通过多 Agent 架构，它为团队、家庭和个人构建了既独立又协作的智能环境。并且这一切都运行在你的机器上——完全自托管的设计让隐私不再是妥协，而单进程启动的便捷性，则让强大的 Web 控制台、CLI 与 IM 集成触手可及。
+**MediaBuddy** 是一个开源、自托管的 AI 助手。它不仅是工具，更是可并行运作的数字生命体。通过多 Agent 架构，它为团队、家庭和个人构建了既独立又协作的智能环境。并且这一切都运行在你的机器上——完全自托管的设计让隐私不再是妥协，而单进程启动的便捷性，则让强大的 Web 控制台、CLI 与 IM 集成触手可及。
 
 借助飞书、钉钉、QQ、微信、企业微信或 HTTP/SSE/WebSocket API 与任意 Agent 对话；通过**专家库**一键创建专业角色，通过 **Connector**（OAuth + MCP）接入外部服务，通过 **ACP** 与 IDE / 终端 AI 工具双向协作。
 
@@ -65,12 +65,12 @@
 
 ## 📌 概述
 
-Octop 是面向家庭与小团队的自托管 AI 助手平台。单进程同时提供 Web 控制台、CLI、IM 通道（飞书、钉钉、QQ、微信、企业微信等）与定时任务，共享 `~/.octop/` 下的控制面数据库（默认 SQLite；可选 PostgreSQL）。
+MediaBuddy 是面向家庭与小团队的自托管 AI 助手平台。单进程同时提供 Web 控制台、CLI、IM 通道（飞书、钉钉、QQ、微信、企业微信等）与定时任务，共享 `~/.octop/` 下的控制面数据库（默认 SQLite；可选 PostgreSQL）。
 
-> Octop 的设计目标：让每一次对话、工作区与凭据都留在你自己的机器上，同时为每个用户配备一组可按场景切换的专业 Agent。
+> MediaBuddy 的设计目标：让每一次对话、工作区与凭据都留在你自己的机器上，同时为每个用户配备一组可按场景切换的专业 Agent。
 
 <details>
-<summary>🐾 你能用 Octop 做什么</summary>
+<summary>🐾 你能用 MediaBuddy 做什么</summary>
 
 - **个人助理** — 让专属 Agent 帮你写周报、整理资料、定日程，记忆随工作区长期保留。
 - **家庭共享** — 一个管理员账号，全家共用；按成员分配不同 Agent 与专家角色，也可共享专家与知识库。
@@ -97,14 +97,14 @@ Octop 是面向家庭与小团队的自托管 AI 助手平台。单进程同时�
 | **ACP** | agent-client-protocol |
 | **构建 / 质量** | hatchling · ruff · mypy · pytest |
 
-Octop 基于一系列 Octop Harness 工程实践构建——它将这些专注的运行时组合进同一个进程：
+MediaBuddy 基于 Octop Harness 工程实践构建——它将这些专注的运行时组合进同一个进程：
 
 - **[Octop Harness](https://github.com/TencentCloud/octop-harness)** — Agent 运行时：模型路由、工具、技能与对话检查点。
 - **[Octop Gateway](https://github.com/TencentCloud/octop-gateway)** — 多平台 IM 通道桥接，将各类入站消息归一为统一的处理管线。
 - **[Octop Memory](https://github.com/TencentCloud/octop-memory)** — 分层记忆与全文检索，让 Agent 的记忆随工作区一同迁移。
 - **[Octop Browser](https://github.com/TencentCloud/octop-browser)** — 基于 CDP 的浏览器自动化，支持持久化配置，用于网页类任务。
 
-Octop 不依赖外部消息队列或中间件，而是通过进程内的 `HarnessProcessor` 统一路由所有入口——Web UI、IM 与定时任务。最终呈现为一个可重启恢复的单进程：启动时整个状态都从控制面数据库重建（默认 `~/.octop/octop.db`，亦可配置 PostgreSQL）。
+MediaBuddy 不依赖外部消息队列或中间件，而是通过进程内的 `HarnessProcessor` 统一路由所有入口——Web UI、IM 与定时任务。最终呈现为一个可重启恢复的单进程：启动时整个状态都从控制面数据库重建（默认 `~/.octop/octop.db`，亦可配置 PostgreSQL）。
 
 ## 🤔 功能特性
 
@@ -138,14 +138,14 @@ Octop 不依赖外部消息队列或中间件，而是通过进程内的 `Harnes
 
 ### ACP（Agent Client Protocol）
 
-Octop 支持两个方向的 ACP 集成：
+MediaBuddy 支持两个方向的 ACP 集成：
 
-1. **入站** — 外部工具使用**你的** Octop Agent
+1. **入站** — 外部工具使用**你的** MediaBuddy Agent
    ```bash
    octop acp --agent main   # 为 Zed、OpenCode 等提供 stdio ACP 服务
    ```
 
-2. **出站** — Octop 委派给外部编程 Agent
+2. **出站** — MediaBuddy 委派给外部编程 Agent
    - 控制台 → **ACP**（`/acp`）：配置 Runner（按用户全局）
    - 为 Agent 启用 **acp_runner** 后，在对话中委派任务
 
@@ -171,9 +171,9 @@ Octop 支持两个方向的 ACP 集成：
 - [ ] **自进化能力** — 将日常对话自动沉淀为技能，让助手随使用不断成长。
 - [ ] **Managed Agents** — 平台托管的 Agent 生命周期（开通、伸缩与运维），无需自行维护完整自托管栈。
 - [ ] **Project** — 以项目为边界组织 Agent、文件与会话，围绕同一目标协作。
-- [ ] **云边端一体** — 本地运行 Octop，同时可将选定任务调度到云端执行：轻量工作留在本地，重活按需上云。
-- [ ] **插件市场** — 搭建插件市场，支持在 Octop 内发现、安装与更新第三方插件。
-- [ ] **对话式控制面** — 完善 Octop 自身 Skill，让对话即可覆盖当前控制台的完整能力：创建专家、配置通道、管理知识库，并支持开发插件。
+- [ ] **云边端一体** — 本地运行 MediaBuddy，同时可将选定任务调度到云端执行：轻量工作留在本地，重活按需上云。
+- [ ] **插件市场** — 搭建插件市场，支持在 MediaBuddy 内发现、安装与更新第三方插件。
+- [ ] **对话式控制面** — 完善 MediaBuddy 自身 Skill，让对话即可覆盖当前控制台的完整能力：创建专家、配置通道、管理知识库，并支持开发插件。
 
 规划会随社区发展动态调整，以上仅供参考。
 
@@ -347,7 +347,7 @@ docker run -d \
 `octop update` 只替换 wheel / 二进制，你的 `~/.octop/` 数据库、工作区、密钥与 `config.json` 均会保留：
 
 ```bash
-octop update          # 获取并安装最新版 Octop，若已注册系统服务则自动重启
+octop update          # 获取并安装最新版 MediaBuddy，若已注册系统服务则自动重启
 ```
 
 数据库结构会在下次启动时自动迁移；仅当设置向导提示需要迁移时才运行 `octop init`。跨版本升级前请务必先备份（`octop backup`）。
@@ -398,7 +398,7 @@ OpenAI 兼容 API、DashScope（千问）、Ollama 等预设 — 在控制台或
 | 命令 | 说明 |
 |------|------|
 | `octop init` | 初始化 `~/.octop/`（数据库、管理员、JWT 密钥） |
-| `octop run` | 前台启动 Octop |
+| `octop run` | 前台启动 MediaBuddy |
 | `octop service start` | 安装并启动系统服务 |
 | `octop service stop` | 停止系统服务 |
 | `octop agent` | 创建、列出、启停 Agent |
@@ -428,7 +428,7 @@ OpenAI 兼容 API、DashScope（千问）、Ollama 等预设 — 在控制台或
 `octop run` 启动后访问 **http://127.0.0.1:8088**。
 
 <p align="center">
-  <img src="docs/assets/readme-chat-zh.png" alt="Octop Web 控制台" width="800" />
+  <img src="docs/assets/readme-chat-zh.png" alt="MediaBuddy Web 控制台" width="800" />
 </p>
 
 - **对话** — 与专家 / 团队实时聊天

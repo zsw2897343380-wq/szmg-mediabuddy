@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/readme-banner.png" alt="Octop Banner" width="600" />
+  <img src="docs/assets/readme-banner.png" alt="MediaBuddy Banner" width="600" />
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 
 ---
 
-**Octop** is an open-source, self-hosted AI assistant. It's not just a tool — it's a digital life form that can operate in parallel. Through its multi-agent architecture, it builds an intelligent environment that is both independent and collaborative for teams, families, and individuals. Best of all, it runs entirely on your machine — the fully self-hosted design means privacy is never a compromise, while single-process startup makes the powerful web console, CLI, and IM integrations readily accessible.
+**MediaBuddy** is an open-source, self-hosted AI assistant. It's not just a tool — it's a digital life form that can operate in parallel. Through its multi-agent architecture, it builds an intelligent environment that is both independent and collaborative for teams, families, and individuals. Best of all, it runs entirely on your machine — the fully self-hosted design means privacy is never a compromise, while single-process startup makes the powerful web console, CLI, and IM integrations readily accessible.
 
 Chat through the Web Dashboard, Feishu, DingTalk, QQ, WeChat, Telegram, Discord, WeCom, or programmatic HTTP/SSE/WebSocket. Extend capabilities with the **expert library**, **Connectors** (OAuth + MCP), and **ACP** integration for IDE workflows.
 
@@ -56,7 +56,7 @@ Chat through the Web Dashboard, Feishu, DingTalk, QQ, WeChat, Telegram, Discord,
 | 💾 | **Pluggable workspace backends** | Local disk, Docker sandbox, PostgreSQL, or COS/S3 for agent files — separate from the control-plane DB |
 | 🧠 | **Portable memory** | Powered by [Octop Memory](https://github.com/TencentCloud/octop-memory); memory migrates with the workspace |
 | 📚 | **Knowledge base** | RAG over your documents; share corpora within a deployment and ground answers in your private data |
-| 🧩 | **Plugins** | Extend Octop with third-party plugins; bundled plugins are seeded and toggled on demand |
+| 🧩 | **Plugins** | Extend MediaBuddy with third-party plugins; bundled plugins are seeded and toggled on demand |
 | ↔️ | **ACP bidirectional** | `octop acp` for IDE/terminal AI; delegate to OpenCode / Claude Code with permission gates |
 | 💻 | **Terminal AI+** | Interactive shell in the browser — AI-assisted command execution and troubleshooting |
 | 🌐 | **Browser AI+** | Headless Chromium sessions for web automation, screenshots, and remote browsing |
@@ -66,12 +66,12 @@ Chat through the Web Dashboard, Feishu, DingTalk, QQ, WeChat, Telegram, Discord,
 
 ## 📌 Overview
 
-Octop is a self-hosted AI assistant platform for households and small teams. It runs a single process that serves a web dashboard, a CLI, IM channels (Feishu, DingTalk, QQ, WeChat, Telegram, Discord, WeCom, and more), and cron automation — all sharing one control-plane database under `~/.octop/` (SQLite by default; PostgreSQL optional).
+MediaBuddy is a self-hosted AI assistant platform for households and small teams. It runs a single process that serves a web dashboard, a CLI, IM channels (Feishu, DingTalk, QQ, WeChat, Telegram, Discord, WeCom, and more), and cron automation — all sharing one control-plane database under `~/.octop/` (SQLite by default; PostgreSQL optional).
 
-> Octop's design goal: keep every conversation, workspace, and credential on your own machine, while giving each user a personal team of specialized agents they can switch between per task.
+> MediaBuddy's design goal: keep every conversation, workspace, and credential on your own machine, while giving each user a personal team of specialized agents they can switch between per task.
 
 <details>
-<summary>🐾 What can you do with Octop</summary>
+<summary>🐾 What can you do with MediaBuddy</summary>
 
 - **Personal assistant** — let a dedicated agent write weekly reports, organize notes, and manage your schedule; memory persists with the workspace.
 - **Family sharing** — one admin account, the whole household; assign different agents and experts per member; share experts and knowledge bases when useful.
@@ -96,14 +96,14 @@ Octop is a self-hosted AI assistant platform for households and small teams. It 
 | **ACP** | agent-client-protocol |
 | **Build / quality** | hatchling · ruff · mypy · pytest |
 
-Octop is built on the Octop Harness stack — a set of focused runtimes that Octop composes into one process:
+MediaBuddy is built on the Octop Harness stack — a set of focused runtimes that MediaBuddy composes into one process:
 
 - **[Octop Harness](https://github.com/TencentCloud/octop-harness)** — Agent runtime: model routing, tools, skills, and conversation checkpointing.
 - **[Octop Gateway](https://github.com/TencentCloud/octop-gateway)** — multi-platform IM channel bridge that normalizes incoming messages into a single processing pipeline.
 - **[Octop Memory](https://github.com/TencentCloud/octop-memory)** — hierarchical recall with full-text search, so an agent's memory travels with its workspace.
 - **[Octop Browser](https://github.com/TencentCloud/octop-browser)** — CDP-based browser automation with persistent profiles for web tasks.
 
-Instead of an external queue or message broker, Octop routes every surface — Web UI, IM, and cron — through one in-process `HarnessProcessor`. The result is a single, restart-safe process whose entire state is rebuilt from the control-plane database on boot (local SQLite by default; PostgreSQL optional).
+Instead of an external queue or message broker, MediaBuddy routes every surface — Web UI, IM, and cron — through one in-process `HarnessProcessor`. The result is a single, restart-safe process whose entire state is rebuilt from the control-plane database on boot (local SQLite by default; PostgreSQL optional).
 
 ## 🤔 Features
 
@@ -137,14 +137,14 @@ Instead of an external queue or message broker, Octop routes every surface — W
 
 ### ACP (Agent Client Protocol)
 
-Octop supports ACP in two directions:
+MediaBuddy supports ACP in two directions:
 
-1. **Inbound** — external tools use **your** Octop agent
+1. **Inbound** — external tools use **your** MediaBuddy agent
    ```bash
    octop acp --agent main   # stdio ACP server for Zed, OpenCode, …
    ```
 
-2. **Outbound** — Octop delegates to external coding agents
+2. **Outbound** — MediaBuddy delegates to external coding agents
    - Dashboard → **ACP** (`/acp`): configure runners (global per user)
    - Enable **acp_runner** per agent, then delegate in chat
 
@@ -170,9 +170,9 @@ Here are our mid-to-long term plans:
 - [ ] **Self-evolution** — automatically distill everyday conversations into reusable skills, so the assistant grows with you.
 - [ ] **Managed Agents** — platform-hosted agent lifecycle (provision, scale, and operate agents without managing the full self-hosted stack yourself).
 - [ ] **Project** — project-scoped workspaces that group agents, files, and conversations around a shared goal.
-- [ ] **Cloud–edge continuum** — run Octop locally while offloading selected tasks to the cloud, so light work stays on-device and heavier jobs use remote capacity when you need it.
-- [ ] **Plugin marketplace** — a curated market to discover, install, and update third-party plugins without leaving Octop.
-- [ ] **Conversational control plane** — deepen Octop’s own skills so chat can cover the full dashboard surface: create experts, wire channels, manage knowledge bases, and scaffold plugins end-to-end.
+- [ ] **Cloud–edge continuum** — run MediaBuddy locally while offloading selected tasks to the cloud, so light work stays on-device and heavier jobs use remote capacity when you need it.
+- [ ] **Plugin marketplace** — a curated market to discover, install, and update third-party plugins without leaving MediaBuddy.
+- [ ] **Conversational control plane** — deepen MediaBuddy’s own skills so chat can cover the full dashboard surface: create experts, wire channels, manage knowledge bases, and scaffold plugins end-to-end.
 
 This roadmap may shift as the community grows; treat it as indicative only.
 
@@ -398,7 +398,7 @@ Other kinds (e.g. Yuanbao, Xiaoyi, MQTT) are available via the gateway — see c
 | Command | Description |
 |---------|-------------|
 | `octop init` | Bootstrap `~/.octop/` (DB, admin, JWT secret) |
-| `octop run` | Start Octop in the foreground |
+| `octop run` | Start MediaBuddy in the foreground |
 | `octop service start` | Install and start as a system service |
 | `octop service stop` | Stop the system service |
 | `octop agent` | Create, list, start/stop agents |
@@ -428,7 +428,7 @@ Full reference: **[docs/cli.md](docs/cli.md)**.
 After `octop run`, open **http://127.0.0.1:8088**.
 
 <p align="center">
-  <img src="docs/assets/readme-chat.png" alt="Octop Web Dashboard" width="800" />
+  <img src="docs/assets/readme-chat.png" alt="MediaBuddy Web Dashboard" width="800" />
 </p>
 
 - **Chat** — real-time conversation with experts and teams
