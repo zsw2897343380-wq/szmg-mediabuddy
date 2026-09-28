@@ -18,6 +18,8 @@ dev:
 
 testing:
   stage: testing
+  environment:
+    name: testing
   script:
     - /bin/cp ~/bin/deploy.sh .
     - /bin/sh deploy.sh install  testing  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
