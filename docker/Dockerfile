@@ -43,7 +43,7 @@ ARG NODE_MAX_OLD_SPACE_SIZE=2048
 WORKDIR /build/dashboard
 
 COPY dashboard/package.json dashboard/package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+RUN \
     set -eu; \
     if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi; \
     npm ci --no-audit \
@@ -83,8 +83,7 @@ ARG PIP_INDEX_URL=
 ARG PIP_TRUSTED_HOST=
 ARG APT_MIRROR=
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+RUN \
     if [ -n "$APT_MIRROR" ]; then \
         printf 'Types: deb\nURIs: https://%s/debian\nSuites: trixie trixie-updates\nComponents: main contrib non-free non-free-firmware\n\nTypes: deb\nURIs: https://%s/debian-security\nSuites: trixie-security\nComponents: main contrib non-free non-free-firmware\n' \
             "$APT_MIRROR" "$APT_MIRROR" > /etc/apt/sources.list.d/debian.sources; \
@@ -102,7 +101,7 @@ WORKDIR /app
 
 # 先安装锁定依赖，仅改源码时可复用此层缓存
 COPY pyproject.toml uv.lock README.md LICENSE ./
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN \
     if [ -n "$PIP_INDEX_URL" ]; then \
         export UV_INDEX_URL="$PIP_INDEX_URL"; \
         if [ -n "$PIP_TRUSTED_HOST" ]; then export UV_INSECURE_HOST="$PIP_TRUSTED_HOST"; fi; \
@@ -122,7 +121,7 @@ COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN \
     if [ -n "$PIP_INDEX_URL" ]; then \
         export UV_INDEX_URL="$PIP_INDEX_URL"; \
         if [ -n "$PIP_TRUSTED_HOST" ]; then export UV_INSECURE_HOST="$PIP_TRUSTED_HOST"; fi; \
