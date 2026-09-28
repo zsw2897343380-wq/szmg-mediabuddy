@@ -1,56 +1,53 @@
-# Desktop packages require native runners. Configure runner tags and tools as
-# documented in desktop/README.md (Go, Node, uv/Python, Wails; NSIS on Windows).
 stages:
-  - package
+  - dev
   - testing
+  - staging
+  - prod
 
-package-windows:
-  stage: package
-  tags:
-    - windows
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v/'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - desktop/**/*
-        - dashboard/**/*
+dev:
+  stage: dev
   script:
-    - bash desktop/package-release.sh windows-amd64
-  artifacts:
-    name: "Octop-windows-$CI_COMMIT_REF_SLUG"
-    paths:
-      - desktop/src/bin/Octop-desktop-windows-amd64-*.exe
-      - desktop/portable/release/Octop-portable-windows-amd64-*.zip
-    expire_in: 30 days
-
-package-macos:
-  stage: package
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  dev  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/dev-.*$/'
+  except:
+    - branches
   tags:
-    - macos
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v/'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - desktop/**/*
-        - dashboard/**/*
-  script:
-    - bash desktop/package-release.sh darwin-arm64
-  artifacts:
-    name: "Octop-macos-$CI_COMMIT_REF_SLUG"
-    paths:
-      - desktop/src/bin/Octop-desktop-darwin-arm64-*.dmg
-      - desktop/portable/release/Octop-portable-darwin-arm64-*.zip
-    expire_in: 30 days
+    - dev-runner
 
 testing:
   stage: testing
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  testing  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/testing-.*$/'
+  except:
+    - branches
   tags:
     - testing-runner
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^testing-/'
-  environment:
-    name: testing
+
+staging:
+  stage: staging
   script:
-    - cp docker/Dockerfile Dockerfile
-    - cp ~/bin/deploy.sh .
-    - /bin/sh deploy.sh install testing "${CI_COMMIT_TAG}" "${CUSTOM_TAG:-}"
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  staging  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/staging-.*$/'
+  except:
+    - branches
+  tags:
+    - staging-runner
+
+prod:
+  stage: prod
+  script:
+    - /bin/cp ~/bin/deploy.sh .
+    - /bin/sh deploy.sh install  prod  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
+  only:
+    - '/prod-.*$/'
+  except:
+    - branches
+  tags:
+    - prod-runner
