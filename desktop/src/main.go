@@ -404,7 +404,9 @@ func main() {
 	}
 
 	api.scheduleDragOverlay()
-	go api.boot()
+	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
+		go api.boot()
+	})
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
