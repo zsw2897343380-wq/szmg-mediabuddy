@@ -280,6 +280,17 @@ export default function LoginPage() {
           {t("login.title")}
         </h2>
 
+        <div
+          style={{
+            marginTop: -12,
+            color: "var(--fn-text-tertiary)",
+            fontSize: 13,
+            textAlign: "center",
+          }}
+        >
+          {window.location.host}
+        </div>
+
         <Input
           prefix={
             <User size={16} style={{ color: "var(--fn-text-quaternary)" }} />
