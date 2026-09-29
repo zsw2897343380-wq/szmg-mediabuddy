@@ -1,0 +1,119 @@
+name: Manual Windows EXE
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Build dashboard
+        run: make build-frontend
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-dist
+          path: src/octop/dashboard/
+          if-no-files-found: error
+          retention-days: 3
+
+  windows-exe:
+    name: Build Windows EXE
+    needs: frontend
+    runs-on: windows-latest
+    env:
+      OCTOP_DESKTOP_URL: ${{ vars.OCTOP_DESKTOP_URL || 'https://temeidabuddy.sztv.com.cn' }}
+      PBS_BASE_URL: https://github.com/astral-sh/python-build-standalone/releases/download/20251209
+      PBS_TAG: "20251209"
+      PBS_PY: "3.12.12"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dashboard-dist
+          path: src/octop/dashboard
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Read package version
+        run: |
+          VER=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          echo "OCTOP_VERSION=$VER" >> "$GITHUB_ENV"
+          echo "Packaging version $VER for $OCTOP_DESKTOP_URL"
+      - name: Bootstrap portable Python runtime
+        run: bash desktop/portable/bootstrap-runtime.sh windows-amd64
+      - name: Assemble portable package
+        run: bash desktop/portable/package.sh windows-amd64
+      - name: Verify portable imports
+        run: |
+          set -euo pipefail
+          desktop/portable/release/Octop-windows-amd64/runtime/python.exe desktop/portable/verify_imports.py \
+            --packages desktop/portable/release/Octop-windows-amd64/packages \
+            --requirements desktop/portable/requirements-windows-amd64.txt
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: desktop/src/go.sum
+      - name: Install Wails v3 CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.13
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          $nsisDir = "${env:ProgramFiles(x86)}\NSIS"
+          if (-not (Test-Path (Join-Path $nsisDir "makensis.exe"))) { throw "makensis.exe missing after NSIS install" }
+          Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
+      - name: Embed the configured service URL
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          main = Path("desktop/src/main.go")
+          source = main.read_text(encoding="utf-8")
+          declaration = "var bundledDesktopURL string"
+          if declaration not in source:
+              marker = "const trayDoubleClick = 400 * time.Millisecond"
+              assert marker in source, "desktop URL insertion point not found"
+              source = source.replace(marker, marker + "\n\n" + declaration, 1)
+          old = 'if url := os.Getenv("OCTOP_DESKTOP_URL"); url != "" {'
+          if old in source:
+              new = 'url := os.Getenv("OCTOP_DESKTOP_URL")\n\tif url == "" {\n\t\turl = bundledDesktopURL\n\t}\n\tif url != "" {'
+              source = source.replace(old, new, 1)
+          assert "url = bundledDesktopURL" in source, "desktop URL fallback insertion failed"
+          main.write_text(source, encoding="utf-8")
+
+          taskfile = Path("desktop/src/build/windows/Taskfile.yml")
+          task_source = taskfile.read_text(encoding="utf-8")
+          old_flag = '-ldflags="-w -s -H windowsgui"'
+          new_flag = '-ldflags="-w -s -H windowsgui -X main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}"'
+          if old_flag in task_source:
+              task_source = task_source.replace(old_flag, new_flag, 1)
+          assert "main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}" in task_source, "Windows linker URL injection not configured"
+          taskfile.write_text(task_source, encoding="utf-8")
+          PY
+      - name: Package desktop app
+        working-directory: desktop/src
+        run: >-
+          wails3 task package
+          ARCH=amd64
+          VERSION=${{ env.OCTOP_VERSION }}
+          PORTABLE_ZIP=../portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MediaBuddy-Windows-EXE
+          path: |
+            desktop/src/bin/Octop-desktop-windows-amd64-${{ env.OCTOP_VERSION }}.exe
+            desktop/portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+          if-no-files-found: error
+          retention-days: 14
