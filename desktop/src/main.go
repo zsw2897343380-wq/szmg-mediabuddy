@@ -8,7 +8,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -286,7 +288,29 @@ func (a *App) requestQuit() {
 	}
 }
 
+func configureStartupLog() {
+	home := octopHome()
+	if err := os.MkdirAll(home, 0o700); err != nil {
+		return
+	}
+	file, err := os.OpenFile(filepath.Join(home, "desktop.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		return
+	}
+	log.SetOutput(file)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+	log.Printf("----- Octop desktop starting (goos=%s goarch=%s) -----", runtime.GOOS, runtime.GOARCH)
+}
+
+func logStartupPanic(stage string) {
+	if recovered := recover(); recovered != nil {
+		log.Printf("panic during %s: %v\n%s", stage, recovered, debug.Stack())
+	}
+}
+
 func main() {
+	configureStartupLog()
+	defer logStartupPanic("main")
 	store := &settingsStore{cur: loadSettings()}
 	api := &App{
 		store: store,
@@ -405,10 +429,18 @@ func main() {
 
 	api.scheduleDragOverlay()
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
-		go api.boot()
+		log.Printf("application started; beginning desktop boot")
+		go func() {
+			defer logStartupPanic("desktop boot")
+			api.boot()
+			log.Printf("desktop boot completed")
+		}()
 	})
 
+	log.Printf("starting application event loop")
 	if err := app.Run(); err != nil {
-		log.Fatal(err)
+		log.Printf("application event loop exited with error: %v", err)
+		return
 	}
+	log.Printf("application event loop exited without error")
 }
