@@ -74,6 +74,10 @@ otherwise extracts the matching zip shipped with the desktop package (embedded
 in the Windows and Linux binaries, under `Contents/Resources` on macOS). The
 Wails shell never downloads Octop. For local runtime debugging, set
 `OCTOP_DESKTOP_PORTABLE_ZIP=/absolute/path/Octop-portable-<plat>-<version>.zip`.
+Release builds use the GitHub Actions repository variable `OCTOP_DESKTOP_URL` as
+their default service URL. Set it under **Settings → Secrets and variables →
+Actions → Variables**; a process-level `OCTOP_DESKTOP_URL` overrides the bundled
+default.
 On later launches, a newer bundled portable version replaces the extracted
 runtime after creating a consistent SQLite backup under `~/.octop/backups/`.
 The upgraded Octop process then applies the normal database migrations during

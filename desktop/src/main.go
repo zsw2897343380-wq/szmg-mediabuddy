@@ -21,6 +21,10 @@ var assets embed.FS
 
 const trayDoubleClick = 400 * time.Millisecond
 
+// Set at release build time to direct packaged desktop apps to their service.
+// OCTOP_DESKTOP_URL at process startup still takes precedence.
+var bundledDesktopURL string
+
 // App is the Wails service bound to the shell UI.
 type App struct {
 	app            *application.App
@@ -161,7 +165,11 @@ func (a *App) boot() {
 	if a.store != nil {
 		locale = a.store.get().Locale
 	}
-	if url := os.Getenv("OCTOP_DESKTOP_URL"); url != "" {
+	url := os.Getenv("OCTOP_DESKTOP_URL")
+	if url == "" {
+		url = bundledDesktopURL
+	}
+	if url != "" {
 		a.setStatus(desktopText(locale, copyStatusConnecting))
 		if err := waitHealth(locale, url, 60*time.Second); err != nil {
 			a.setStatus(err.Error())
