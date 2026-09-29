@@ -19,6 +19,7 @@ dev:
 testing:
   stage: testing
   script:
+    - set -a; . ./.env.testing; set +a
     - /bin/cp ~/bin/deploy.sh .
     - /bin/sh deploy.sh install  testing  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
   only:
@@ -43,6 +44,7 @@ staging:
 prod:
   stage: prod
   script:
+    - set -a; . ./.env.prod; set +a
     - /bin/cp ~/bin/deploy.sh .
     - /bin/sh deploy.sh install  prod  ${CI_COMMIT_TAG}  ${CUSTOM_TAG}
   only:
