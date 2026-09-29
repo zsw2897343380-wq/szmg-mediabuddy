@@ -43,30 +43,55 @@ octop_random_password() {
 }
 
 DEFAULT_PASSWORD="${OCTOP_DEFAULT_PASSWORD:-}"
+DATABASE_DRIVER="$(python -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("database", {}).get("driver", "sqlite"))' "$OCTOP_HOME/config.json" 2>/dev/null || printf 'sqlite')"
+[ -n "${OCTOP_DATABASE_URL:-}" ] && DATABASE_DRIVER="postgresql"
+DATABASE_DRIVER="${OCTOP_DATABASE_DRIVER:-$DATABASE_DRIVER}"
+DATABASE_DRIVER="${DATABASE_DRIVER,,}"
+INIT_RESUME_FLAG=()
+if [ "$DATABASE_DRIVER" = "postgresql" ]; then
+    INIT_RESUME_FLAG=(--resume)
+fi
 
 if [ ! -f "$DB_FILE" ]; then
-    echo "[entrypoint] 首次启动，正在初始化 Octop..."
+    # PostgreSQL-backed installs have no local octop.db file. Check the configured
+    # database before bootstrapping so container restarts don't recreate its admin.
+    if [ "$DATABASE_DRIVER" = "postgresql" ] \
+        && octop --json user list 2>/dev/null \
+            | python -c 'import json, sys; username = sys.argv[1]; rows = json.load(sys.stdin); sys.exit(0 if any(row.get("username") == username for row in rows) else 1)' "$ADMIN_USERNAME"; then
+        echo "[entrypoint] 数据库中已存在管理员 ${ADMIN_USERNAME}，跳过首次初始化。"
+    else
+        echo "[entrypoint] 首次启动，正在初始化 Octop..."
 
-    if [ -z "$DEFAULT_PASSWORD" ]; then
-        DEFAULT_PASSWORD="$(octop_random_password)"
-        echo "[entrypoint] 未设置 OCTOP_DEFAULT_PASSWORD，已自动生成随机密码。"
-    fi
+        if [ -z "$DEFAULT_PASSWORD" ]; then
+            DEFAULT_PASSWORD="$(octop_random_password)"
+            echo "[entrypoint] 未设置 OCTOP_DEFAULT_PASSWORD，已自动生成随机密码。"
+        fi
 
-    if ! octop init \
-        --yes \
-        --admin-username "$ADMIN_USERNAME" \
-        --admin-password "$DEFAULT_PASSWORD" \
-        ${ADMIN_DISPLAY_NAME:+--admin-display-name "$ADMIN_DISPLAY_NAME"}; then
-        echo "[entrypoint] 指定的初始密码未通过应用密码策略（过弱或过于常见），改用随机密码重试 ..."
-        DEFAULT_PASSWORD="$(octop_random_password)"
+        set +e
         octop init \
             --yes \
+            "${INIT_RESUME_FLAG[@]}" \
             --admin-username "$ADMIN_USERNAME" \
             --admin-password "$DEFAULT_PASSWORD" \
             ${ADMIN_DISPLAY_NAME:+--admin-display-name "$ADMIN_DISPLAY_NAME"}
-    fi
+        INIT_STATUS=$?
+        set -e
 
-    cat > "$CREDENTIAL_FILE" << EOF
+        if [ "$INIT_STATUS" -eq 2 ]; then
+            echo "[entrypoint] 指定的初始密码未通过应用密码策略（过弱或过于常见），改用随机密码重试 ..."
+            DEFAULT_PASSWORD="$(octop_random_password)"
+            octop init \
+                --yes \
+                "${INIT_RESUME_FLAG[@]}" \
+                --admin-username "$ADMIN_USERNAME" \
+                --admin-password "$DEFAULT_PASSWORD" \
+                ${ADMIN_DISPLAY_NAME:+--admin-display-name "$ADMIN_DISPLAY_NAME"}
+        elif [ "$INIT_STATUS" -ne 0 ]; then
+            exit "$INIT_STATUS"
+        fi
+
+        if [ -n "$DEFAULT_PASSWORD" ]; then
+        cat > "$CREDENTIAL_FILE" << EOF
 Octop Login Credential
 ======================
 URL:      http://<host>:${PORT}
@@ -80,8 +105,10 @@ Please change this password after first login!
 This file is rewritten whenever the initial password is (re)generated here.
 If you changed the password inside the Web console, that password wins.
 EOF
-    chmod 600 "$CREDENTIAL_FILE"
-    echo "[entrypoint] 凭据已保存至: $CREDENTIAL_FILE"
+        chmod 600 "$CREDENTIAL_FILE"
+        echo "[entrypoint] 凭据已保存至: $CREDENTIAL_FILE"
+        fi
+    fi
 fi
 
 if [ $# -eq 0 ]; then

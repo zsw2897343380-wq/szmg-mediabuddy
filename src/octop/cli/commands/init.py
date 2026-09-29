@@ -33,6 +33,12 @@ import click
     help="Wipe existing ~/.octop contents before bootstrapping.",
 )
 @click.option(
+    "--resume",
+    is_flag=True,
+    default=False,
+    help="Continue bootstrap without wiping existing ~/.octop contents.",
+)
+@click.option(
     "--yes",
     "non_interactive",
     is_flag=True,
@@ -44,6 +50,7 @@ def init(
     admin_password: str | None,
     admin_display_name: str | None,
     force: bool,
+    resume: bool,
     non_interactive: bool,
 ) -> None:
     """Bootstrap an Octop server (~/.octop dir, DB migrations, first admin)."""
@@ -60,7 +67,33 @@ def init(
     paths = PathLayout.from_env()
     home = paths.root
 
-    if home.exists() and any(home.iterdir()):
+    if force and resume:
+        raise click.UsageError("--force and --resume cannot be used together")
+
+    username = admin_username
+    password = admin_password
+    display_name = admin_display_name
+
+    if not non_interactive:
+        from octop.cli.support import prompts as _prompts
+
+        if not username:
+            username = _prompts.text("Admin username:")
+        if not password:
+            password = _prompts.password("Admin password:")
+        if display_name is None:
+            display_name = _prompts.text("Display name (optional):", default="") or None
+
+    if not username:
+        click.echo("error: admin username is required", err=True)
+        raise SystemExit(1)
+    try:
+        validate_password_policy(password or "")
+    except OctopError as exc:
+        click.echo(f"error: {exc.message}", err=True)
+        raise SystemExit(2) from None
+
+    if home.exists() and any(home.iterdir()) and not resume:
         if not force:
             click.echo(
                 f"error: {home} already exists and is not empty. Use --force to reset.",
@@ -82,29 +115,6 @@ def init(
     db = open_database(config, paths)
     try:
         run_migrations(db)
-
-        username = admin_username
-        password = admin_password
-        display_name = admin_display_name
-
-        if not non_interactive:
-            from octop.cli.support import prompts as _prompts
-
-            if not username:
-                username = _prompts.text("Admin username:")
-            if not password:
-                password = _prompts.password("Admin password:")
-            if display_name is None:
-                display_name = _prompts.text("Display name (optional):", default="") or None
-
-        if not username:
-            click.echo("error: admin username is required", err=True)
-            raise SystemExit(1)
-        try:
-            validate_password_policy(password or "")
-        except OctopError as exc:
-            click.echo(f"error: {exc.message}", err=True)
-            raise SystemExit(1) from None
 
         UserRepo(db).create(
             username=username,
