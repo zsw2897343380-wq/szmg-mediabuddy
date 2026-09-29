@@ -251,8 +251,7 @@ jobs:
           if declaration not in source:
               marker = "const trayDoubleClick = 400 * time.Millisecond"
               assert marker in source, "desktop URL insertion point not found"
-              source = source.replace(marker, marker + "
-\n" + declaration, 1)
+              source = source.replace(marker, marker + "\n\n" + declaration, 1)
           old = 'if url := os.Getenv("OCTOP_DESKTOP_URL"); url != "" {'
           if old in source:
               new = 'url := os.Getenv("OCTOP_DESKTOP_URL")\n\tif url == "" {\n\t\turl = bundledDesktopURL\n\t}\n\tif url != "" {'
