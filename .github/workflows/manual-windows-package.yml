@@ -1,4 +1,4 @@
-name: Manual Windows Portable ZIP
+name: Manual Windows Package
 
 on:
   workflow_dispatch:
@@ -25,8 +25,8 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  windows-portable:
-    name: Build Windows Portable ZIP
+  windows-package:
+    name: Build Windows Package
     needs: frontend
     runs-on: windows-latest
     env:
@@ -56,12 +56,26 @@ jobs:
         run: bash desktop/portable/bootstrap-runtime.sh windows-amd64
       - name: Assemble portable package
         run: bash desktop/portable/package.sh windows-amd64
-      - name: Verify portable imports
+      - name: Smoke import (native host only)
         run: |
           set -euo pipefail
-          desktop/portable/release/Octop-windows-amd64/runtime/python.exe desktop/portable/verify_imports.py \
-            --packages desktop/portable/release/Octop-windows-amd64/packages \
-            --requirements desktop/portable/requirements-windows-amd64.txt
+          staging="desktop/portable/release/Octop-windows-amd64"
+          py="${staging}/runtime/python.exe"
+          req_file="desktop/portable/requirements-windows-amd64.txt"
+          if [[ ! -f "$py" ]]; then
+            echo "python missing under ${staging}/runtime" >&2
+            exit 1
+          fi
+          if [[ ! -f "$req_file" ]]; then
+            echo "frozen requirements missing: ${req_file}" >&2
+            exit 1
+          fi
+          verify_args=(--packages "${staging}/packages" --requirements "$req_file")
+          override_file="desktop/portable/overrides-windows-amd64.txt"
+          if [[ -f "$override_file" ]]; then
+            verify_args+=(--overrides "$override_file")
+          fi
+          PYTHONNOUSERSITE=1 "$py" desktop/portable/verify_imports.py "${verify_args[@]}"
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25.x"
@@ -109,15 +123,9 @@ jobs:
           ARCH=amd64
           VERSION=${{ env.OCTOP_VERSION }}
           PORTABLE_ZIP=../portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
-      - name: Expand portable ZIP for one-step extraction
-        shell: pwsh
-        run: |
-          $archive = "desktop/portable/release/Octop-portable-windows-amd64-$env:OCTOP_VERSION.zip"
-          $destination = "desktop/portable/release/MediaBuddy-Portable"
-          Expand-Archive -LiteralPath $archive -DestinationPath $destination
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: MediaBuddy-Windows-Portable-ZIP
-          path: desktop/portable/release/MediaBuddy-Portable/
+          path: desktop/src/bin/Octop-desktop-windows-amd64-${{ env.OCTOP_VERSION }}.*
+          archive: false
           if-no-files-found: error
           retention-days: 14
