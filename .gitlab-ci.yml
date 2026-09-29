@@ -4,9 +4,6 @@ stages:
   - staging
   - prod
 
-before_script:
-  - set -a; . ./.env; set +a
-
 dev:
   stage: dev
   script:
