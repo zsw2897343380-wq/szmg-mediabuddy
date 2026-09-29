@@ -1,4 +1,4 @@
-name: Manual Windows EXE
+name: Manual Windows Portable ZIP
 
 on:
   workflow_dispatch:
@@ -25,8 +25,8 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  windows-exe:
-    name: Build Windows EXE
+  windows-portable:
+    name: Build Windows Portable ZIP
     needs: frontend
     runs-on: windows-latest
     env:
@@ -109,11 +109,15 @@ jobs:
           ARCH=amd64
           VERSION=${{ env.OCTOP_VERSION }}
           PORTABLE_ZIP=../portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+      - name: Expand portable ZIP for one-step extraction
+        shell: pwsh
+        run: |
+          $archive = "desktop/portable/release/Octop-portable-windows-amd64-$env:OCTOP_VERSION.zip"
+          $destination = "desktop/portable/release/MediaBuddy-Portable"
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination
       - uses: actions/upload-artifact@v4
         with:
-          name: MediaBuddy-Windows-EXE
-          path: |
-            desktop/src/bin/Octop-desktop-windows-amd64-${{ env.OCTOP_VERSION }}.exe
-            desktop/portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+          name: MediaBuddy-Windows-Portable-ZIP
+          path: desktop/portable/release/MediaBuddy-Portable/
           if-no-files-found: error
           retention-days: 14
