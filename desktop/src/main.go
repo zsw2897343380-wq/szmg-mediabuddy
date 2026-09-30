@@ -8,7 +8,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -41,19 +43,26 @@ type App struct {
 	trayClickMu    sync.Mutex
 	lastTrayClick  time.Time
 	trayClickTimer *time.Timer
+	mainWindowReady chan struct{}
+	mainWindowReadyOnce sync.Once
 }
 
 func (a *App) ServiceName() string { return "desktop" }
 
-func (a *App) ServiceStartup(context.Context, application.ServiceOptions) error { return nil }
+func (a *App) ServiceStartup(context.Context, application.ServiceOptions) error {
+	log.Printf("[lifecycle] service startup")
+	return nil
+}
 
 func (a *App) ServiceShutdown() error {
+	log.Printf("[lifecycle] service shutdown begin")
 	a.sleep.stop()
 	a.mu.Lock()
 	cmd := a.cmd
 	a.cmd = nil
 	a.mu.Unlock()
 	stopOctop(cmd)
+	log.Printf("[lifecycle] service shutdown complete")
 	return nil
 }
 
@@ -163,6 +172,8 @@ func (a *App) setStatus(msg string) {
 }
 
 func (a *App) boot() {
+	started := time.Now()
+	log.Printf("[boot] begin")
 	locale := LocaleEN
 	if a.store != nil {
 		locale = a.store.get().Locale
@@ -172,37 +183,55 @@ func (a *App) boot() {
 		url = bundledDesktopURL
 	}
 	if url != "" {
+		log.Printf("[boot] waiting for configured dashboard health")
+		healthStarted := time.Now()
 		a.setStatus(desktopText(locale, copyStatusConnecting))
 		if err := waitHealth(locale, url, 60*time.Second); err != nil {
+			log.Printf("[boot] configured dashboard health failed after %s: %v", time.Since(healthStarted), err)
 			a.setStatus(err.Error())
 			return
 		}
+		log.Printf("[boot] configured dashboard healthy after %s", time.Since(healthStarted))
 		a.showDashboard(url)
+		log.Printf("[boot] complete after %s", time.Since(started))
 		return
 	}
 	s := a.store.get()
+	log.Printf("[boot] checking bundled runtime")
 	a.setStatus(desktopText(locale, copyStatusCheckingRuntime))
+	runtimeStarted := time.Now()
 	if err := ensurePortable(locale, a.setStatus); err != nil {
+		log.Printf("[boot] bundled runtime check failed after %s: %v", time.Since(runtimeStarted), err)
 		a.setStatus(err.Error())
 		return
 	}
+	log.Printf("[boot] bundled runtime ready after %s", time.Since(runtimeStarted))
 	root := portableDir()
+	log.Printf("[boot] starting local Octop service on port %d", s.Port)
+	startStarted := time.Now()
 	a.mu.Lock()
 	stopOctop(a.cmd)
 	cmd, err := startOctop(root, s.Port)
 	a.cmd = cmd
 	a.mu.Unlock()
 	if err != nil {
+		log.Printf("[boot] local Octop start failed after %s: %v", time.Since(startStarted), err)
 		a.setStatus(err.Error())
 		return
 	}
+	log.Printf("[boot] local Octop process started after %s", time.Since(startStarted))
 	base := dashboardURL(s.Port)
 	a.setStatus(desktopText(locale, copyStatusStartingService))
+	healthStarted := time.Now()
+	log.Printf("[boot] waiting for local Octop health")
 	if err := waitHealth(locale, base, 2*time.Minute); err != nil {
+		log.Printf("[boot] local Octop health failed after %s: %v", time.Since(healthStarted), err)
 		a.setStatus(err.Error())
 		return
 	}
+	log.Printf("[boot] local Octop healthy after %s", time.Since(healthStarted))
 	a.showDashboard(base)
+	log.Printf("[boot] complete after %s", time.Since(started))
 }
 
 func (a *App) showDashboard(base string) {
@@ -221,7 +250,9 @@ func (a *App) showDashboard(base string) {
 			return
 		}
 	}
+	log.Printf("[boot] setting main window dashboard URL")
 	a.window.SetURL(base)
+	log.Printf("[boot] main window dashboard URL set")
 	a.scheduleDragOverlay()
 	s := a.store.get()
 	go func() {
@@ -229,6 +260,7 @@ func (a *App) showDashboard(base string) {
 		a.applyDashboardPrefs(s)
 	}()
 	a.setStatus(desktopText(s.Locale, copyStatusReady))
+	log.Printf("[boot] dashboard shown and ready status emitted")
 }
 
 func (a *App) hideToTray() {
@@ -308,14 +340,40 @@ func (a *App) requestQuit() {
 	}
 }
 
+func configureStartupLog() {
+	home := octopHome()
+	log.Printf("[startup] log directory: %s; pid=%d", home, os.Getpid())
+	if err := os.MkdirAll(home, 0o700); err != nil {
+		return
+	}
+	file, err := os.OpenFile(filepath.Join(home, "desktop.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		return
+	}
+	log.SetOutput(file)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+	log.Printf("----- MediaBuddy desktop starting (goos=%s goarch=%s pid=%d) -----", runtime.GOOS, runtime.GOARCH, os.Getpid())
+}
+
+func logStartupPanic(stage string) {
+	if recovered := recover(); recovered != nil {
+		log.Printf("panic during %s: %v\n%s", stage, recovered, debug.Stack())
+	}
+}
+
 func main() {
+	configureStartupLog()
+	defer logStartupPanic("main")
+	log.Printf("[startup] loading settings")
 	store := &settingsStore{cur: loadSettings()}
+	log.Printf("[startup] settings loaded")
 	api := &App{
 		store:           store,
 		sleep:           &sleepGuard{},
 		mainWindowReady: make(chan struct{}),
 	}
 
+	log.Printf("[startup] creating Wails application")
 	app := application.New(application.Options{
 		Name:        "MediaBuddy",
 		Description: "MediaBuddy desktop client",
@@ -335,12 +393,14 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})
+	log.Printf("[startup] Wails application created")
 	api.app = app
 	attachOpenURLEventListener(app, api.OpenExternal)
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
 		applyAppIcon(app)
 	})
 
+	log.Printf("[startup] creating main window")
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:                "MediaBuddy",
 		Width:                1200,
@@ -350,6 +410,7 @@ func main() {
 		AllowSimpleEventEmit: true,
 		BackgroundColour:     application.NewRGB(247, 248, 250),
 	})
+	log.Printf("[startup] main window created")
 	api.window = win
 	app.Event.On("desktop:toggle-maximise", func(_ *application.CustomEvent) {
 		win.ToggleMaximise()
@@ -358,15 +419,18 @@ func main() {
 		win.Minimise()
 	})
 	app.Event.On("desktop:close", func(_ *application.CustomEvent) {
+		log.Printf("[window] close button requested hide-to-tray")
 		api.hideToTray()
 	})
 	installDragOverlay := func(_ *application.WindowEvent) {
 		api.mainWindowReadyOnce.Do(func() { close(api.mainWindowReady) })
+		log.Printf("[window] main WebView navigation completed")
 		api.scheduleDragOverlay()
 	}
 	win.OnWindowEvent(events.Mac.WebViewDidFinishNavigation, installDragOverlay)
 	win.OnWindowEvent(events.Windows.WebViewNavigationCompleted, installDragOverlay)
 	win.OnWindowEvent(events.Linux.WindowLoadFinished, installDragOverlay)
+	log.Printf("[startup] creating hidden settings window")
 	settingsWin := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:            "MediaBuddy 设置",
 		Width:            settingsWindowWidth,
@@ -381,6 +445,7 @@ func main() {
 			HiddenOnTaskbar: true,
 		},
 	})
+	log.Printf("[startup] hidden settings window created")
 	api.settingsWindow = settingsWin
 	app.Event.RegisterApplicationEventHook(events.Mac.ApplicationShouldHandleReopen, func(event *application.ApplicationEvent) {
 		event.Cancel()
@@ -388,6 +453,7 @@ func main() {
 	})
 
 	win.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
+		log.Printf("[window] main window closing requested")
 		api.mu.Lock()
 		quit := api.quitting
 		api.mu.Unlock()
@@ -395,6 +461,7 @@ func main() {
 			return
 		}
 		e.Cancel()
+		log.Printf("[window] main window close cancelled; hiding to tray")
 		api.hideToTray()
 	})
 	win.OnWindowEvent(events.Common.WindowMinimise, func(_ *application.WindowEvent) {
@@ -410,7 +477,9 @@ func main() {
 		settingsWin.Hide()
 	})
 
+	log.Printf("[startup] creating system tray")
 	tray := app.SystemTray.New()
+	log.Printf("[startup] system tray created")
 	applyTrayIcon(tray)
 	tray.SetTooltip("MediaBuddy")
 	tray.AttachWindow(settingsWin).WindowOffset(6)
@@ -430,9 +499,19 @@ func main() {
 	}
 
 	api.scheduleDragOverlay()
-	go api.boot()
+	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
+		log.Printf("application started; beginning desktop boot")
+		go func() {
+			defer logStartupPanic("desktop boot")
+			api.boot()
+			log.Printf("desktop boot completed")
+		}()
+	})
 
+	log.Printf("[startup] entering Wails application event loop")
 	if err := app.Run(); err != nil {
-		log.Fatal(err)
+		log.Printf("application event loop exited with error: %v", err)
+		return
 	}
+	log.Printf("[shutdown] Wails application event loop exited without error")
 }

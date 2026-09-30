@@ -1,0 +1,283 @@
+name: Manual Desktop Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Build dashboard
+        run: make build-frontend
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dashboard-dist
+          path: src/octop/dashboard/
+          if-no-files-found: error
+          retention-days: 3
+
+  windows-package:
+    name: Build Windows Package
+    needs: frontend
+    runs-on: windows-latest
+    env:
+      OCTOP_DESKTOP_URL: ${{ vars.OCTOP_DESKTOP_URL || 'https://temeidabuddy.sztv.com.cn' }}
+      PBS_BASE_URL: https://github.com/astral-sh/python-build-standalone/releases/download/20251209
+      PBS_TAG: "20251209"
+      PBS_PY: "3.12.12"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v8
+        with:
+          name: dashboard-dist
+          path: src/octop/dashboard
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Read package version
+        run: |
+          VER=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          echo "OCTOP_VERSION=$VER" >> "$GITHUB_ENV"
+          echo "Packaging version $VER for $OCTOP_DESKTOP_URL"
+      - name: Bootstrap portable Python runtime
+        run: bash desktop/portable/bootstrap-runtime.sh windows-amd64
+      - name: Assemble portable package
+        run: bash desktop/portable/package.sh windows-amd64
+      - name: Smoke import (native host only)
+        run: |
+          set -euo pipefail
+          staging="desktop/portable/release/Octop-windows-amd64"
+          py="${staging}/runtime/python.exe"
+          req_file="desktop/portable/requirements-windows-amd64.txt"
+          if [[ ! -f "$py" ]]; then
+            echo "python missing under ${staging}/runtime" >&2
+            exit 1
+          fi
+          if [[ ! -f "$req_file" ]]; then
+            echo "frozen requirements missing: ${req_file}" >&2
+            exit 1
+          fi
+          verify_args=(--packages "${staging}/packages" --requirements "$req_file")
+          override_file="desktop/portable/overrides-windows-amd64.txt"
+          if [[ -f "$override_file" ]]; then
+            verify_args+=(--overrides "$override_file")
+          fi
+          PYTHONNOUSERSITE=1 "$py" desktop/portable/verify_imports.py "${verify_args[@]}"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: desktop/src/go.sum
+      - name: Install Wails v3 CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.13
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $nsisDir = "${env:ProgramFiles(x86)}\NSIS"
+          $makensis = Join-Path $nsisDir "makensis.exe"
+          function Test-Makensis { Test-Path -LiteralPath $makensis }
+          if (-not (Test-Makensis)) {
+            $installed = $false
+            for ($i = 1; $i -le 5; $i++) {
+              Write-Host "choco install nsis (attempt $i/5)"
+              try {
+                choco install nsis --yes --no-progress --execution-timeout=600
+              } catch {
+                Write-Warning "choco attempt $i failed: $_"
+              }
+              if (Test-Makensis) { $installed = $true; break }
+              Start-Sleep -Seconds ([Math]::Min(60, 10 * $i))
+            }
+            if (-not $installed) {
+              Write-Host "Chocolatey unavailable; downloading NSIS setup from SourceForge"
+              $setup = Join-Path $env:RUNNER_TEMP "nsis-setup.exe"
+              $urls = @(
+                "https://downloads.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe",
+                "https://sourceforge.net/projects/nsis/files/NSIS%203/3.11/nsis-3.11-setup.exe/download"
+              )
+              $downloaded = $false
+              foreach ($url in $urls) {
+                try {
+                  Invoke-WebRequest -Uri $url -OutFile $setup -UseBasicParsing -TimeoutSec 180
+                  if ((Test-Path -LiteralPath $setup) -and ((Get-Item $setup).Length -gt 1MB)) {
+                    $downloaded = $true
+                    break
+                  }
+                } catch {
+                  Write-Warning "NSIS download failed from $url : $_"
+                }
+              }
+              if (-not $downloaded) { throw "NSIS install failed (Chocolatey and direct download)" }
+              Start-Process -FilePath $setup -ArgumentList "/S" -Wait
+            }
+          }
+          if (-not (Test-Makensis)) { throw "makensis.exe missing after NSIS install" }
+          Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
+      - name: Embed the configured service URL
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          main = Path("desktop/src/main.go")
+          source = main.read_text(encoding="utf-8")
+          declaration = "var bundledDesktopURL string"
+          if declaration not in source:
+              marker = "const trayDoubleClick = 400 * time.Millisecond"
+              assert marker in source, "desktop URL insertion point not found"
+              source = source.replace(marker, marker + "\n\n" + declaration, 1)
+          old = 'if url := os.Getenv("OCTOP_DESKTOP_URL"); url != "" {'
+          if old in source:
+              new = 'url := os.Getenv("OCTOP_DESKTOP_URL")\n\tif url == "" {\n\t\turl = bundledDesktopURL\n\t}\n\tif url != "" {'
+              source = source.replace(old, new, 1)
+          assert "url = bundledDesktopURL" in source, "desktop URL fallback insertion failed"
+          main.write_text(source, encoding="utf-8")
+
+          taskfile = Path("desktop/src/build/windows/Taskfile.yml")
+          task_source = taskfile.read_text(encoding="utf-8")
+          old_flag = '-ldflags="-w -s -H windowsgui"'
+          new_flag = '-ldflags="-w -s -H windowsgui -X main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}"'
+          if old_flag in task_source:
+              task_source = task_source.replace(old_flag, new_flag, 1)
+          assert "main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}" in task_source, "Windows linker URL injection not configured"
+          taskfile.write_text(task_source, encoding="utf-8")
+          PY
+      - name: Package desktop app
+        working-directory: desktop/src
+        run: >-
+          wails3 task package
+          ARCH=amd64
+          VERSION=${{ env.OCTOP_VERSION }}
+          PORTABLE_ZIP=../portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          path: desktop/src/bin/MediaBuddy-desktop-windows-amd64-${{ env.OCTOP_VERSION }}.*
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+  macos-dmg:
+    name: "${{ matrix.plat }}"
+    needs: frontend
+    runs-on: ${{ matrix.os }}
+    env:
+      GREEN_HOST_PLAT: ${{ matrix.plat }}
+      OCTOP_DESKTOP_URL: ${{ vars.OCTOP_DESKTOP_URL || 'https://temeidabuddy.sztv.com.cn' }}
+      PBS_BASE_URL: https://github.com/astral-sh/python-build-standalone/releases/download/20251209
+      PBS_TAG: "20251209"
+      PBS_PY: "3.12.12"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - plat: darwin-arm64
+            arch: arm64
+            os: macos-14
+          - plat: darwin-amd64
+            arch: amd64
+            os: macos-15-intel
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v8
+        with:
+          name: dashboard-dist
+          path: src/octop/dashboard
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Cache portable Python downloads
+        continue-on-error: true
+        uses: actions/cache@v5
+        with:
+          path: green/.cache
+          key: pbs-${{ env.PBS_TAG }}-${{ env.PBS_PY }}-${{ matrix.plat }}
+      - name: Read package version
+        run: |
+          set -euo pipefail
+          VER=$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' pyproject.toml | head -1)
+          echo "OCTOP_VERSION=$VER" >> "$GITHUB_ENV"
+          echo "Packaging ${{ matrix.plat }} $VER for $OCTOP_DESKTOP_URL"
+      - name: Bootstrap portable CPython
+        run: bash desktop/portable/bootstrap-runtime.sh "${{ matrix.plat }}"
+      - name: Assemble portable runtime
+        run: bash desktop/portable/package.sh "${{ matrix.plat }}"
+      - name: Smoke import and verify native libraries
+        run: |
+          set -euo pipefail
+          staging="desktop/portable/release/Octop-${{ matrix.plat }}"
+          py="$staging/runtime/bin/python3"
+          req_file="desktop/portable/requirements-${{ matrix.plat }}.txt"
+          if [[ ! -x "$py" || ! -f "$req_file" ]]; then
+            echo "portable Python runtime or requirements missing for ${{ matrix.plat }}" >&2
+            exit 1
+          fi
+          set -- --packages "$staging/packages" --requirements "$req_file"
+          override_file="desktop/portable/overrides-${{ matrix.plat }}.txt"
+          if [[ -f "$override_file" ]]; then
+            set -- "$@" --overrides "$override_file"
+          fi
+          PYTHONNOUSERSITE=1 "$py" desktop/portable/verify_imports.py "$@"
+          REPO_ROOT="$PWD"
+          source desktop/portable/_common.sh
+          verify_no_homebrew_dylibs "$staging/packages" "${{ matrix.plat }}"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: desktop/src/go.sum
+      - name: Install Wails v3 CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.13
+      - name: Embed configured service URL for macOS
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          main = Path("desktop/src/main.go")
+          source = main.read_text(encoding="utf-8")
+          declaration = "var bundledDesktopURL string"
+          if declaration not in source:
+              marker = "const trayDoubleClick = 400 * time.Millisecond"
+              assert marker in source, "desktop URL insertion point not found"
+              source = source.replace(marker, marker + "\n\n" + declaration, 1)
+          old = 'if url := os.Getenv("OCTOP_DESKTOP_URL"); url != "" {'
+          if old in source:
+              new = 'url := os.Getenv("OCTOP_DESKTOP_URL")\n\tif url == "" {\n\t\turl = bundledDesktopURL\n\t}\n\tif url != "" {'
+              source = source.replace(old, new, 1)
+          assert "url = bundledDesktopURL" in source, "desktop URL fallback insertion failed"
+          main.write_text(source, encoding="utf-8")
+          taskfile = Path("desktop/src/build/darwin/Taskfile.yml")
+          task_source = taskfile.read_text(encoding="utf-8")
+          old_flag = '-ldflags="-w -s"'
+          new_flag = '-ldflags="-w -s -X main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}"'
+          if old_flag in task_source:
+              task_source = task_source.replace(old_flag, new_flag, 1)
+          assert "main.bundledDesktopURL={{.OCTOP_DESKTOP_URL}}" in task_source, "macOS linker URL injection not configured"
+          taskfile.write_text(task_source, encoding="utf-8")
+          PY
+      - name: Package macOS app with bundled portable runtime
+        working-directory: desktop/src
+        run: >-
+          wails3 task package
+          ARCH=${{ matrix.arch }}
+          VERSION=${{ env.OCTOP_VERSION }}
+          PORTABLE_ZIP=../portable/release/Octop-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
+      - name: Upload DMG
+        uses: actions/upload-artifact@v7
+        with:
+          path: desktop/src/bin/MediaBuddy-desktop-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.dmg
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
