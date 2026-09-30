@@ -37,6 +37,8 @@ type App struct {
 	trayClickMu    sync.Mutex
 	lastTrayClick  time.Time
 	trayClickTimer *time.Timer
+	mainWindowReady chan struct{}
+	mainWindowReadyOnce sync.Once
 }
 
 func (a *App) ServiceName() string { return "desktop" }
@@ -226,6 +228,18 @@ func (a *App) showDashboard(base string) {
 	if a.window == nil {
 		return
 	}
+	if a.mainWindowReady != nil {
+		log.Printf("[boot] waiting for initial main window navigation")
+		timer := time.NewTimer(15 * time.Second)
+		defer timer.Stop()
+		select {
+		case <-a.mainWindowReady:
+			log.Printf("[boot] initial main window navigation completed")
+		case <-timer.C:
+			log.Printf("[boot] timed out waiting for initial main window navigation; keeping the application open")
+			return
+		}
+	}
 	log.Printf("[boot] setting main window dashboard URL")
 	a.window.SetURL(base)
 	log.Printf("[boot] main window dashboard URL set")
@@ -346,6 +360,7 @@ func main() {
 	api := &App{
 		store: store,
 		sleep: &sleepGuard{},
+		mainWindowReady: make(chan struct{}),
 	}
 
 	log.Printf("[startup] creating Wails application")
@@ -398,6 +413,7 @@ func main() {
 		api.hideToTray()
 	})
 	installDragOverlay := func(_ *application.WindowEvent) {
+		api.mainWindowReadyOnce.Do(func() { close(api.mainWindowReady) })
 		log.Printf("[window] main WebView navigation completed")
 		api.scheduleDragOverlay()
 	}
