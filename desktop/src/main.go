@@ -35,6 +35,8 @@ type App struct {
 	cmd            *exec.Cmd
 	mu             sync.Mutex
 	quitting       bool
+	mainWindowReady chan struct{}
+	mainWindowReadyOnce sync.Once
 
 	trayClickMu    sync.Mutex
 	lastTrayClick  time.Time
@@ -207,6 +209,18 @@ func (a *App) showDashboard(base string) {
 	if a.window == nil {
 		return
 	}
+	if a.mainWindowReady != nil {
+		log.Printf("[boot] waiting for initial main window navigation")
+		timer := time.NewTimer(15 * time.Second)
+		defer timer.Stop()
+		select {
+		case <-a.mainWindowReady:
+			log.Printf("[boot] initial main window navigation completed")
+		case <-timer.C:
+			log.Printf("[boot] timed out waiting for initial main window navigation; keeping the application open")
+			return
+		}
+	}
 	a.window.SetURL(base)
 	a.scheduleDragOverlay()
 	s := a.store.get()
@@ -297,13 +311,14 @@ func (a *App) requestQuit() {
 func main() {
 	store := &settingsStore{cur: loadSettings()}
 	api := &App{
-		store: store,
-		sleep: &sleepGuard{},
+		store:           store,
+		sleep:           &sleepGuard{},
+		mainWindowReady: make(chan struct{}),
 	}
 
 	app := application.New(application.Options{
-		Name:        "Octop",
-		Description: "Octop desktop",
+		Name:        "MediaBuddy",
+		Description: "MediaBuddy desktop client",
 		Services: []application.Service{
 			application.NewService(api),
 		},
@@ -327,7 +342,7 @@ func main() {
 	})
 
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:                "Octop",
+		Title:                "MediaBuddy",
 		Width:                1200,
 		Height:               800,
 		URL:                  "/",
@@ -345,12 +360,15 @@ func main() {
 	app.Event.On("desktop:close", func(_ *application.CustomEvent) {
 		api.hideToTray()
 	})
-	installDragOverlay := func(_ *application.WindowEvent) { api.scheduleDragOverlay() }
+	installDragOverlay := func(_ *application.WindowEvent) {
+		api.mainWindowReadyOnce.Do(func() { close(api.mainWindowReady) })
+		api.scheduleDragOverlay()
+	}
 	win.OnWindowEvent(events.Mac.WebViewDidFinishNavigation, installDragOverlay)
 	win.OnWindowEvent(events.Windows.WebViewNavigationCompleted, installDragOverlay)
 	win.OnWindowEvent(events.Linux.WindowLoadFinished, installDragOverlay)
 	settingsWin := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "Octop 设置",
+		Title:            "MediaBuddy 设置",
 		Width:            settingsWindowWidth,
 		Height:           settingsWindowOuterHeight(),
 		URL:              "/?settings=1",
@@ -394,7 +412,7 @@ func main() {
 
 	tray := app.SystemTray.New()
 	applyTrayIcon(tray)
-	tray.SetTooltip("Octop")
+	tray.SetTooltip("MediaBuddy")
 	tray.AttachWindow(settingsWin).WindowOffset(6)
 	showSettings := func() { tray.ShowWindow() }
 	if trayLeftClickShowsSettings(runtime.GOOS) {

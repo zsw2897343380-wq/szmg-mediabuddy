@@ -5,11 +5,11 @@
   "info": {
     "0000": {
       "ProductVersion": "0.9.26",
-      "CompanyName": "Octop",
-      "FileDescription": "Octop desktop",
+      "CompanyName": "MediaBuddy",
+      "FileDescription": "MediaBuddy desktop client",
       "LegalCopyright": "Copyright © 2026",
-      "ProductName": "Octop",
-      "Comments": "Octop desktop shell"
+      "ProductName": "MediaBuddy",
+      "Comments": "MediaBuddy desktop client"
     }
   }
 }

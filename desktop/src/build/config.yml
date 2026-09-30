@@ -5,12 +5,12 @@
 version: "3"
 
 info:
-  companyName: "Octop"
-  productName: "Octop"
+  companyName: "MediaBuddy"
+  productName: "MediaBuddy"
   productIdentifier: "com.tencent.octop"
-  description: "Octop desktop shell"
-  copyright: "(c) 2026, Octop"
-  comments: "Wails v3 + green portable"
+  description: "MediaBuddy desktop client"
+  copyright: "(c) 2026, MediaBuddy"
+  comments: "MediaBuddy desktop client"
   version: "0.9.26"
 
 dev_mode:
