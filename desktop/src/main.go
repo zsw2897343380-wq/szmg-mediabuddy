@@ -37,8 +37,6 @@ type App struct {
 	cmd            *exec.Cmd
 	mu             sync.Mutex
 	quitting       bool
-	mainWindowReady chan struct{}
-	mainWindowReadyOnce sync.Once
 
 	trayClickMu    sync.Mutex
 	lastTrayClick  time.Time
