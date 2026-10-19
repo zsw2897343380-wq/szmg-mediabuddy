@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
@@ -231,12 +231,14 @@ export function JobDrawer({
   );
 
   return (
-    <Drawer
-      width={520}
-      placement="right"
+    <Modal
+      width={800}
+      centered
+      footer={null}
+      className={styles.editorModal}
       title={editingJob ? t("cronJobs.editJob") : t("cronJobs.createJob")}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
       destroyOnHidden
     >
       {remote ? (
@@ -601,6 +603,6 @@ export function JobDrawer({
           </div>
         </Form.Item>
       </Form>
-    </Drawer>
+    </Modal>
   );
 }

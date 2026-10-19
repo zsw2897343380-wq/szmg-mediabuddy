@@ -1,5 +1,4 @@
-import { Dropdown, Switch, Tag, Tooltip } from "antd";
-import type { MenuProps } from "antd";
+import { Dropdown, Switch, Tooltip } from "antd";
 import {
   Pencil,
   Play,
@@ -7,266 +6,149 @@ import {
   MoreHorizontal,
   Clock,
   AlertCircle,
+  History,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CronJobSpecOutput } from "../../../../api/types";
 import styles from "../index.module.less";
-import {
-  CHANNEL_ICONS,
-  CHANNEL_LABEL_KEYS,
-} from "../../../Agent/Channels/components/constants";
-import {
-  channelFromSessionKey,
-  extractPromptFromJob,
-  formatCronTimestamp,
-} from "../cronDisplay";
+import { extractPromptFromJob, formatCronTimestamp } from "../cronDisplay";
 import {
   formatTriggerText,
-  lastRunStatusTag,
   oneShotPhase,
   oneShotPhaseLabelKey,
 } from "../onceSchedule";
 
 type CronJob = CronJobSpecOutput;
-
-// Accent color per status
-const ENABLED_ACCENT = "#22c55e";
-const DISABLED_ACCENT = "#8c8c8c";
-
 interface CronJobCardProps {
   job: CronJob;
   timeZone: string;
+  onDetail: (job: CronJob) => void;
+  onViewRecords: (jobId: string) => void;
   onToggleEnabled: (job: CronJob) => void;
   onExecuteNow: (job: CronJob) => void;
   onEdit: (job: CronJob) => void;
   onDelete: (jobId: string) => void;
 }
-
 export function CronJobCard({
   job,
   timeZone,
+  onDetail,
+  onViewRecords,
   onToggleEnabled,
   onExecuteNow,
   onEdit,
   onDelete,
 }: CronJobCardProps) {
   const { t } = useTranslation();
-  const meta = (job.meta as Record<string, unknown> | undefined) ?? {};
-  const sessionKey =
-    typeof meta.octop_session_key === "string" ? meta.octop_session_key : "";
-  const channel = sessionKey
-    ? channelFromSessionKey(sessionKey)
-    : Array.isArray(job.dispatch?.channel)
-    ? job.dispatch.channel[0]
-    : job.dispatch?.channel || "dashboard";
-  const icon = CHANNEL_ICONS[channel as keyof typeof CHANNEL_ICONS];
-  const label = CHANNEL_LABEL_KEYS[channel as keyof typeof CHANNEL_LABEL_KEYS]
-    ? t(CHANNEL_LABEL_KEYS[channel as keyof typeof CHANNEL_LABEL_KEYS])
-    : channel;
-  const prompt = extractPromptFromJob(job);
-
-  const lastStatus =
-    typeof meta.octop_last_status === "string" ? meta.octop_last_status : null;
-  const lastError =
-    typeof meta.octop_last_error === "string" ? meta.octop_last_error : null;
-  const lastRunAt =
+  const meta = job.meta ?? {};
+  const status =
+    typeof meta.octop_last_status === "string" ? meta.octop_last_status : "";
+  const error =
+    typeof meta.octop_last_error === "string" ? meta.octop_last_error : "";
+  const lastRun =
     typeof meta.octop_last_run_at === "number" ? meta.octop_last_run_at : null;
-
-  const accent = job.enabled ? ENABLED_ACCENT : DISABLED_ACCENT;
-  const phase = oneShotPhase(
-    job.schedule?.cron,
-    Boolean(job.enabled),
-    lastStatus,
-  );
-  const pillColor =
-    phase === "failed"
-      ? "#ef4444"
-      : phase === "missed"
-      ? "#d97706"
-      : phase === "pending"
-      ? ENABLED_ACCENT
-      : phase
-      ? DISABLED_ACCENT
-      : accent;
-  const statusLabel = phase
-    ? t(oneShotPhaseLabelKey(phase))
-    : job.enabled
-    ? t("common.enabled")
-    : t("common.disabled");
-  const statusTag = lastStatus ? lastRunStatusTag(lastStatus) : null;
-  const triggerLabel = formatTriggerText(job.schedule?.cron, {
+  const phase = oneShotPhase(job.schedule.cron, Boolean(job.enabled), status);
+  const trigger = formatTriggerText(job.schedule.cron, {
     mail: t("cronJobs.form.agentlyNewMail"),
     once: t("cronJobs.form.scheduleModeOnce"),
   });
-
-  const taskType = job.task_type === "text" ? "text" : "agent";
-
-  const moreMenuItems: MenuProps["items"] = [
-    {
-      key: "delete",
-      label: t("common.delete"),
-      icon: <Trash2 size={13} />,
-      disabled: job.enabled,
-      danger: true,
-      onClick: () => onDelete(job.id),
-    },
-  ];
-
   return (
-    <div
-      className={styles.cronCard}
-      style={{ "--cron-accent": accent } as React.CSSProperties}
+    <article
+      className={`${styles.cronCard} ${
+        job.enabled ? "" : styles.cronCardPaused
+      }`}
     >
-      {/* Header */}
       <div className={styles.cronCardHeader}>
-        {/* Channel icon box */}
-        <Tooltip title={label}>
-          <div
-            className={styles.cronCardIcon}
-            style={{ color: accent, background: `${accent}1a` }}
-          >
-            {icon ? (
-              <img src={icon} alt={label} style={{ width: 22, height: 22 }} />
-            ) : (
-              <Clock size={22} />
-            )}
-          </div>
-        </Tooltip>
-
-        {/* Title block */}
-        <div className={styles.cronCardTitleBlock}>
-          <div className={styles.cronCardName}>{job.name || job.id}</div>
-          <div className={styles.cronCardId}>
-            <span className={styles.cronCardIdLabel}>ID</span>
-            <span className={styles.cronCardIdValue}>{job.id}</span>
-          </div>
-          <div className={styles.cronCardMeta}>
-            {/* Status pill */}
-            <div
-              className={styles.cronCardStatus}
-              style={{
-                color: pillColor,
-                background: `${pillColor}1a`,
+        <button
+          type="button"
+          className={styles.cronCardName}
+          onClick={() => onDetail(job)}
+          title={job.name}
+        >
+          {job.name}
+        </button>
+        {status === "error" ? (
+          <Tooltip title={error || t("cronJobs.workbuddy.failed")}>
+            <AlertCircle size={16} className={styles.runFailure} />
+          </Tooltip>
+        ) : null}
+        <div className={styles.cronCardActions}>
+          <div className={styles.cronCardHoverActions}>
+            <Tooltip title={t("cronJobs.executeNow")}>
+              <button
+                type="button"
+                aria-label={t("cronJobs.executeNow")}
+                className={styles.cardIconButton}
+                onClick={() => onExecuteNow(job)}
+              >
+                <Play size={15} />
+              </button>
+            </Tooltip>
+            <Tooltip title={t("common.edit")}>
+              <button
+                type="button"
+                aria-label={t("common.edit")}
+                className={styles.cardIconButton}
+                onClick={() => onEdit(job)}
+              >
+                <Pencil size={15} />
+              </button>
+            </Tooltip>
+            <Dropdown
+              trigger={["click"]}
+              menu={{
+                items: [
+                  {
+                    key: "records",
+                    label: t("cronJobs.workbuddy.records"),
+                    icon: <History size={15} />,
+                    onClick: () => onViewRecords(job.id),
+                  },
+                  {
+                    key: "delete",
+                    label: t("common.delete"),
+                    icon: <Trash2 size={15} />,
+                    danger: true,
+                    onClick: () => onDelete(job.id),
+                  },
+                ],
               }}
             >
-              <span
-                className={styles.cronCardStatusDot}
-                style={{ background: pillColor }}
-              />
-              {statusLabel}
-            </div>
-            {/* Task type tag */}
-            <Tag style={{ fontSize: 11, margin: 0 }}>
-              {taskType === "text"
-                ? t("cronJobs.form.taskTypeText")
-                : t("cronJobs.form.taskTypeAgent")}
-            </Tag>
+              <button
+                type="button"
+                className={styles.cardIconButton}
+                aria-label={t("common.more")}
+              >
+                <MoreHorizontal size={16} />
+              </button>
+            </Dropdown>
           </div>
-        </div>
-
-        <Tooltip title={job.enabled ? t("common.disable") : t("common.enable")}>
           <Switch
             size="small"
             checked={job.enabled}
-            onChange={() => onToggleEnabled(job)}
-            className={styles.cronCardSwitch}
             aria-label={job.enabled ? t("common.disable") : t("common.enable")}
+            onChange={() => onToggleEnabled(job)}
           />
-        </Tooltip>
-      </div>
-
-      {/* Prompt / description */}
-      <p className={styles.cronCardDesc}>{prompt || "\u00a0"}</p>
-
-      {/* Cron schedule + last run info */}
-      <div className={styles.cronCardInfo}>
-        <span className={styles.cronCardInfoItem}>
-          <Clock size={11} style={{ flexShrink: 0 }} />
-          <code className={styles.cronCardCode}>{triggerLabel}</code>
-        </span>
-        {lastRunAt && (
-          <span className={styles.cronCardInfoItem}>
-            <span className={styles.cronCardInfoLabel}>
-              {t("cronJobs.col.lastRunAt")}:
-            </span>
-            <span>{formatCronTimestamp(lastRunAt, timeZone)}</span>
-          </span>
-        )}
-        {lastStatus && (
-          <Tag
-            color={statusTag?.color ?? "default"}
-            style={{ fontSize: 11, margin: 0 }}
-          >
-            {statusTag ? t(statusTag.labelKey) : lastStatus}
-          </Tag>
-        )}
-      </div>
-
-      {/* Error row */}
-      {lastStatus === "error" && lastError && (
-        <div className={styles.cronCardErrorWrap}>
-          <Tooltip
-            title={lastError}
-            mouseEnterDelay={0.3}
-            overlayStyle={{ maxWidth: 360 }}
-          >
-            <div className={styles.cronCardError}>
-              <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
-              <span className={styles.cronCardErrorText}>{lastError}</span>
-            </div>
-          </Tooltip>
         </div>
-      )}
-
-      {/* Footer actions */}
+      </div>
+      <p className={styles.cronCardDesc} title={extractPromptFromJob(job)}>
+        {extractPromptFromJob(job) || "\u00a0"}
+      </p>
       <div className={styles.cronCardFooter}>
-        <Tooltip title={t("common.edit")} mouseEnterDelay={0.5}>
-          <button
-            type="button"
-            className={styles.cronCardEditBtn}
-            disabled={job.enabled}
-            onClick={() => onEdit(job)}
-            aria-label={t("common.edit")}
-          >
-            <Pencil size={13} />
-          </button>
+        <span className={styles.cronCardSchedule} title={trigger}>
+          <Clock size={14} />
+          <span>{trigger}</span>
+        </span>
+        <Tooltip title={formatCronTimestamp(lastRun, timeZone)}>
+          <span className={styles.cronCardState}>
+            {phase
+              ? t(oneShotPhaseLabelKey(phase))
+              : job.enabled
+              ? t("common.enabled")
+              : t("common.disabled")}
+          </span>
         </Tooltip>
-
-        <Dropdown
-          menu={{ items: moreMenuItems }}
-          placement="bottomLeft"
-          trigger={["click"]}
-        >
-          <Tooltip title={t("common.more", "更多")} mouseEnterDelay={0.5}>
-            <button
-              type="button"
-              className={styles.cronCardEditBtn}
-              aria-label={t("common.more", "更多")}
-            >
-              <MoreHorizontal size={13} />
-            </button>
-          </Tooltip>
-        </Dropdown>
-
-        <div className={styles.cronCardFooterActions}>
-          <button
-            type="button"
-            className={styles.cronCardToggleBtn}
-            onClick={() => onToggleEnabled(job)}
-          >
-            {job.enabled ? t("common.disable") : t("common.enable")}
-          </button>
-          <button
-            type="button"
-            className={styles.cronCardRunBtn}
-            style={{ color: accent, borderColor: `${accent}55` }}
-            onClick={() => onExecuteNow(job)}
-          >
-            <Play size={13} />
-            {t("cronJobs.executeNow")}
-          </button>
-        </div>
       </div>
-    </div>
+    </article>
   );
 }

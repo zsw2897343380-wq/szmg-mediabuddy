@@ -237,7 +237,7 @@
     "common": "常用",
     "control": "控制",
     "experts": "专家",
-    "tasks": "自动化",
+    "tasks": "定时任务",
     "connectors": "连接器",
     "bridge": "云端协同",
     "acp": "ACP 协作",
@@ -2478,7 +2478,24 @@
     },
     "noAgentSelected": "请先在右上角选择一个专家来管理它的定时任务",
     "deleteFailed": "删除失败",
-    "goToChat": "发送到聊天"
+    "goToChat": "发送到聊天",
+    "workbuddy": {
+      "tasks": "定时任务",
+      "records": "运行记录",
+      "all": "全部",
+      "enabled": "启用",
+      "paused": "暂停",
+      "success": "成功",
+      "failed": "失败",
+      "allTasks": "全部任务",
+      "recordScope": "当前专家的运行记录",
+      "executionTime": "执行时间",
+      "noRecords": "暂无运行记录",
+      "recordsFailed": "运行记录加载失败，请重试",
+      "loadMore": "加载更多 / 重试",
+      "noMatches": "没有匹配的定时任务",
+      "searchPlaceholder": "搜索定时任务"
+    }
   },
   "channels": {
     "title": "通道",
@@ -6770,7 +6787,7 @@
       "subtitle": "创建与管理你的 AI 专家，也可从模板一键新建"
     },
     "tasks": {
-      "title": "自动化",
+      "title": "定时任务",
       "subtitle": "创建和管理专家定期执行的计划任务，也可立刻手动运行"
     },
     "connectors": {

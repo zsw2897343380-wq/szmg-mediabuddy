@@ -32,6 +32,27 @@ class AuditRow:
         )
 
 
+@dataclass(frozen=True)
+class CronRunAuditRow:
+    id: int
+    ts: int
+    cron_id: str
+    name: str
+    action: str
+    payload: str | None
+
+    @classmethod
+    def from_row(cls, r: DbRow) -> CronRunAuditRow:
+        return cls(
+            id=r["id"],
+            ts=r["ts"],
+            cron_id=r["cron_id"],
+            name=r["name"],
+            action=r["action"],
+            payload=r["payload"],
+        )
+
+
 class AuditRepo:
     def __init__(self, db: DatabasePool) -> None:
         self._db = db
@@ -111,3 +132,29 @@ class AuditRepo:
         with self._db.transaction() as conn:
             cursor = conn.execute("DELETE FROM audit_log WHERE ts < ?", (cutoff_ts,))
         return int(cursor.rowcount or 0)
+
+    def query_cron_runs(
+        self,
+        *,
+        agent_id: str,
+        user_id: int,
+        cron_id: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CronRunAuditRow]:
+        """Read completed runs only for currently owned, visible cron jobs."""
+        sql = (
+            "SELECT a.id, a.ts, c.cron_id, c.name, a.action, a.payload "
+            "FROM audit_log a JOIN cron_jobs c ON c.cron_id = a.target "
+            "JOIN agents g ON g.agent_id = c.agent_id "
+            "WHERE c.agent_id = ? AND c.user_id = ? AND g.user_id = ? "
+            "AND a.action IN ('cron.run_ok', 'cron.run_failed')"
+        )
+        params: list[object] = [agent_id, user_id, user_id]
+        if cron_id is not None:
+            sql += " AND c.cron_id = ?"
+            params.append(cron_id)
+        sql += " ORDER BY a.ts DESC, a.id DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        with self._db.connect() as conn:
+            return map_rows(conn.execute(sql, params).fetchall(), CronRunAuditRow)

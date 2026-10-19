@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+import asyncio
+from functools import partial
+from typing import Any, Literal, cast
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_access, require_agent_row, user_owns_agent
@@ -55,6 +57,20 @@ class CronExamplesResponse(BaseModel):
     """Compat mirror of welcome ``task_examples`` (workspace → catalog → name)."""
 
     task_examples: dict[str, list[str]] | None = None
+
+
+class CronRunRecordResponse(BaseModel):
+    id: int
+    cron_id: str
+    name: str
+    executed_at: int = Field(description="Completion audit timestamp in Unix seconds.")
+    status: Literal["ok", "error"]
+    error: str | None = None
+
+
+class CronRunRecordsResponse(BaseModel):
+    items: list[CronRunRecordResponse]
+    has_more: bool
 
 
 def _get_cron_manager(server: Any) -> Any:
@@ -157,6 +173,43 @@ async def create_cron(
     )
     row = await _get_cron_manager(server).create(spec)
     return cast(dict[str, Any], row.to_public_dict(include_agent=True))
+
+
+@router.get(
+    "/agents/{agent_id}/cron/records",
+    summary="List completed cron runs",
+    description="Owner-only completed audit events for this agent's existing tasks. "
+    "Deleted tasks are excluded; duration and conversation IDs are not recorded.",
+    response_model=CronRunRecordsResponse,
+)
+async def list_cron_records(
+    agent_id: str,
+    cron_id: str | None = Query(default=None, description="Filter to one visible task."),
+    limit: int = Query(default=100, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> CronRunRecordsResponse:
+    from octop.infra.cron.history import list_cron_run_records  # noqa: PLC0415
+
+    agent_row = require_agent_row(agent_id, user=user, as_user=None, server=server)
+    _assert_cron_manage(agent_id=agent_id, agent_row=agent_row, user=user)
+    records, has_more = await asyncio.get_running_loop().run_in_executor(
+        None,
+        partial(
+            list_cron_run_records,
+            server.services,
+            agent_id=agent_id,
+            user_id=user.id,
+            cron_id=cron_id,
+            limit=limit,
+            offset=offset,
+        ),
+    )
+    return CronRunRecordsResponse(
+        items=[CronRunRecordResponse(**vars(record)) for record in records],
+        has_more=has_more,
+    )
 
 
 @router.get("/agents/{agent_id}/cron/{cron_id}", summary="Get cron job")

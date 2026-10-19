@@ -269,3 +269,39 @@ async def test_cross_user_cannot_list_cron(env: Any) -> None:
     c, _srv, _alice_auth, bob_auth, aid = env
     r = await c.get(f"/api/agents/{aid}/cron", headers=bob_auth)
     assert r.status_code == 403
+
+
+async def test_records_are_owner_scoped_and_paginated(env: Any) -> None:
+    c, srv, alice_auth, bob_auth, aid = env
+    created = await c.post(
+        f"/api/agents/{aid}/cron",
+        headers=alice_auth,
+        json={"name": "Report", "trigger": "interval:3600", "prompt": "report", "enabled": False},
+    )
+    cid = created.json()["id"]
+    audit = srv.services.audit_repo
+    audit.system_event("cron.run_ok", target=cid)
+    audit.system_event("cron.run_failed", target=cid, payload="provider failed")
+    audit.system_event("cron.create", target=cid)
+    # Unrelated and deleted tasks must not appear, even with newer audit IDs.
+    audit.system_event("cron.run_failed", target="deleted", payload="private")
+    url = f"/api/agents/{aid}/cron/records"
+    first = await c.get(url, headers=alice_auth, params={"limit": 1})
+    assert first.status_code == 200, first.text
+    assert first.json()["has_more"] is True
+    record = first.json()["items"][0]
+    assert record["cron_id"] == cid
+    assert record["name"] == "Report"
+    assert record["status"] == "error"
+    assert record["error"] == "provider failed"
+    second = await c.get(url, headers=alice_auth, params={"limit": 1, "offset": 1})
+    assert second.json()["has_more"] is False
+    assert second.json()["items"][0]["status"] == "ok"
+    assert second.json()["items"][0]["error"] is None
+    assert (await c.get(url, headers=bob_auth)).status_code == 403
+    assert (await c.get(url, headers=alice_auth, params={"cron_id": "private"})).json()[
+        "items"
+    ] == []
+    assert (await c.get(url, headers=alice_auth, params={"limit": 101})).status_code == 422
+    await c.delete(f"/api/agents/{aid}/cron/{cid}", headers=alice_auth)
+    assert (await c.get(url, headers=alice_auth)).json()["items"] == []

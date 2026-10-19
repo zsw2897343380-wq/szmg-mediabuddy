@@ -107,3 +107,17 @@ export interface OctopCronPatchBody {
   task_type?: "text" | "agent";
   mcp_servers?: string[];
 }
+
+export interface OctopCronRunRecord {
+  id: number;
+  cron_id: string;
+  name: string;
+  executed_at: number;
+  status: "ok" | "error";
+  error: string | null;
+}
+
+export interface OctopCronRunRecords {
+  items: OctopCronRunRecord[];
+  has_more: boolean;
+}

@@ -3,6 +3,7 @@ import type {
   OctopCronRow,
   OctopCronCreateBody,
   OctopCronPatchBody,
+  OctopCronRunRecords,
 } from "../types";
 
 export interface OctopCronSettings {
@@ -15,6 +16,12 @@ export interface CronTaskExamples {
 }
 
 export const octopCronApi = {
+  records: (agentId: string, offset = 0, cronId?: string) =>
+    request<OctopCronRunRecords>(
+      `/agents/${agentId}/cron/records?offset=${offset}&limit=100${
+        cronId ? `&cron_id=${encodeURIComponent(cronId)}` : ""
+      }`,
+    ),
   settings: () => request<OctopCronSettings>("/cron/settings"),
 
   list: (agentId: string) => request<OctopCronRow[]>(`/agents/${agentId}/cron`),

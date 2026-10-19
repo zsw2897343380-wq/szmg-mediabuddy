@@ -237,7 +237,7 @@
     "common": "Common",
     "control": "Control",
     "experts": "Experts",
-    "tasks": "Automation",
+    "tasks": "Scheduled tasks",
     "connectors": "Connectors",
     "bridge": "Cloud collab",
     "acp": "ACP Collaboration",
@@ -2478,7 +2478,24 @@
       "runtimeMisfireGrace": "Misfire Grace (s)"
     },
     "noAgentSelected": "Pick an expert in the top-right switcher first to manage its scheduled tasks",
-    "goToChat": "Send to chat"
+    "goToChat": "Send to chat",
+    "workbuddy": {
+      "tasks": "Scheduled tasks",
+      "records": "Run records",
+      "all": "All",
+      "enabled": "Active",
+      "paused": "Paused",
+      "success": "Success",
+      "failed": "Failed",
+      "allTasks": "All tasks",
+      "recordScope": "Run records for the selected expert",
+      "executionTime": "Execution time",
+      "noRecords": "No run records",
+      "recordsFailed": "Could not load run records. Please retry.",
+      "loadMore": "Load more / Retry",
+      "noMatches": "No matching scheduled tasks",
+      "searchPlaceholder": "Search scheduled tasks"
+    }
   },
   "channels": {
     "title": "Channels",
@@ -6770,7 +6787,7 @@
       "subtitle": "Create and manage your AI experts, or spin one up from a template"
     },
     "tasks": {
-      "title": "Automation",
+      "title": "Scheduled tasks",
       "subtitle": "Create and manage scheduled tasks for your experts, or run one immediately"
     },
     "connectors": {

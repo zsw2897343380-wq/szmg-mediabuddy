@@ -5,11 +5,12 @@ import {
   Empty,
   Form,
   Segmented,
+  Input,
   Spin,
   Tooltip,
   Alert,
 } from "antd";
-import { LayoutGrid, List, RefreshCw } from "lucide-react";
+import { LayoutGrid, List, RefreshCw, Search, Plus } from "lucide-react";
 import type { CronJobSpecOutput } from "../../../api/types";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,8 @@ import { useAgent } from "../../../context/AgentContext";
 import { taskExampleColumns } from "./taskExamples";
 import { useTaskExamples } from "./useTaskExamples";
 import styles from "./index.module.less";
+import { RunRecords } from "./components/RunRecords";
+import { filterCronJobs, type CronStatusFilter } from "./taskFilters";
 
 type CronJob = CronJobSpecOutput;
 
@@ -91,7 +94,7 @@ function CronJobsEmptyState({
 function CronJobsPage() {
   const { t } = useTranslation();
   const { isMobile, viewMode, setViewMode, showCardView } =
-    useCardTableView("table");
+    useCardTableView("card");
   const navigate = useNavigate();
   const { activeAgentId, activeAgent } = useAgent();
   const canManageJobs = activeAgent?.is_owner === true;
@@ -114,6 +117,11 @@ function CronJobsPage() {
   const [editingJob, setEditingJob] = useState<CronJobFormValues | null>(null);
   const [form] = Form.useForm<CronJobFormValues>();
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"tasks" | "records">("tasks");
+  const [statusFilter, setStatusFilter] = useState<CronStatusFilter>("all");
+  const [keyword, setKeyword] = useState("");
+  const [recordJobId, setRecordJobId] = useState<string>();
+  const [recordsRevision, setRecordsRevision] = useState(0);
 
   // Detail drawer state
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
@@ -131,6 +139,9 @@ function CronJobsPage() {
     setDetailDrawerOpen(false);
     setDetailJob(null);
     setExecutingJob(null);
+    setKeyword("");
+    setStatusFilter("all");
+    setRecordJobId(undefined);
   }, [activeAgentId]);
 
   const handleDetail = (job: CronJob) => {
@@ -210,6 +221,7 @@ function CronJobsPage() {
     setRefreshing(true);
     try {
       await refetchJobs(true);
+      setRecordsRevision((value) => value + 1);
     } finally {
       setRefreshing(false);
     }
@@ -263,63 +275,61 @@ function CronJobsPage() {
   // Keep list shell stable across expert switches, but do NOT show the
   // table/card toolbar when there's nothing to manage (empty already has CTAs).
   const contentBusy = listRefreshing || refreshing || listStale;
+  const filteredJobs = filterCronJobs(jobs, statusFilter, keyword);
   const showList = jobs.length > 0;
   const showEmpty = !loading && !listStale && jobs.length === 0;
   const showBodySpinner = loading || (contentBusy && !showList && !showEmpty);
-  const showToolbar = showList;
+  const viewRecords = (jobId: string) => {
+    setRecordJobId(jobId);
+    setActiveTab("records");
+  };
 
   return (
-    <PageShell
-      title={t("pageShell.tasks.title")}
-      subtitle={t("pageShell.tasks.subtitle")}
-      agentScoped
-    >
-      {activeAgent?.bridge ? (
-        <Alert
-          type="info"
-          showIcon
-          message={t("chat.remoteExpert.editBanner")}
-          description={t("chat.remoteExpert.editTasks")}
-          style={{ marginBottom: 12 }}
-        />
-      ) : null}
-      {showToolbar ? (
-        <div className={styles.gridToolbar}>
-          <span className={styles.gridCount}>
-            {t("cronJobs.totalItems", { count: jobs.length })}
-            {contentBusy ? (
-              <span className={styles.refreshHint}>
-                {" · "}
-                {listStale ? t("cronJobs.loadingJobs") : t("cronJobs.syncing")}
-              </span>
-            ) : null}
-          </span>
+    <PageShell title={t("pageShell.tasks.title")} agentScoped embedded>
+      <div className={styles.workspace}>
+        <div className={styles.workspaceToolbar}>
+          <div
+            className={styles.workspaceTabs}
+            role="tablist"
+            aria-label={t("pageShell.tasks.title")}
+          >
+            {(["tasks", "records"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab}
+                className={
+                  activeTab === tab
+                    ? styles.workspaceTabActive
+                    : styles.workspaceTab
+                }
+                onClick={() => setActiveTab(tab)}
+              >
+                {t(`cronJobs.workbuddy.${tab}`)}
+              </button>
+            ))}
+          </div>
           <div className={styles.gridToolbarRight}>
-            <Segmented
-              size="small"
-              value={viewMode}
-              onChange={(v) => setViewMode(v as "table" | "card")}
-              options={[
-                {
-                  value: "table",
-                  label: (
-                    <span className={styles.viewModeLabel}>
-                      <List size={14} />
-                      {t("cronJobs.viewTable")}
-                    </span>
-                  ),
-                },
-                {
-                  value: "card",
-                  label: (
-                    <span className={styles.viewModeLabel}>
-                      <LayoutGrid size={14} />
-                      {t("cronJobs.viewCard")}
-                    </span>
-                  ),
-                },
-              ]}
+            <Input
+              className={styles.searchInput}
+              prefix={<Search size={15} />}
+              allowClear
+              placeholder={t("cronJobs.workbuddy.searchPlaceholder")}
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
             />
+            {activeTab === "tasks" && showList ? (
+              <Segmented
+                size="small"
+                value={viewMode}
+                onChange={(value) => setViewMode(value as "table" | "card")}
+                options={[
+                  { value: "card", label: <LayoutGrid size={15} /> },
+                  { value: "table", label: <List size={15} /> },
+                ]}
+              />
+            ) : null}
             <Tooltip title={t("common.refresh")}>
               <Button
                 icon={<RefreshCw size={15} />}
@@ -327,70 +337,130 @@ function CronJobsPage() {
                 onClick={() => void handleRefresh()}
               />
             </Tooltip>
-            <Button type="primary" onClick={handleCreate} disabled={listStale}>
-              + {t("cronJobs.createJob")}
+            <Button
+              type="primary"
+              icon={<Plus size={15} />}
+              onClick={handleCreate}
+              disabled={listStale}
+            >
+              {t("cronJobs.createJob")}
             </Button>
           </div>
         </div>
-      ) : null}
-
-      {showBodySpinner ? (
-        <div className={styles.firstLoad}>
-          <Spin />
-        </div>
-      ) : showEmpty ? (
-        <CronJobsEmptyState
-          onCreate={handleCreate}
-          onSuggestionClick={handleSuggestionClick}
-          suggestions={taskExamples}
-        />
-      ) : (
-        <div
-          className={`${styles.listShell} ${
-            contentBusy ? styles.listShellBusy : ""
-          }`}
-        >
-          {contentBusy ? (
-            <div className={styles.listBusyBar} aria-hidden>
-              <Spin size="small" />
-            </div>
-          ) : null}
-          {showCardView ? (
-            <div className={styles.cardGrid}>
-              {jobs.map((job) => (
-                <CronJobCard
-                  key={job.id}
-                  job={job}
-                  timeZone={cronTimezone}
-                  onToggleEnabled={handleToggleEnabled}
-                  onExecuteNow={handleExecuteNow}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          ) : (
-            <ResizableTable
-              className={styles.cronTable}
-              columns={columns}
-              dataSource={jobs}
-              rowKey="id"
-              size="middle"
-              tableLayout="fixed"
-              scroll={{ x: 1562 }}
-              storageKey="cron-jobs-table-widths"
-              minWidth={72}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: false,
-                showTotal: (total) =>
-                  t("cronJobs.totalItems", { count: total }),
-              }}
-            />
-          )}
-        </div>
-      )}
-
+        {activeAgent?.bridge ? (
+          <Alert
+            type="info"
+            showIcon
+            message={t("chat.remoteExpert.editBanner")}
+            description={t("chat.remoteExpert.editTasks")}
+            style={{ marginBottom: 12 }}
+          />
+        ) : null}
+        {activeTab === "tasks" && showList ? (
+          <div
+            className={styles.statusFilters}
+            role="tablist"
+            aria-label={t("cronJobs.col.lastStatus")}
+          >
+            {(["all", "enabled", "paused"] as const).map((value) => (
+              <button
+                type="button"
+                key={value}
+                role="tab"
+                aria-selected={statusFilter === value}
+                className={
+                  statusFilter === value
+                    ? styles.statusFilterActive
+                    : styles.statusFilter
+                }
+                onClick={() => setStatusFilter(value)}
+              >
+                {t(`cronJobs.workbuddy.${value}`)} (
+                {value === "all"
+                  ? jobs.length
+                  : jobs.filter((job) =>
+                      value === "enabled" ? job.enabled : !job.enabled,
+                    ).length}
+                )
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {activeTab === "records" ? (
+          <RunRecords
+            key={activeAgentId}
+            agentId={activeAgentId}
+            jobs={jobs}
+            timeZone={cronTimezone}
+            keyword={keyword}
+            taskId={recordJobId}
+            onTaskChange={setRecordJobId}
+            revision={recordsRevision}
+          />
+        ) : showBodySpinner ? (
+          <div className={styles.firstLoad}>
+            <Spin />
+          </div>
+        ) : showEmpty ? (
+          <CronJobsEmptyState
+            onCreate={handleCreate}
+            onSuggestionClick={handleSuggestionClick}
+            suggestions={taskExamples}
+          />
+        ) : (
+          <div
+            className={`${styles.listShell} ${
+              contentBusy ? styles.listShellBusy : ""
+            }`}
+          >
+            {contentBusy ? (
+              <div className={styles.listBusyBar} aria-hidden>
+                <Spin size="small" />
+              </div>
+            ) : null}
+            {filteredJobs.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={t("cronJobs.workbuddy.noMatches")}
+              />
+            ) : showCardView ? (
+              <div className={styles.cardGrid}>
+                {filteredJobs.map((job) => (
+                  <CronJobCard
+                    key={job.id}
+                    job={job}
+                    timeZone={cronTimezone}
+                    onDetail={handleDetail}
+                    onViewRecords={viewRecords}
+                    onToggleEnabled={handleToggleEnabled}
+                    onExecuteNow={handleExecuteNow}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            ) : (
+              <ResizableTable
+                className={styles.cronTable}
+                columns={columns}
+                dataSource={filteredJobs}
+                rowKey="id"
+                size="middle"
+                tableLayout="fixed"
+                scroll={{ x: 1562 }}
+                storageKey="cron-jobs-table-widths"
+                minWidth={72}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: false,
+                  showTotal: (total) =>
+                    t("cronJobs.totalItems", { count: total }),
+                }}
+              />
+            )}
+          </div>
+        )}
+      </div>
       <JobDrawer
         open={drawerOpen}
         editingJob={editingJob}
