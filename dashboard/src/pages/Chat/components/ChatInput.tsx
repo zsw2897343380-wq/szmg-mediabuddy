@@ -9,6 +9,8 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { App } from "antd";
+import { FolderOpen, ChevronDown } from "lucide-react";
+import HitlPolicyPicker from "./HitlPolicyPicker";
 
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import {
@@ -64,12 +66,15 @@ import styles from "../index.module.less";
 
 /** Imperative handle exposed via ref for programmatic text injection. */
 export interface ChatInputHandle {
+  readText: () => string;
   setPrefillText: (text: string) => void;
   setPrefillComposer: (text: string, attachments?: ChatAttachment[]) => void;
   focusComposer: () => void;
 }
 
 interface ChatInputProps {
+  welcome?: boolean;
+  onOpenWorkspace?: () => void;
   onSend: (text: string, attachments?: ChatAttachment[]) => void;
   /** Queue a message while the current turn is still streaming. */
   onQueue?: (item: EnqueueChatItemInput) => "ok" | "empty" | "full";
@@ -144,6 +149,8 @@ interface ChatInputProps {
 const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   function ChatInput(
     {
+      welcome = false,
+      onOpenWorkspace,
       onSend,
       onQueue,
       queuedItems = [],
@@ -297,6 +304,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     useImperativeHandle(
       ref,
       () => ({
+        readText: () => textRef.current,
         setPrefillText: (newText: string) => {
           userHasEditedRef.current = false;
           ignoreInitialTextRef.current = null;
@@ -984,6 +992,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           )}
 
           <ChatInputActionsRow
+            welcome={welcome}
             isMobile={isMobile}
             isStreaming={isStreaming || holdSend}
             isTeam={isTeam}
@@ -1060,7 +1069,29 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             onChange={handleFileChange}
           />
         </div>
-        {!isMobile && (
+        {welcome && (
+          <div className={styles.composerTray}>
+            {onOpenWorkspace && (
+              <button
+                type="button"
+                onClick={onOpenWorkspace}
+                disabled={disabled}
+              >
+                <FolderOpen size={16} />
+                {t("chatWelcome.workspace")}
+                <ChevronDown size={12} />
+              </button>
+            )}
+            {onHitlPolicyChange && (
+              <HitlPolicyPicker
+                labeled
+                policy={hitlPolicy ?? { mode: "ask" }}
+                onChange={onHitlPolicyChange}
+              />
+            )}
+          </div>
+        )}
+        {!isMobile && !welcome && (
           <p className={styles.aiDisclaimer}>{t("chatWelcome.aiDisclaimer")}</p>
         )}
       </div>

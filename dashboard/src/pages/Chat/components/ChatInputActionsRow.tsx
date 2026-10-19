@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Send,
+  ArrowUp,
   Square,
   MessageSquarePlus,
   Paperclip,
@@ -28,6 +29,7 @@ import {
   Route,
   Info,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import { Tooltip, Popover } from "antd";
 import { message } from "@/utils/antdMessage";
@@ -68,6 +70,7 @@ import styles from "../index.module.less";
 
 /** Picker opened from the composer plus menu. */
 type CompactPickerKey =
+  | "shortcut"
   | "mode"
   | "model"
   | "connector"
@@ -121,6 +124,7 @@ function PlusMenuCount({
 }
 
 interface ChatInputActionsRowProps {
+  welcome?: boolean;
   isMobile: boolean;
   isStreaming: boolean;
   /** Team host room — stop control uses clearer wording. */
@@ -190,6 +194,7 @@ interface ChatInputActionsRowProps {
 }
 
 export default function ChatInputActionsRow({
+  welcome = false,
   isMobile,
   isStreaming,
   isTeam = false,
@@ -263,6 +268,7 @@ export default function ChatInputActionsRow({
   const [isCompact, setIsCompact] = useState(false);
   const [shortcutOpen, setShortcutOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [reasoningModelRef, setReasoningModelRef] = useState<string | null>(
     null,
   );
@@ -401,6 +407,7 @@ export default function ChatInputActionsRow({
   };
 
   const closePlusMenu = () => {
+    setModelPopoverOpen(false);
     setOverflowPopoverOpen(false);
     closeCompactPicker();
   };
@@ -422,6 +429,7 @@ export default function ChatInputActionsRow({
   };
 
   const compactPickerTitle: Record<CompactPickerKey, string> = {
+    shortcut: t("shortcut.title", "快捷指令"),
     mode: t("chat.conversationMode.picker"),
     model: t("chat.selectModel", "Model"),
     connector: t("connectors.chatPicker"),
@@ -719,6 +727,7 @@ export default function ChatInputActionsRow({
           }
           onSelect={(command) => {
             setShortcutOpen(false);
+            if (welcome) closePlusMenu();
             onSlashShortcutSelect(command);
           }}
           onHover={() => undefined}
@@ -731,6 +740,44 @@ export default function ChatInputActionsRow({
 
   const renderPlusMenu = () => (
     <div className={styles.mobileOverflowMenu}>
+      {welcome && (
+        <>
+          <button
+            type="button"
+            className={styles.mobileOverflowItem}
+            disabled={uploading}
+            onClick={() => {
+              closePlusMenu();
+              onFileSelect();
+            }}
+          >
+            <FileUp size={16} />
+            {t("upload.files", "Files")}
+          </button>
+          <button
+            type="button"
+            className={styles.mobileOverflowItem}
+            disabled={uploading}
+            onClick={() => {
+              closePlusMenu();
+              onFolderSelect();
+            }}
+          >
+            <FolderUp size={16} />
+            {t("upload.folder", "Folder")}
+          </button>
+          <button
+            type="button"
+            className={styles.mobileOverflowItem}
+            onClick={() => {
+              openCompactPicker("shortcut");
+            }}
+          >
+            <Zap size={16} />
+            {t("shortcut.title", "快捷指令")}
+          </button>
+        </>
+      )}
       {showModePicker && (
         <button
           type="button"
@@ -874,6 +921,8 @@ export default function ChatInputActionsRow({
 
   const renderCompactPickerContent = () => {
     switch (compactPicker) {
+      case "shortcut":
+        return shortcutMenu;
       case "mode":
         return (
           <ConversationModeMenu
@@ -1026,7 +1075,7 @@ export default function ChatInputActionsRow({
             </Tooltip>
           </Popover>
         )}
-        {onHitlPolicyChange && (
+        {!welcome && onHitlPolicyChange && (
           <HitlPolicyPicker
             policy={hitlPolicy ?? { mode: "ask" }}
             onChange={onHitlPolicyChange}
@@ -1048,6 +1097,7 @@ export default function ChatInputActionsRow({
               className={styles.secondaryBtn}
               type="button"
               aria-label={t("shortcut.title", "快捷指令")}
+              hidden={welcome}
             >
               <Zap size={16} />
             </button>
@@ -1099,6 +1149,7 @@ export default function ChatInputActionsRow({
               disabled={uploading}
               aria-label={t("upload.tooltip", "Upload")}
               aria-haspopup="menu"
+              hidden={welcome}
             >
               <Paperclip size={16} />
             </button>
@@ -1123,57 +1174,85 @@ export default function ChatInputActionsRow({
         </p>
       ) : null}
       <div className={styles.inputActions}>
-        <ContextWindowRing
-          usedTokens={contextUsedTokens}
-          usageEstimated={contextUsedTokens == null}
-          maxTokens={contextMaxTokens}
-          agentId={agentId}
-          threadId={threadId}
-          selectedConnectors={selectedConnectors}
-          isMobile={isMobile}
-          decisionSaved={decisionSaved}
-        />
-        {/* Desktop: dedicated newChatBtn; mobile: replace polish with new-chat */}
-        {useCompactControls ? (
-          <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
+        {welcome && showModelPicker && (
+          <Popover
+            trigger="click"
+            placement="topRight"
+            arrow={false}
+            open={modelPopoverOpen}
+            onOpenChange={setModelPopoverOpen}
+            overlayClassName={styles.modelPopover}
+            content={modelMenu}
+          >
             <button
-              className={styles.newChatBtn}
-              onClick={onNewChat}
               type="button"
+              className={styles.composerModelButton}
+              aria-label={`${t(
+                "chat.selectModel",
+                "Model",
+              )}: ${selectedModelTriggerLabel}`}
             >
-              <MessageSquarePlus size={16} strokeWidth={1.75} />
+              <Cpu size={15} />
+              <span>{selectedModelTriggerLabel}</span>
+              <ChevronDown size={12} />
             </button>
-          </Tooltip>
-        ) : (
+          </Popover>
+        )}
+        {!welcome && (
           <>
-            <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
-              <button
-                className={styles.newChatBtn}
-                onClick={onNewChat}
-                type="button"
-              >
-                <MessageSquarePlus size={16} strokeWidth={1.75} />
-              </button>
-            </Tooltip>
-            <Tooltip title={t("chat.polish.tooltip")} mouseEnterDelay={0.4}>
-              <button
-                className={styles.secondaryBtn}
-                onClick={onPolish}
-                type="button"
-                disabled={
-                  !text.trim() ||
-                  polishing ||
-                  isStreaming ||
-                  disabled ||
-                  !agentId
-                }
-              >
-                <Wand2
-                  size={16}
-                  className={polishing ? styles.spinIcon : undefined}
-                />
-              </button>
-            </Tooltip>
+            <ContextWindowRing
+              usedTokens={contextUsedTokens}
+              usageEstimated={contextUsedTokens == null}
+              maxTokens={contextMaxTokens}
+              agentId={agentId}
+              threadId={threadId}
+              selectedConnectors={selectedConnectors}
+              isMobile={isMobile}
+              decisionSaved={decisionSaved}
+            />
+            {/* Desktop: dedicated newChatBtn; mobile: replace polish with new-chat */}
+            {useCompactControls ? (
+              <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
+                <button
+                  className={styles.newChatBtn}
+                  onClick={onNewChat}
+                  type="button"
+                >
+                  <MessageSquarePlus size={16} strokeWidth={1.75} />
+                </button>
+              </Tooltip>
+            ) : (
+              <>
+                <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
+                  <button
+                    className={styles.newChatBtn}
+                    onClick={onNewChat}
+                    type="button"
+                  >
+                    <MessageSquarePlus size={16} strokeWidth={1.75} />
+                  </button>
+                </Tooltip>
+                <Tooltip title={t("chat.polish.tooltip")} mouseEnterDelay={0.4}>
+                  <button
+                    className={styles.secondaryBtn}
+                    onClick={onPolish}
+                    type="button"
+                    disabled={
+                      !text.trim() ||
+                      polishing ||
+                      isStreaming ||
+                      disabled ||
+                      !agentId
+                    }
+                  >
+                    <Wand2
+                      size={16}
+                      className={polishing ? styles.spinIcon : undefined}
+                    />
+                  </button>
+                </Tooltip>
+              </>
+            )}
           </>
         )}
         <Tooltip
@@ -1338,7 +1417,7 @@ export default function ChatInputActionsRow({
             title={t("chat.send", "Send")}
             type="button"
           >
-            <Send size={18} />
+            {welcome ? <ArrowUp size={18} /> : <Send size={18} />}
           </button>
         )}
       </div>

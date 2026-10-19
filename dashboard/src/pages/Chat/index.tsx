@@ -61,7 +61,11 @@ import type { TokenUsage } from "../../api/types";
 import type { ChatAttachment } from "./hooks/useChat";
 import MessageList from "./components/MessageList";
 import ChatInput, { type ChatInputHandle } from "./components/ChatInput";
-import WelcomeScreen, { WelcomeSuggestions } from "./components/WelcomeScreen";
+import WelcomeScreen, {
+  WelcomeSuggestions,
+  WelcomeComposerHeader,
+  type WelcomeScene,
+} from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
 import ModelConfigEmpty from "./components/ModelConfigEmpty";
 import AgentProfileDrawer from "../../components/AgentProfileDrawer";
@@ -169,6 +173,8 @@ function ChatPageInner() {
   );
   // Imperative handle to push a new prefill into the already-mounted ChatInput.
   const chatInputRef = useRef<ChatInputHandle | null>(null);
+  const [welcomeScene, setWelcomeScene] = useState<WelcomeScene>("office");
+  const welcomeDrafts = useRef(new Map<string, string>());
 
   // Clear the router state after consuming prefillInput so it doesn't persist
   // on subsequent visits or page refreshes.
@@ -927,6 +933,7 @@ function ChatPageInner() {
   });
 
   const handleNewChat = useCallback(() => {
+    welcomeDrafts.current.clear();
     clearQueued();
     startNewChat();
   }, [clearQueued, startNewChat]);
@@ -934,6 +941,7 @@ function ChatPageInner() {
   useEffect(() => {
     const start = () => {
       if (!resolvedAgentId) return;
+      welcomeDrafts.current.clear();
       clearQueued();
       handleNewChatWithAgent(resolvedAgentId);
       chatInputRef.current?.focusComposer();
@@ -1294,6 +1302,20 @@ function ChatPageInner() {
       (historyLoading || !historyHydrated),
   );
   const showWelcome = !hasMessages && !awaitingThreadHistory;
+  const handleWelcomeSceneChange = (scene: WelcomeScene) => {
+    if (scene === welcomeScene) {
+      chatInputRef.current?.focusComposer();
+      return;
+    }
+    welcomeDrafts.current.set(
+      `${resolvedAgentId}:${welcomeScene}`,
+      chatInputRef.current?.readText() ?? "",
+    );
+    setWelcomeScene(scene);
+    chatInputRef.current?.setPrefillText(
+      welcomeDrafts.current.get(`${resolvedAgentId}:${scene}`) ?? "",
+    );
+  };
 
   useEffect(() => {
     if (showWelcome || !agentChatReady || noAgents) {
@@ -1351,6 +1373,7 @@ function ChatPageInner() {
       }}
       onAgentSelect={navigateToAgent}
       onNewChatWithAgent={(agentId) => {
+        welcomeDrafts.current.clear();
         clearQueued();
         handleNewChatWithAgent(agentId);
       }}
@@ -1547,9 +1570,8 @@ function ChatPageInner() {
                 <WelcomeScreen
                   agentName={activeAgent?.name ?? null}
                   welcomeSuffix={welcomeSuffix}
-                  conversationMode={conversationMode}
-                  onConversationModeChange={handleConversationModeChange}
-                  hideMascot={isStreaming || liveSpeakers.length > 0}
+                  scene={welcomeScene}
+                  onSceneChange={handleWelcomeSceneChange}
                   isTeam={isTeamChat}
                 />
               ) : (
@@ -1841,8 +1863,16 @@ function ChatPageInner() {
                 </div>
               </div>
             ) : null}
+            {showWelcome && agentChatReady && !noAgents && (
+              <WelcomeComposerHeader
+                scene={welcomeScene}
+                onPromptClick={handlePromptClick}
+              />
+            )}
             <ChatInput
               ref={chatInputRef}
+              welcome={showWelcome && agentChatReady && !noAgents}
+              onOpenWorkspace={openFileList}
               onSend={wrappedHandleSend}
               onQueue={enqueueQueued}
               queuedItems={displayQueuedItems}
@@ -1900,10 +1930,16 @@ function ChatPageInner() {
             />
             {showWelcome && agentChatReady && !noAgents && (
               <WelcomeSuggestions
-                key={resolvedAgentId}
+                key={`${resolvedAgentId}-${welcomeScene}`}
+                scene={welcomeScene}
                 quickCards={expertQuickCards}
                 onPromptClick={handlePromptClick}
               />
+            )}
+            {showWelcome && agentChatReady && !noAgents && (
+              <p className={styles.welcomeDisclaimer}>
+                {t("chatWelcome.aiDisclaimer")}
+              </p>
             )}
           </div>
 

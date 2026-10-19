@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { ShieldAlert, ShieldCheck, X, ChevronDown } from "lucide-react";
 import { Popover, Tooltip } from "antd";
 import { useToolDisplayNames } from "../hooks/toolDisplayNames";
 import {
@@ -11,11 +11,13 @@ import {
 import styles from "../index.module.less";
 
 interface HitlPolicyPickerProps {
+  labeled?: boolean;
   policy: HitlSessionPolicy;
   onChange: (policy: HitlSessionPolicy) => void;
 }
 
 export default function HitlPolicyPicker({
+  labeled = false,
   policy,
   onChange,
 }: HitlPolicyPickerProps) {
@@ -117,6 +119,12 @@ export default function HitlPolicyPicker({
             <ShieldAlert size={16} />
           ) : (
             <ShieldCheck size={16} />
+          )}
+          {labeled && (
+            <>
+              <span>{triggerLabel}</span>
+              <ChevronDown size={12} />
+            </>
           )}
         </button>
       </Tooltip>

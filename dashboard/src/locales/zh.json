@@ -231,6 +231,8 @@
     "SKILL_PACKAGE_LOCKED": "此技能复制自锁定策略的技能包，无法在工作区编辑。"
   },
   "nav": {
+    "assistant": "助理",
+    "more": "更多",
     "chat": "对话",
     "common": "常用",
     "control": "控制",
@@ -3919,15 +3921,15 @@
     "viewEpisodes": "去看情绪日记 →"
   },
   "chatWelcome": {
-    "greeting": "今天想完成什么？",
+    "greeting": "MediaBuddy, 我帮你",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "团队",
     "mascotSwitchHint": "点一下换个表情～",
     "descriptionWithAgentSuffix": "无论工作还是生活，说出你的想法",
     "descriptionWithTeamSuffix": "这是一个专家团队，成员会一起回答你的问题",
     "description": "无论工作还是生活，说出你的想法，我来搞定",
-    "newChat": "新建对话",
-    "inputPlaceholder": "描述你的任务，@ 添加上下文，/ 调用技能与指令",
+    "newChat": "新建任务",
+    "inputPlaceholder": "今天帮你做些什么？@ 添加上下文，/ 调用技能与指令",
     "aiDisclaimer": "AI 生成内容，请注意甄别",
     "hideThinking": "隐藏思维过程",
     "showThinking": "查看思维过程",
@@ -3971,7 +3973,81 @@
     "quickPrompt11Text": "请帮我制作一份 PPT 演示文稿的大纲，主题是：",
     "quickPrompt12Title": "优化简历",
     "quickPrompt12Desc": "粘贴简历内容，帮你润色和强化亮点",
-    "quickPrompt12Text": "请帮我优化以下简历内容，使其更专业、更有吸引力，并突出核心优势：\n\n"
+    "quickPrompt12Text": "请帮我优化以下简历内容，使其更专业、更有吸引力，并突出核心优势：\n\n",
+    "workspace": "工作空间",
+    "scenes": {
+      "label": "工作场景",
+      "office": "办公",
+      "code": "开发",
+      "design": "设计"
+    },
+    "categories": {
+      "label": "任务分类",
+      "chat": {
+        "label": "企业微信",
+        "prompt": "帮我整理企业微信中的工作消息，提炼待办事项。"
+      },
+      "document": {
+        "label": "创作文档",
+        "prompt": "帮我起草一份工作文档，先确认目标和提纲。"
+      },
+      "finance": {
+        "label": "金融服务",
+        "prompt": "帮我分析一份财务报告，梳理关键指标和风险。"
+      },
+      "data": {
+        "label": "分析数据",
+        "prompt": "帮我分析数据，找出趋势并制作清晰的图表。"
+      },
+      "slides": {
+        "label": "制作PPT",
+        "prompt": "帮我制作一份演示文稿，先梳理主题和页面结构。"
+      },
+      "research": {
+        "label": "深度研究",
+        "prompt": "帮我研究一个主题，核实来源并整理研究报告。"
+      },
+      "plan": {
+        "label": "策划方案",
+        "prompt": "帮我策划一份项目方案，明确目标、步骤和交付物。"
+      },
+      "website": {
+        "label": "制作网站",
+        "prompt": "帮我制作一个网站，先确认功能和页面布局。"
+      },
+      "debug": {
+        "label": "排查问题",
+        "prompt": "帮我排查代码问题，定位原因并给出最小修复。"
+      },
+      "tests": {
+        "label": "编写测试",
+        "prompt": "帮我为代码编写测试，覆盖核心行为和边界条件。"
+      },
+      "refactor": {
+        "label": "重构代码",
+        "prompt": "帮我重构代码，在保持现有行为的基础上简化实现。"
+      },
+      "automation": {
+        "label": "自动化脚本",
+        "prompt": "帮我编写自动化脚本，先梳理输入、步骤和预期输出。"
+      },
+      "prototype": {
+        "label": "界面原型",
+        "prompt": "帮我设计一个界面原型，先确认用户任务和页面结构。"
+      },
+      "poster": {
+        "label": "海报设计",
+        "prompt": "帮我设计一张海报，先确认主题、文案和视觉风格。"
+      },
+      "presentation": {
+        "label": "演示设计",
+        "prompt": "帮我设计演示文稿的视觉风格和页面布局。"
+      },
+      "illustration": {
+        "label": "插画创作",
+        "prompt": "帮我创作一幅插画，先确认画面内容、风格和用途。"
+      }
+    }
   },
   "upload": {
     "tooltip": "上传文件或文件夹。也可拖到输入框。",

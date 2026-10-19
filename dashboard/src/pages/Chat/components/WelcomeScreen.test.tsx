@@ -1,27 +1,54 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import WelcomeScreen, { WelcomeSuggestions } from "./WelcomeScreen";
+import WelcomeScreen, {
+  WelcomeSuggestions,
+  WelcomeComposerHeader,
+} from "./WelcomeScreen";
 
 vi.mock("../../Experts/components/iconForName", () => ({
   ExpertIcon: () => null,
 }));
 
 describe("task welcome interactions", () => {
-  it("changes the real conversation mode from the home selector", () => {
+  it("changes work scene without changing the execution mode or sending a task", () => {
     const onChange = vi.fn();
-    render(
-      <WelcomeScreen
-        conversationMode="craft"
-        onConversationModeChange={onChange}
-      />,
-    );
+    render(<WelcomeScreen scene="office" onSceneChange={onChange} />);
     expect(
-      screen.getByRole("button", { name: "chat.conversationMode.craft" }),
+      screen.getByRole("button", { name: "chatWelcome.scenes.office" }),
     ).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(
-      screen.getByRole("button", { name: "chat.conversationMode.plan" }),
+      screen.getByRole("button", { name: "chatWelcome.scenes.code" }),
     );
-    expect(onChange).toHaveBeenCalledWith("plan");
+    expect(onChange).toHaveBeenCalledWith("code");
+  });
+
+  it("prefills a category prompt for the selected scene", () => {
+    const onPromptClick = vi.fn();
+    const { rerender } = render(
+      <WelcomeComposerHeader scene="office" onPromptClick={onPromptClick} />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "chatWelcome.categories.document.label",
+      }),
+    );
+    expect(onPromptClick).toHaveBeenCalledWith(
+      "chatWelcome.categories.document.prompt",
+      { prefill: true },
+    );
+    rerender(
+      <WelcomeComposerHeader scene="code" onPromptClick={onPromptClick} />,
+    );
+    expect(
+      screen.queryByRole("button", {
+        name: "chatWelcome.categories.document.label",
+      }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", {
+        name: "chatWelcome.categories.debug.label",
+      }),
+    ).toBeVisible();
   });
 
   it("prefills suggestions and lets the user reveal the remaining tasks", () => {

@@ -56,6 +56,31 @@ const baseProps = {
 };
 
 describe("ChatInputActionsRow plus menu", () => {
+  it("selects the home model directly and keeps uploads in the plus menu", async () => {
+    const onModelChange = vi.fn();
+    const onFileSelect = vi.fn();
+    render(
+      <MemoryRouter>
+        <ChatInputActionsRow
+          {...baseProps}
+          welcome
+          onModelChange={onModelChange}
+          onFileSelect={onFileSelect}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("hitl-policy-picker")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Model: Auto" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Compact Model/ }),
+    );
+    expect(onModelChange).toHaveBeenCalledWith("Provider/compact-model");
+    fireEvent.click(screen.getByTestId("composer-plus"));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Files", exact: true }),
+    );
+    expect(onFileSelect).toHaveBeenCalledOnce();
+  });
   it("keeps approval, shortcuts, and attachments on the toolbar", () => {
     render(
       <MemoryRouter>

@@ -231,6 +231,8 @@
     "SKILL_PACKAGE_LOCKED": "This skill was copied from a locked skill package and cannot be edited in the workspace."
   },
   "nav": {
+    "assistant": "Assistant",
+    "more": "More",
     "chat": "Conversation",
     "common": "Common",
     "control": "Control",
@@ -3919,15 +3921,15 @@
     "viewEpisodes": "Open Episodes →"
   },
   "chatWelcome": {
-    "greeting": "What would you like to get done?",
+    "greeting": "MediaBuddy, here to help",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "Team",
     "mascotSwitchHint": "Tap to switch the mascot",
     "descriptionWithAgentSuffix": "— share what's on your mind, work or life",
     "descriptionWithTeamSuffix": "— an expert team that answers together",
     "description": "Work or life — just tell me what you need, I'll handle it",
-    "newChat": "New Chat",
-    "inputPlaceholder": "Describe your task, @ add context, / use skills and commands",
+    "newChat": "New task",
+    "inputPlaceholder": "What can I help with? @ Add context, / Use skills and commands",
     "aiDisclaimer": "AI-generated content. Please verify carefully.",
     "hideThinking": "Hide thinking",
     "showThinking": "Show thinking",
@@ -3971,7 +3973,81 @@
     "quickPrompt11Text": "Please create a detailed outline for a PowerPoint presentation on the topic: ",
     "quickPrompt12Title": "Polish resume",
     "quickPrompt12Desc": "Paste your resume and I'll strengthen it and highlight key wins",
-    "quickPrompt12Text": "Please improve the following resume to make it more professional and impactful, and highlight the key strengths:\n\n"
+    "quickPrompt12Text": "Please improve the following resume to make it more professional and impactful, and highlight the key strengths:\n\n",
+    "workspace": "Workspace",
+    "scenes": {
+      "label": "Work scene",
+      "office": "Office",
+      "code": "Code",
+      "design": "Design"
+    },
+    "categories": {
+      "label": "Task categories",
+      "chat": {
+        "label": "Enterprise chat",
+        "prompt": "Help me organize enterprise chat messages and extract action items."
+      },
+      "document": {
+        "label": "Documents",
+        "prompt": "Help me draft a work document, starting with its goals and outline."
+      },
+      "finance": {
+        "label": "Finance",
+        "prompt": "Help me analyze a financial report and identify key metrics and risks."
+      },
+      "data": {
+        "label": "Analyze data",
+        "prompt": "Help me analyze data, find trends, and create clear charts."
+      },
+      "slides": {
+        "label": "Make slides",
+        "prompt": "Help me create a presentation, starting with its theme and slide structure."
+      },
+      "research": {
+        "label": "Research",
+        "prompt": "Help me research a topic, verify sources, and organize the findings."
+      },
+      "plan": {
+        "label": "Plan",
+        "prompt": "Help me plan a project with clear goals, steps, and deliverables."
+      },
+      "website": {
+        "label": "Build a website",
+        "prompt": "Help me build a website, starting with its features and page layout."
+      },
+      "debug": {
+        "label": "Debug",
+        "prompt": "Help me debug my code, identify the cause, and make a minimal fix."
+      },
+      "tests": {
+        "label": "Write tests",
+        "prompt": "Help me write tests covering core behavior and edge cases."
+      },
+      "refactor": {
+        "label": "Refactor",
+        "prompt": "Help me simplify my code while preserving its existing behavior."
+      },
+      "automation": {
+        "label": "Automate",
+        "prompt": "Help me write an automation script, starting with inputs, steps, and expected output."
+      },
+      "prototype": {
+        "label": "UI prototype",
+        "prompt": "Help me design a UI prototype based on user tasks and page structure."
+      },
+      "poster": {
+        "label": "Poster",
+        "prompt": "Help me design a poster, starting with its theme, copy, and visual style."
+      },
+      "presentation": {
+        "label": "Presentation",
+        "prompt": "Help me design the visual style and layout of a presentation."
+      },
+      "illustration": {
+        "label": "Illustration",
+        "prompt": "Help me create an illustration, starting with its content, style, and purpose."
+      }
+    }
   },
   "upload": {
     "tooltip": "Upload files or a folder. You can also drop them on the input.",
