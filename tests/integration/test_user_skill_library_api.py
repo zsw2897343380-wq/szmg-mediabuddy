@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from tests.support.auth import create_user
 
 
@@ -107,10 +109,23 @@ async def test_personal_install_is_available_in_chat_and_pause_removes_it(
     assert all(row["slug"] != "library-helper" for row in skills.json())
 
 
+@pytest.mark.parametrize("host_root", [False, True])
 async def test_single_skill_preferences_are_private_and_control_chat_without_siblings(
     env_with_agent: Any,
+    host_root: bool,
 ) -> None:
+    from octop.api.common.validators import validate_chat_skills
+
     client, server, auth, agent_id = env_with_agent
+    registry = server.app_runtime.agent_registry
+    if host_root:
+        cfg = registry.get_config(agent_id)
+        cfg["backend"] = {
+            "type": "local_shell",
+            "root_dir": registry.resolve_workspace_dir(agent_id).anchor,
+            "virtual_mode": True,
+        }
+        registry.persist_harness_config(agent_id, cfg)
     package_id = (
         await client.post("/api/skill-packages", headers=auth, json={"name": "Pair"})
     ).json()["id"]
@@ -138,9 +153,11 @@ async def test_single_skill_preferences_are_private_and_control_chat_without_sib
     listed = (await client.get(f"/api/agents/{agent_id}/skills", headers=auth)).json()
     assert any(skill["slug"] == "reader" and skill["kind"] == "package" for skill in listed)
     assert all(skill["slug"] != "writer" for skill in listed)
-    registry = server.app_runtime.agent_registry
     roots = registry.get_agent(agent_id).config.skills_dir
     assert roots
+    assert await validate_chat_skills(server, agent_id=agent_id, user=None, names=["reader"]) == [
+        "reader"
+    ]
     assert all(
         skill["slug"] == "reader"
         for skills in registry._selected_package_skills(agent_id).values()

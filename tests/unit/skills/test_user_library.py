@@ -284,6 +284,12 @@ async def test_real_harness_catalog_scans_only_selected_package_and_preserves_wo
     )
     assert {row["slug"] for row in rows} == {"reader"}
     assert rows[0]["enabled"] is True
+    assert config.skills_dir
+    manifest = await workspace.aread_text(f"{config.skills_dir[0]}/reader/SKILL.md")
+    assert manifest and "Instructions" in manifest
+    assert (
+        await workspace.aread_text(f"{config.skills_dir[0]}/reader/references/help.txt") == "reader"
+    )
     # All workspace content goes through the workspace facade.
     await workspace.awrite_text("skills/reader/SKILL.md", "---\nname: reader\n---\nWorkspace copy")
     library.update_skill(alice, package_id, "reader", installed=True, enabled=False)
@@ -297,6 +303,70 @@ async def test_real_harness_catalog_scans_only_selected_package_and_preserves_wo
         workspace, skills_dir=manager._resolve_skill_package_dirs("alice-agent")
     )
     assert rows[0]["slug"] == "reader" and rows[0]["enabled"] is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("virtual_mode", [False, True])
+async def test_host_root_install_is_selectable_and_loads_in_real_skills_middleware(
+    manager: AgentManager, virtual_mode: bool
+) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+
+    from deepagents.middleware.skills import _alist_skills
+    from octop_harness.backends import resolve_backend
+    from octop_harness.backends.workspace import BackendWorkspace
+    from octop_harness.skills.catalog import list_skill_summaries
+
+    alice, _bob, package_id = _seed(manager)
+    _skill_store(manager, package_id)
+    workspace_dir = manager.resolve_workspace_dir("alice-agent")
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+    saved = manager.get_config("alice-agent")
+    saved["backend"] = {
+        "type": "local_shell",
+        "root_dir": workspace_dir.anchor,
+        "virtual_mode": virtual_mode,
+    }
+    manager.persist_harness_config("alice-agent", saved)
+    library = _library(manager)
+    library.update_skill(alice, package_id, "reader", installed=True, enabled=True)
+    row = manager.get_row("alice-agent")
+    assert row is not None
+    config = manager._build_harness_config(row)
+    backend = resolve_backend(config.backend, workspace_dir=workspace_dir)
+    workspace = BackendWorkspace(backend, workspace_dir)
+
+    async def catalog() -> list[dict[str, object]]:
+        return await list_skill_summaries(workspace, skills_dir=config.skills_dir)
+
+    # Registry uses the actual harness catalog, including its workspace fallback
+    # for Windows host-root virtual paths, then merges selected package metadata.
+    agent = SimpleNamespace(
+        config=config, workspace=workspace, list_skill_summaries=AsyncMock(side_effect=catalog)
+    )
+    manager._harness_manager = MagicMock()
+    manager._harness_manager.get_agent.return_value = SimpleNamespace(agent=agent)
+    rows = await manager.list_skill_summaries("alice-agent")
+    assert [(item["slug"], item["kind"], item["enabled"]) for item in rows] == [
+        ("reader", "package", True)
+    ]
+    # This is the source list supplied by HarnessAgent to SkillsMiddleware.
+    assert config.skills_dir
+    source = workspace.skill_paths(extra=config.skills_dir)[-1]
+    skills = await _alist_skills(backend, source)
+    assert [skill["name"] for skill in skills] == ["reader"]
+    manifest = await workspace.aread_text(f"{source}/reader/SKILL.md")
+    assert manifest and "Instructions" in manifest
+    assert await workspace.aread_text(f"{source}/reader/references/help.txt") == "reader"
+    assert (
+        await backend.awrite(f"{source}/reader/SKILL.md", "Overwrite")
+    ).error == "permission_denied"
+    assert manager.effective_skill_package_ids("bob-agent") == []
+    assert manager.effective_skill_package_ids("shared") == []
+    library.update_skill(alice, package_id, "reader", installed=True, enabled=False)
+    assert manager._resolve_skill_package_dirs("alice-agent") == []
+    assert manager.get_config("alice-agent")["backend"] == saved["backend"]
 
 
 @pytest.mark.asyncio

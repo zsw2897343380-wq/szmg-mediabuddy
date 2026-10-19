@@ -2828,9 +2828,9 @@ class AgentManager:
     ) -> bool:
         """Local backends that can mount global package host paths via skills_dir.
 
-        POSIX defaults use ``root_dir='/'``. Windows defaults scope the backend to
-        the agent workspace (``root_dir='/'`` is unsafe across drives) — both are
-        local host backends and may attach absolute ``skills_dir`` package roots.
+        Host roots include POSIX ``/`` and Windows drive roots such as ``C:/``.
+        The agent workspace root is also supported; other scoped directories
+        must not gain access to host skill packages.
         """
         if not isinstance(spec, dict):
             return False
@@ -2841,6 +2841,14 @@ class AgentManager:
         if not root_dir:
             return False
         if root_dir == "/":
+            return True
+        root = Path(root_dir)
+        if (
+            len(root.drive) == 2
+            and root.drive[1] == ":"
+            and root.is_absolute()
+            and root.parent == root
+        ):
             return True
         if workspace_dir is None:
             return False

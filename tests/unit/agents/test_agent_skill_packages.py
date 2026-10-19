@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -104,6 +105,26 @@ def test_assert_backend_supports_skill_packages_accepts_host_root(
     manager.assert_backend_supports_skill_packages(
         {"type": "local_shell", "root_dir": "/", "virtual_mode": True}
     )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows drive root semantics")
+@pytest.mark.parametrize("root", ["C:/", "C:\\", "F:/", "F:\\"])
+def test_skill_packages_accept_windows_drive_roots(manager: AgentManager, root: str) -> None:
+    manager.assert_backend_supports_skill_packages(
+        {"type": "local_shell", "root_dir": root, "virtual_mode": True}
+    )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows drive root semantics")
+@pytest.mark.parametrize("root", ["C:", "C:/sandbox", "C:\\sandbox", "F:/project"])
+def test_skill_packages_reject_windows_relative_drives_and_scoped_directories(
+    manager: AgentManager, root: str
+) -> None:
+    with pytest.raises(OctopError) as exc_info:
+        manager.assert_backend_supports_skill_packages(
+            {"type": "local_shell", "root_dir": root, "virtual_mode": True}
+        )
+    assert exc_info.value.code is ErrorCode.SKILL_PACKAGE_BACKEND_UNSUPPORTED
 
 
 def test_assert_backend_supports_skill_packages_accepts_workspace_scoped_default(
