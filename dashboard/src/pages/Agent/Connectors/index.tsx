@@ -1,29 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Drawer, Form, Input, Select, Spin, Switch, Alert } from "antd";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Modal, Form, Input, Select, Spin, Switch, Alert } from "antd";
 import { message } from "@/utils/antdMessage";
 
 import {
   Activity,
-  Blocks,
   CheckCircle2,
   ClipboardPaste,
   Copy,
   Download,
   ExternalLink,
-  Link2,
-  Plug,
-  Plus,
   RefreshCw,
   Sparkles,
-  Wrench,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import PageShell from "../../../layouts/PageShell";
-import TabBar, { type TabBarItem } from "../../../components/TabLabel/TabBar";
-import StreamSetupGuide from "../../../components/StreamSetupGuide/StreamSetupGuide";
-import { OctopEmptyMascot } from "../../../components/EmptyState/OctopEmptyMascot";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { userCan } from "../../../utils/permissions";
 import { apiErrorMessage } from "../../../utils/apiError";
@@ -43,10 +35,7 @@ import {
   type ConnectorInstanceDetail,
   type FeishuUserAuthStartResult,
 } from "../../../api/modules/connectors";
-import { ConnectorCard } from "./ConnectorCard";
 import { AgentlyAuth } from "./AgentlyAuth";
-import { ConnectorInstanceCard } from "./ConnectorInstanceCard";
-import { CustomMcpTab } from "./CustomMcpTab";
 import {
   INLINE_CREDENTIAL_GUIDE_KINDS,
   HIDE_INLINE_FIELD_GUIDE_KINDS,
@@ -67,6 +56,7 @@ import {
   tryOpenAuthPopup,
 } from "./openAuthWindow";
 import { useConnectorInstances } from "./useConnectors";
+import { ConnectorCenter } from "./ConnectorCenter";
 import styles from "./index.module.less";
 
 function buildCredentials(
@@ -1201,7 +1191,7 @@ function ConnectorConfigDrawer({
     Boolean(entry?.quick_auth_url && guideUrl === entry.quick_auth_url);
 
   return (
-    <Drawer
+    <Modal
       title={
         instance
           ? t("connectors.editConnection", {
@@ -1214,8 +1204,10 @@ function ConnectorConfigDrawer({
             })
       }
       open={open}
-      onClose={onClose}
-      width={440}
+      onCancel={onClose}
+      centered
+      className={styles.connectorConfigModal}
+      width={630}
       destroyOnHidden
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -2249,17 +2241,9 @@ function ConnectorConfigDrawer({
           </div>
         )}
       </div>
-    </Drawer>
+    </Modal>
   );
 }
-
-type ConnectorTab = "enabled" | "builtin" | "custom";
-
-const CONNECTOR_TABS: TabBarItem<ConnectorTab>[] = [
-  { key: "enabled", labelKey: "connectors.tabEnabled", icon: Link2 },
-  { key: "builtin", labelKey: "connectors.tabBuiltin", icon: Blocks },
-  { key: "custom", labelKey: "connectors.tabCustom", icon: Wrench },
-];
 
 export default function ConnectorsPage({
   embedded = false,
@@ -2268,20 +2252,12 @@ export default function ConnectorsPage({
 }) {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<ConnectorTab>("enabled");
   const [drawerEntry, setDrawerEntry] = useState<ConnectorCatalogEntry | null>(
     null,
   );
   const [drawerInstance, setDrawerInstance] =
     useState<ConnectorInstance | null>(null);
-  const [customFocusServerName, setCustomFocusServerName] = useState<
-    string | null
-  >(null);
   const { catalog, instances, loading, refresh } = useConnectorInstances();
-
-  const configuredCount = useMemo(() => {
-    return instances.filter((instance) => instance.has_credentials).length;
-  }, [instances]);
 
   useEffect(() => {
     const oauthState = searchParams.get("oauth_state");
@@ -2345,144 +2321,14 @@ export default function ConnectorsPage({
   }, []);
 
   return (
-    <PageShell.Tabbed
-      embedded={embedded}
-      title={t("pageShell.connectors.title")}
-      subtitle={t("pageShell.connectors.subtitle")}
-      tabBar={
-        <TabBar
-          tabs={CONNECTOR_TABS}
-          activeKey={activeTab}
-          onChange={(key) => {
-            if (key === "custom") setCustomFocusServerName(null);
-            setActiveTab(key);
-          }}
-        />
-      }
-    >
-      {activeTab === "custom" ? (
-        <CustomMcpTab focusServerName={customFocusServerName} />
-      ) : activeTab === "enabled" ? (
-        loading ? (
-          <div className={styles.loadingState}>
-            <Spin />
-          </div>
-        ) : instances.length === 0 ? (
-          <div className={styles.emptyLayout}>
-            <StreamSetupGuide
-              className={styles.emptyGuide}
-              wide
-              plain
-              icon={<OctopEmptyMascot />}
-              title={t("connectors.emptyGuideTitle")}
-              description={t("connectors.emptyGuideDesc")}
-              steps={[
-                {
-                  label: t("connectors.emptyGuideStepWhat"),
-                  detail: t("connectors.emptyGuideStepWhatDetail"),
-                },
-                {
-                  label: t("connectors.emptyGuideStepHow"),
-                  detail: t("connectors.emptyGuideStepHowDetail"),
-                },
-                {
-                  label: t("connectors.emptyGuideStepShare"),
-                  detail: t("connectors.emptyGuideStepShareDetail"),
-                },
-              ]}
-              primaryAction={{
-                label: t("connectors.emptyGuideBrowseBuiltin"),
-                onClick: () => setActiveTab("builtin"),
-                icon: <Plug size={14} />,
-              }}
-              secondaryAction={{
-                label: t("connectors.emptyGuideAddCustom"),
-                onClick: () => {
-                  setCustomFocusServerName(null);
-                  setActiveTab("custom");
-                },
-                icon: <Plus size={14} />,
-                type: "default",
-              }}
-            />
-          </div>
-        ) : (
-          <>
-            <div className={styles.listToolbar}>
-              <span className={styles.listToolbarMeta}>
-                {t("connectors.enabledSummary", {
-                  count: instances.length,
-                  defaultValue: "已启用 {{count}} 个连接器实例",
-                })}
-              </span>
-              <Button
-                icon={<RefreshCw size={14} />}
-                loading={loading}
-                onClick={() => void refresh()}
-              >
-                {t("common.refresh")}
-              </Button>
-            </div>
-            <div className={styles.typeGrid}>
-              {instances.map((instance) => (
-                <ConnectorInstanceCard
-                  key={instance.instance_id}
-                  instance={instance}
-                  catalogEntry={catalog.find(
-                    (entry) => entry.kind === instance.kind,
-                  )}
-                  onEdit={(item) => {
-                    if (item.kind === "custom-mcp") {
-                      setCustomFocusServerName(item.mcp_server_name);
-                      setActiveTab("custom");
-                      return;
-                    }
-                    const entry = catalog.find((row) => row.kind === item.kind);
-                    if (entry) handleConfigure(entry, item);
-                  }}
-                  onChanged={handleSaved}
-                />
-              ))}
-            </div>
-          </>
-        )
-      ) : (
-        <>
-          <div className={styles.listToolbar}>
-            <span className={styles.listToolbarMeta}>
-              {t("connectors.listSummary", {
-                total: catalog.length,
-                configured: configuredCount,
-                defaultValue:
-                  "当前支持 {{total}} 个连接器，已配置 {{configured}} 个",
-              })}
-            </span>
-            <Button
-              icon={<RefreshCw size={14} />}
-              loading={loading}
-              onClick={() => void refresh()}
-            >
-              {t("common.refresh")}
-            </Button>
-          </div>
-          {loading ? (
-            <div className={styles.loadingState}>
-              <Spin />
-            </div>
-          ) : (
-            <div className={styles.typeGrid}>
-              {catalog.map((entry) => (
-                <ConnectorCard
-                  key={entry.kind}
-                  entry={entry}
-                  onConfigure={handleConfigure}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
+    <PageShell embedded={embedded} title={t("pageShell.connectors.title")} fill>
+      <ConnectorCenter
+        catalog={catalog}
+        instances={instances}
+        loading={loading}
+        onRefresh={handleSaved}
+        onConfigure={handleConfigure}
+      />
       <ConnectorConfigDrawer
         open={drawerEntry !== null}
         entry={drawerEntry}
@@ -2493,6 +2339,6 @@ export default function ConnectorsPage({
           void handleSaved();
         }}
       />
-    </PageShell.Tabbed>
+    </PageShell>
   );
 }

@@ -1,3 +1,272 @@
+.connectorCenter {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+
+  .typeGrid {
+    grid-template-columns: repeat(auto-fill, minmax(min(288px, 100%), 1fr));
+    gap: 16px;
+    padding: 0;
+  }
+
+  .typeCard {
+    min-height: 90px;
+    padding: 20px;
+    border: 1px solid var(--fn-border-secondary);
+    border-radius: 16px;
+    background: var(--fn-bg-primary);
+    box-shadow: 0 4px 12px #00000008;
+    transform: none;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--fn-bg-secondary);
+      border-color: var(--fn-border-secondary);
+      box-shadow: 0 4px 12px #00000008;
+      transform: none;
+    }
+  }
+
+  .typeCardHeader {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .typeCardTitleCol {
+    gap: 0;
+  }
+  .typeCardTitle {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+  }
+  .typeCardIconLarge {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--fn-border-secondary);
+    border-radius: 16px;
+    background: var(--fn-bg-elevated);
+    overflow: hidden;
+  }
+  .typeCardDesc {
+    display: block;
+    min-height: 22px;
+    max-width: 100%;
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--fn-text-tertiary);
+  }
+}
+
+.centerSearch {
+  width: 180px;
+  min-width: 120px;
+  flex: 0 1 180px;
+  border-radius: 8px;
+}
+.centerGridScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+}
+.connectorAdd,
+.connectorTry {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: var(--fn-bg-secondary);
+  color: var(--fn-text-primary);
+  cursor: pointer;
+  &:hover {
+    background: var(--fn-surface-sunken);
+  }
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+}
+.connectorTry {
+  background: transparent;
+}
+.instanceNameRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  .typeCardTitle {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+.statusDot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-block;
+}
+.statusActive {
+  background: var(--fn-color-success, #28b894);
+}
+.statusInactive {
+  background: var(--fn-text-tertiary);
+}
+.connectorDetail {
+  :global(:is(.ant-btn-primary, .octop-btn-primary):not(:disabled)),
+  :global(:is(.ant-switch-checked, .octop-switch-checked)) {
+    background: var(--fn-text-primary);
+    border-color: var(--fn-text-primary);
+    color: var(--fn-bg-primary);
+  }
+  :global(:is(.ant-modal-content, .octop-modal-content)) {
+    border-radius: 16px;
+    padding: 32px 28px 24px;
+    text-align: center;
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+}
+.connectorDetailInstalled {
+  :global(:is(.ant-modal-content, .octop-modal-content)) {
+    border-radius: 24px;
+    padding: 48px 24px 24px;
+  }
+  :global(:is(.ant-modal-body, .octop-modal-body)) {
+    max-height: min(590px, 80vh);
+    overflow-y: auto;
+  }
+  h2 {
+    margin: 20px 24px 12px;
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .detailDescription {
+    padding: 0 24px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+}
+.detailIcon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.detailDescription {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--fn-text-secondary);
+}
+.detailStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fn-text-secondary);
+}
+.detailActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+.detailEnabled {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--fn-text-secondary);
+}
+.detailTools {
+  text-align: left;
+  margin-top: 24px;
+}
+.toolsList {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 24px;
+  padding: 8px 16px;
+  background: var(--fn-bg-secondary);
+  div {
+    padding: 10px 0;
+  }
+  strong {
+    font-weight: 500;
+    font-size: 13px;
+  }
+  p {
+    margin: 4px 0 0;
+    color: var(--fn-text-tertiary);
+    font-size: 12px;
+    line-height: 18px;
+  }
+}
+.detailDocs {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--fn-text-secondary);
+}
+.customTitle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.customConnectorModal,
+.connectorConfigModal {
+  :global(:is(.ant-btn-primary, .octop-btn-primary):not(:disabled)) {
+    background: var(--fn-text-primary);
+    border-color: var(--fn-text-primary);
+    color: var(--fn-bg-primary);
+  }
+  :global(:is(.ant-modal-content, .octop-modal-content)) {
+    border-radius: 16px;
+  }
+  :global(:is(.ant-modal-body, .octop-modal-body)) {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .centerGridScroll {
+    padding: 0 12px 16px;
+  }
+  .centerSearch {
+    flex: 1;
+  }
+}
+
 .loadingState {
   display: flex;
   justify-content: center;

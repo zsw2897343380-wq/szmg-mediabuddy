@@ -1,15 +1,12 @@
-import { App, Switch, Tag, Tooltip, Typography } from "antd";
-
-import { Trash2 } from "lucide-react";
+import { Tag, Typography } from "antd";
+import { ArrowUpRight, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
-import {
-  connectorsApi,
-  type ConnectorCatalogEntry,
-  type ConnectorInstance,
+import type {
+  ConnectorCatalogEntry,
+  ConnectorInstance,
 } from "../../../api/modules/connectors";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
-import { ConnectorLogo, connectorAccent } from "./connectorDefs";
+import { ConnectorLogo } from "./connectorDefs";
 import styles from "./index.module.less";
 
 interface ConnectorInstanceCardProps {
@@ -17,64 +14,41 @@ interface ConnectorInstanceCardProps {
   catalogEntry: ConnectorCatalogEntry | undefined;
   onEdit: (instance: ConnectorInstance) => void;
   onChanged: () => void | Promise<void>;
+  onTry?: (instance: ConnectorInstance) => void;
 }
 
 export function ConnectorInstanceCard({
   instance,
   catalogEntry,
   onEdit,
-  onChanged,
+  onTry,
 }: ConnectorInstanceCardProps) {
   const { t } = useTranslation();
-  const { modal, message } = App.useApp();
   const user = useCurrentUser();
-  const accent = catalogEntry ? connectorAccent(catalogEntry) : "#8c8c8c";
   const isOwner = user?.id === instance.owner_user_id;
   const ownerLabel =
     instance.owner_display_name || instance.owner_username || "";
-  const editable =
-    instance.can_manage &&
-    (catalogEntry != null || (instance.kind === "custom-mcp" && isOwner));
-
-  const handleDelete = () => {
-    modal.confirm({
-      title: t("connectors.deleteConfirm", { name: instance.display_name }),
-      okText: t("common.delete"),
-      okButtonProps: { danger: true },
-      cancelText: t("common.cancel"),
-      onOk: async () => {
-        await connectorsApi.deleteInstance(instance.instance_id);
-        message.success(t("connectors.deleteSuccess", "已删除"));
-        await onChanged();
-      },
-    });
-  };
-
-  const handleToggle = async (enabled: boolean) => {
-    try {
-      await connectorsApi.patchInstance(instance.instance_id, {
-        status: enabled ? "active" : "disabled",
-      });
-      message.success(
-        enabled
-          ? t("connectors.enableSuccess", "已启用")
-          : t("connectors.disableSuccess", "已停用"),
-      );
-      await onChanged();
-    } catch (error) {
-      console.error(error);
-      message.error(t("connectors.toggleFailed", "更新失败"));
-    }
-  };
-
+  const ready = instance.status === "active" && instance.has_credentials;
+  const status = !instance.has_credentials
+    ? "unauthorized"
+    : ready
+    ? "active"
+    : "disabled";
   return (
     <div
       className={styles.typeCard}
-      style={{ "--connector-accent": accent } as React.CSSProperties}
-      onClick={() => editable && onEdit(instance)}
-      role={editable ? "button" : undefined}
-      tabIndex={editable ? 0 : -1}
-      onKeyDown={(e) => e.key === "Enter" && editable && onEdit(instance)}
+      role="button"
+      tabIndex={0}
+      onClick={() => onEdit(instance)}
+      onKeyDown={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
+          onEdit(instance);
+        }
+      }}
     >
       <div className={styles.typeCardBody}>
         <div className={styles.typeCardHeader}>
@@ -86,14 +60,23 @@ export function ConnectorInstanceCard({
             />
           </div>
           <div className={styles.typeCardTitleCol}>
-            <Typography.Text
-              className={styles.typeCardTitle}
-              ellipsis={{ tooltip: instance.display_name }}
-            >
-              {instance.display_name}
-            </Typography.Text>
-            {instance.shared ? (
-              <Tag color="blue" className={styles.instanceCardTag}>
+            <div className={styles.instanceNameRow}>
+              <Typography.Text
+                className={styles.typeCardTitle}
+                ellipsis={{ tooltip: instance.display_name }}
+              >
+                {instance.display_name}
+              </Typography.Text>
+              <span
+                className={`${styles.statusDot} ${
+                  ready ? styles.statusActive : styles.statusInactive
+                }`}
+                aria-label={t(`connectorCenter.status.${status}`)}
+                title={t(`connectorCenter.status.${status}`)}
+              />
+            </div>
+            {instance.shared && (
+              <Tag className={styles.instanceCardTag}>
                 {isOwner || !ownerLabel
                   ? t("connectors.sharedBadge", "共享")
                   : t("connectors.sharedFrom", {
@@ -101,57 +84,31 @@ export function ConnectorInstanceCard({
                       defaultValue: `来自 ${ownerLabel}`,
                     })}
               </Tag>
-            ) : null}
+            )}
+            <div className={styles.typeCardDesc}>
+              {instance.description ||
+                catalogEntry?.description ||
+                instance.kind}
+            </div>
           </div>
-          <div
-            className={styles.instanceCardHeaderActions}
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            className={styles.connectorTry}
+            aria-label={t(
+              ready
+                ? "connectorCenter.tryNamed"
+                : "connectorCenter.configureNamed",
+              { name: instance.display_name },
+            )}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (ready && onTry) onTry(instance);
+              else onEdit(instance);
+            }}
           >
-            {instance.can_manage ? (
-              <Switch
-                size="small"
-                checked={instance.status === "active"}
-                onChange={(enabled) => void handleToggle(enabled)}
-              />
-            ) : null}
-          </div>
+            {ready ? <ArrowUpRight size={16} /> : <RefreshCw size={16} />}
+          </button>
         </div>
-
-        <div className={styles.typeCardDesc}>
-          {instance.description ||
-            catalogEntry?.description ||
-            catalogEntry?.name ||
-            instance.kind}
-        </div>
-      </div>
-
-      <div className={styles.typeCardFooter}>
-        <div className={styles.typeCardHint}>
-          {!instance.has_credentials
-            ? t("connectors.noCredentials", "缺少凭证")
-            : editable
-            ? t("connectors.clickToManage", "点击管理连接")
-            : t("connectors.sharedReadonly", "共享连接器，仅所有者可管理")}
-        </div>
-        {instance.can_manage ? (
-          <div
-            className={styles.instanceCardActions}
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            <Tooltip title={t("common.delete")} mouseEnterDelay={0.5}>
-              <button
-                type="button"
-                className={styles.instanceCardDelBtn}
-                onClick={handleDelete}
-                aria-label={t("common.delete")}
-              >
-                <Trash2 size={13} />
-              </button>
-            </Tooltip>
-          </div>
-        ) : null}
       </div>
     </div>
   );

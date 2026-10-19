@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { Typography } from "antd";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { ConnectorCatalogEntry } from "../../../api/modules/connectors";
@@ -9,11 +10,13 @@ import styles from "./index.module.less";
 interface ConnectorCardProps {
   entry: ConnectorCatalogEntry;
   onConfigure: (entry: ConnectorCatalogEntry, instance: null) => void;
+  onConnect?: (entry: ConnectorCatalogEntry, instance: null) => void;
 }
 
 export const ConnectorCard = memo(function ConnectorCard({
   entry,
   onConfigure,
+  onConnect = onConfigure,
 }: ConnectorCardProps) {
   const { t } = useTranslation();
   const accent = connectorAccent(entry);
@@ -28,9 +31,16 @@ export const ConnectorCard = memo(function ConnectorCard({
       onClick={() => !disabled && onConfigure(entry, null)}
       role="button"
       tabIndex={disabled ? -1 : 0}
-      onKeyDown={(e) =>
-        e.key === "Enter" && !disabled && onConfigure(entry, null)
-      }
+      onKeyDown={(e) => {
+        if (
+          e.target === e.currentTarget &&
+          (e.key === "Enter" || e.key === " ") &&
+          !disabled
+        ) {
+          e.preventDefault();
+          onConfigure(entry, null);
+        }
+      }}
     >
       <div className={styles.typeCardBody}>
         <div className={styles.typeCardHeader}>
@@ -44,27 +54,22 @@ export const ConnectorCard = memo(function ConnectorCard({
             >
               {entry.name}
             </Typography.Text>
-            <span
-              className={styles.categoryChip}
-              style={{ color: accent, background: `${accent}18` }}
-            >
-              {t(`connectors.category.${entry.category}`, entry.category)}
-            </span>
+            <div className={styles.typeCardDesc}>{entry.description}</div>
           </div>
+          <button
+            type="button"
+            className={styles.connectorAdd}
+            disabled={disabled}
+            aria-label={t("connectorCenter.connectNamed", { name: entry.name })}
+            onClick={(event) => {
+              event.stopPropagation();
+              onConnect(entry, null);
+            }}
+          >
+            <Plus size={16} />
+          </button>
         </div>
-
-        <div className={styles.typeCardDesc}>{entry.description}</div>
       </div>
-
-      {!disabled ? (
-        <div className={styles.typeCardFooter}>
-          <div className={styles.typeCardHint}>
-            {t("connectors.clickToConnect", "点击连接")}
-          </div>
-        </div>
-      ) : (
-        <div className={styles.typeCardFooterSpacer} aria-hidden />
-      )}
     </div>
   );
 });

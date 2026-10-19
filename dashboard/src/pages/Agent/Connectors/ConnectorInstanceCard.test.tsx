@@ -5,8 +5,7 @@
  *   - long titles render via Typography ellipsis (tooltip shows the full
  *     title once the text actually truncates; jsdom cannot measure that,
  *     so we assert the ``*-typography-ellipsis`` hook class instead)
- *   - the "来自 X / 共享" tag sits on its own line inside the title column,
- *     NOT in the header-actions row next to the switch
+ *   - the shared owner stays alongside the card content, separate from try
  *   - non-shared instances render no tag
  */
 
@@ -62,18 +61,16 @@ describe("<ConnectorInstanceCard />", () => {
     expect(title.className).toContain("typography-ellipsis");
   });
 
-  it("places the shared-from tag on its own line with the title, not next to the switch", () => {
+  it("keeps the shared owner separate from the try action", () => {
     renderCard(makeInstance({ can_manage: true }));
 
     const title = screen.getByText(LONG_TITLE);
     const tag = screen.getByText("来自 Admin");
-    const switchEl = document.querySelector("button.ant-switch");
-    expect(switchEl).not.toBeNull();
-
-    // Tag shares the title column wrapper (its own line under the title)…
-    expect(tag.parentElement).toBe(title.parentElement);
-    // …and is no longer grouped with the header actions (switch).
-    expect(switchEl!.parentElement).not.toContainElement(tag);
+    const tryButton = screen.getByRole("button", {
+      name: "connectorCenter.tryNamed",
+    });
+    expect(tag.parentElement).toContainElement(title);
+    expect(tryButton).not.toContainElement(tag);
   });
 
   it("renders no tag for non-shared instances", () => {

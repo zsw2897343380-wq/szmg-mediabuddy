@@ -79,6 +79,10 @@ vi.mock("../../../context/AgentContext", () => ({
 
 import { preferencesApi } from "../../../api/modules/preferences";
 import { useChatComposerResources } from "./useChatComposerResources";
+import {
+  setPendingAttachConnector,
+  peekPendingAttachConnector,
+} from "../utils/pendingAttachConnector";
 
 const baseAgents = [
   { agent_id: "expertA", knowledge_base_ids: ["k1"] },
@@ -92,6 +96,23 @@ beforeEach(() => {
 });
 
 describe("useChatComposerResources — per-expert KB selection", () => {
+  it("selects a one-shot connector from its try action without changing saved preferences", async () => {
+    setPendingAttachConnector("expertA", "c2");
+    const { result, unmount } = renderHook(() =>
+      useChatComposerResources("expertA"),
+    );
+    await waitFor(() =>
+      expect(result.current.selectedConnectors).toEqual(["c2"]),
+    );
+    expect(peekPendingAttachConnector("expertA")).toBeNull();
+    expect(localStorage.length).toBe(0);
+    unmount();
+    const fresh = renderHook(() => useChatComposerResources("expertA"));
+    await waitFor(() =>
+      expect(fresh.result.current.chatConnectors.length).toBe(2),
+    );
+    expect(fresh.result.current.selectedConnectors).toEqual([]);
+  });
   it("restores expert A's manual selection after switching A -> B -> A", async () => {
     const threadId = "thread-existing"; // existing session → saved prefs apply
     const { result, rerender } = renderHook(

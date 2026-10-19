@@ -23,6 +23,10 @@ import {
 } from "../utils/chatStorage";
 import { resolveInitialConnectors } from "../utils/resolveInitialConnectors";
 import {
+  consumePendingAttachConnector,
+  peekPendingAttachConnector,
+} from "../utils/pendingAttachConnector";
+import {
   consumePendingAttachKnowledgeBaseId,
   peekPendingAttachKnowledgeBaseId,
 } from "../utils/pendingAttachKnowledgeBase";
@@ -240,6 +244,14 @@ export function useChatComposerResources(
             }));
           setChatConnectors(options);
           const allowed = new Set(options.map((o) => o.mcp_server_name));
+          const requestedConnector =
+            peekPendingAttachConnector(resolvedAgentId);
+          if (requestedConnector && allowed.has(requestedConnector)) {
+            consumePendingAttachConnector(resolvedAgentId);
+            composerTouchedRef.current = true;
+            setSelectedConnectors([requestedConnector]);
+            return;
+          }
           const defaults = withDefaultOpenKnowledgeBases(
             options.filter((o) => o.default_open).map((o) => o.mcp_server_name),
             expertMcpServers ?? [],
