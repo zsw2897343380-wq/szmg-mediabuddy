@@ -83,13 +83,9 @@ tasks:
           rm -rf "$work"
         }
         trap cleanup EXIT
-        mkdir -p "${staging}/.background"
+        mkdir -p "$staging"
         ditto "$app_path" "${staging}/${app_name}"
         ln -s /Applications "${staging}/Applications"
-        # Finder renders a background picture at its DPI-derived point size, so
-        # 1200x800 @144dpi lands exactly on the 600x400pt container window.
-        sips -s format png -z 800 1200 -s dpiWidth 144 -s dpiHeight 144 \
-          build/darwin/dmg-background.jpeg --out "${staging}/.background/background.png" >/dev/null
         if [[ -d "/Volumes/${volname}" ]]; then
           hdiutil detach "/Volumes/${volname}" -quiet >/dev/null 2>&1 || \
             hdiutil detach "/Volumes/${volname}" -force -quiet >/dev/null 2>&1 || true
@@ -120,7 +116,7 @@ tasks:
               set arrangement of viewOptions to not arranged
               set icon size of viewOptions to 128
               try
-                set background picture of viewOptions to file ".background:background.png"
+                set background color of viewOptions to {65535, 65535, 65535}
               end try
               set position of item appName of container window to {154, 237}
               set position of item "Applications" of container window to {454, 237}
