@@ -1,4 +1,4 @@
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, LayoutGrid } from "lucide-react";
 import { Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 import type { MinimalNavPane } from "./layoutModeStorage";
@@ -41,21 +41,22 @@ export default function SidebarMinimalPaneToggle({
   }
 
   return (
-    <div className={styles.minimalPaneHeader}>
-      <span className={styles.navGroupLabel}>
-        {minimalPane === "records" ? t("nav.paneRecords") : settingsLabel}
-      </span>
-      <Tooltip title={nextLabel} placement="top">
-        <button
-          type="button"
-          className={styles.minimalPaneSwitchBtn}
-          onClick={() => onSelect(nextPane)}
-          aria-label={nextLabel}
-        >
-          <ArrowLeftRight size={14} strokeWidth={1.8} aria-hidden />
-          {nextLabel}
-        </button>
-      </Tooltip>
+    <div>
+      <button
+        type="button"
+        className={styles.moreNavButton}
+        onClick={() => onSelect(nextPane)}
+        aria-label={nextLabel}
+        aria-expanded={minimalPane === "settings"}
+      >
+        <LayoutGrid size={16} strokeWidth={1.8} />
+        {minimalPane === "records" ? t("nav.more") : t("nav.paneRecords")}
+      </button>
+      <div className={styles.minimalPaneHeader}>
+        <span className={styles.navGroupLabel}>
+          {minimalPane === "records" ? t("nav.paneRecords") : settingsLabel}
+        </span>
+      </div>
     </div>
   );
 }

@@ -38,7 +38,7 @@ describe("sidebarNavLayout", () => {
       "chat",
       "experts",
       "tasks",
-      "token-usage",
+      "knowledge-bases",
     ]);
     expect(editor.groups.map((group) => group.id)).toEqual([
       "settings",

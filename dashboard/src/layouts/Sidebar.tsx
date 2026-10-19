@@ -532,16 +532,19 @@ export default function Sidebar({
           width: isRailCollapsed ? 32 : "auto",
           maxWidth: isRailCollapsed ? 32 : isMobile ? 190 : 160,
           objectFit: "contain",
-          display: "block",
+          display: !isRailCollapsed && !isMobile ? "none" : "block",
           flexShrink: 0,
           borderRadius: isRailCollapsed ? 8 : undefined,
         }}
       />
       {!isRailCollapsed && !isMobile && (
-        <>
-          <CurrentVersionBadge isMobile={isMobile} />
-          <AppVersionBadge isMobile={isMobile} />
-        </>
+        <div className={styles.brandWordmark}>
+          <strong>MediaBuddy</strong>
+          <div className={styles.brandVersions}>
+            <CurrentVersionBadge isMobile={isMobile} />
+            <AppVersionBadge isMobile={isMobile} />
+          </div>
+        </div>
       )}
     </>
   );
@@ -659,7 +662,7 @@ export default function Sidebar({
           <div className={styles.minimalPrimaryBlock}>
             <NavList
               sections={navSections}
-              selectedKey={selectedKey}
+              selectedKey={selectedKey === "chat" ? "" : selectedKey}
               onNavigate={handleNavigate}
               onToggleChatRail={handleToggleChatRail}
               showChatRailToggle={false}
@@ -709,7 +712,7 @@ export default function Sidebar({
         type="button"
         className={`${styles.newChatButton} ${
           isRailCollapsed ? styles.newChatButtonCollapsed : ""
-        }`}
+        } ${onChatPath ? styles.newChatButtonActive : ""}`}
         onClick={startNewChat}
         aria-label={t("chatWelcome.newChat")}
         title={t("chatWelcome.newChat")}
@@ -843,7 +846,9 @@ export default function Sidebar({
           alignItems: "center",
           gap: 6,
           minWidth: 0,
-          padding: isRailCollapsed ? "12px 0" : "14px 14px 10px",
+          padding: isRailCollapsed ? "12px 0" : "12px 24px",
+          height: 64,
+          boxSizing: "border-box",
           justifyContent: isRailCollapsed ? "center" : "flex-start",
           flexShrink: 0,
         }}

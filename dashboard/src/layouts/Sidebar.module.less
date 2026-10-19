@@ -1,8 +1,57 @@
 .sidebarShell {
-  --fn-sidebar-bg: var(--fn-bg-secondary);
+  --fn-sidebar-bg: color-mix(
+    in srgb,
+    var(--fn-bg-elevated) 97%,
+    var(--fn-text-primary)
+  );
   --fn-sidebar-item-active-bg: var(--fn-bg-tertiary);
   --fn-sidebar-item-active-text: var(--fn-text-primary);
   --fn-sidebar-item-hover: var(--fn-bg-tertiary);
+}
+
+.brandWordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  strong {
+    color: var(--fn-text-primary);
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 700;
+  }
+}
+
+.brandVersions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.moreNavButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 24px);
+  margin: 2px 12px 20px;
+  padding: 5px 12px;
+  min-height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fn-text-primary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  &:hover {
+    background: var(--fn-sidebar-item-hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--fn-color-brand);
+  }
+}
+
+.sidebarUser {
+  border-top: 0.5px solid var(--fn-border-primary);
 }
 
 .newChatButton {
@@ -10,11 +59,12 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
-  margin: 14px 12px 2px;
-  padding: 10px 12px;
-  border: 1px solid var(--fn-border-primary);
-  border-radius: 10px;
-  background: var(--fn-bg-elevated);
+  margin: 0 12px 2px;
+  padding: 5px 12px;
+  min-height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
   color: var(--fn-text-primary);
   font: inherit;
   font-size: 14px;
@@ -37,6 +87,10 @@
   justify-content: center;
   margin: 12px 8px 2px;
   padding: 10px 0;
+}
+
+.newChatButtonActive {
+  background: var(--fn-bg-tertiary);
 }
 
 .navGroup {
@@ -115,7 +169,7 @@
   flex: 1;
   min-width: 0;
   padding: 0 12px;
-  height: 36px;
+  height: 32px;
   border: none;
   border-radius: var(--fn-radius-md);
   background: transparent;

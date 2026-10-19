@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import {
   Monitor,
-  MessageSquareText,
+  BookOpen,
+  Bot,
   Timer,
   SlidersHorizontal,
   Waypoints,
-  Database,
   Cpu,
   Users as UsersIcon,
   Activity,
@@ -21,8 +21,8 @@ import {
 import type { OctopUser } from "../api/modules/auth";
 import { navAllowed, userCan } from "../utils/permissions";
 
-export const EXPANDED_WIDTH = 272;
-export const COLLAPSED_WIDTH = 56;
+export const EXPANDED_WIDTH = 280;
+export const COLLAPSED_WIDTH = 48;
 
 const iconSize = 16;
 const iconStroke = 1.8;
@@ -123,11 +123,11 @@ export function navSectionLabel(
  * comes from {@link buildNavSections}.
  */
 export const SIDEBAR_GROUPED_NAV_KEYS = [
+  "token-usage",
   "personalization",
   "channels",
   "connectors",
   "skill-packages",
-  "knowledge-bases",
   "bridge",
   "workbench",
   "remote-desktop",
@@ -155,8 +155,8 @@ export function buildNavSections(
     {
       key: "chat",
       path: "/chat",
-      icon: <MessageSquareText size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.chat",
+      icon: <Bot size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.assistant",
     },
   ];
   const centerPath = navAllowed(user, "experts")
@@ -184,12 +184,12 @@ export function buildNavSections(
       labelKey: "nav.tasks",
     });
   }
-  if (navAllowed(user, "token-usage")) {
+  if (navAllowed(user, "knowledge-bases")) {
     topItems.push({
-      key: "token-usage",
-      path: "/token-usage",
-      icon: <Activity size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.tokenUsage",
+      key: "knowledge-bases",
+      path: "/knowledge-bases",
+      icon: <BookOpen size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.knowledgeBases",
     });
   }
   const sections: NavSection[] = [{ items: topItems }];
@@ -211,12 +211,12 @@ export function buildNavSections(
       labelKey: "nav.channels",
     });
   }
-  if (navAllowed(user, "knowledge-bases")) {
+  if (navAllowed(user, "token-usage")) {
     settingsItems.push({
-      key: "knowledge-bases",
-      path: "/knowledge-bases",
-      icon: <Database size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.knowledgeBases",
+      key: "token-usage",
+      path: "/token-usage",
+      icon: <Activity size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.tokenUsage",
     });
   }
   // User-scoped remote Octop links stay available without a module permission.
