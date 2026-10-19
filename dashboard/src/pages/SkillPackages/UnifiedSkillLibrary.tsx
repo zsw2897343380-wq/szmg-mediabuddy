@@ -50,6 +50,8 @@ import { SkillImportModal } from "./SkillImportModal";
 import type { ParsedZipSkill } from "../Agent/Skills/components/parseSkillZip";
 import type { SkillHubSkill } from "../Agent/Skills/components/SkillHubDetailDrawer";
 import styles from "./UnifiedSkillLibrary.module.less";
+import BuiltinSkillsDrawer from "./BuiltinSkillsDrawer";
+import { PERM, userCanAny } from "../../utils/permissions";
 
 type LocalSkill = { skill: SkillPackageSkill; pkg: SkillPackageDetail };
 type Selection =
@@ -119,6 +121,7 @@ export default function UnifiedSkillLibrary({
   const [detailLoading, setDetailLoading] = useState(false);
   const [overviewQuery, setOverviewQuery] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const [presetsOpen, setPresetsOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [skillForm] = Form.useForm<SkillFormValues>();
@@ -509,9 +512,18 @@ export default function UnifiedSkillLibrary({
 
   return (
     <PageShell embedded={embedded} title={t("nav.skills")} fill>
+      <BuiltinSkillsDrawer
+        open={presetsOpen}
+        onClose={() => setPresetsOpen(false)}
+      />
       <div className={styles.page}>
         <CapabilityHeaderActions resource="skills">
           <div className={styles.toolbarActions}>
+            {userCanAny(user, PERM.skills) && (
+              <Button onClick={() => setPresetsOpen(true)}>
+                {t("skillsCenter.presets")}
+              </Button>
+            )}
             {!mine && (
               <Button
                 onClick={() => {

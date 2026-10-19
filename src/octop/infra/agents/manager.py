@@ -3136,6 +3136,9 @@ class AgentManager:
 
         agent = self.get_agent(agent_id)
         cfg = self.get_config(agent_id)
+        disabled = await asyncio.get_running_loop().run_in_executor(
+            None, self.effective_skills_disabled, agent_id, skills_disabled_set(cfg)
+        )
         workspace_dir = self.resolve_workspace_dir(agent_id)
         repaired = repair_workspace_skill_manifests(workspace_dir)
         if repaired:
@@ -3157,13 +3160,13 @@ class AgentManager:
                     return list(
                         await list_skill_summaries(
                             workspace,
-                            skills_disabled=skills_disabled_set(cfg),
+                            skills_disabled=disabled,
                             skills_dir=self._normalize_skills_dir_config(cfg.get("skills")) or None,
                         )
                     )
             return list_workspace_skill_summaries(
                 workspace_dir,
-                skills_disabled=skills_disabled_set(cfg),
+                skills_disabled=disabled,
             )
 
         try:
@@ -3188,6 +3191,9 @@ class AgentManager:
                 exc,
             )
             harness_rows = await workspace_fallback()
+        for summary in harness_rows:
+            if summary.get("slug") in disabled or summary.get("name") in disabled:
+                summary["enabled"] = False
         # Surface unrepairable manifests that harness silently skipped.
         present = {
             str(row.get("slug") or "").strip()
@@ -3196,7 +3202,7 @@ class AgentManager:
         }
         for row in list_workspace_skill_summaries(
             workspace_dir,
-            skills_disabled=skills_disabled_set(cfg),
+            skills_disabled=disabled,
             include_corrupt=True,
         ):
             if not row.get("corrupt"):
@@ -3237,7 +3243,6 @@ class AgentManager:
                 return [localize_skill_summary(row, locale) for row in harness_rows]
             return harness_rows
 
-        disabled = skills_disabled_set(cfg)
         selected = await asyncio.get_running_loop().run_in_executor(
             None, self._selected_package_skills, agent_id
         )
@@ -3298,7 +3303,35 @@ class AgentManager:
 
     def sync_skills_disabled(self, agent_id: str, disabled: set[str]) -> None:
         """Push ``skills_disabled`` to the running harness agent (hot update)."""
-        self.get_agent(agent_id).set_skills_disabled(disabled)
+        self.get_agent(agent_id).set_skills_disabled(
+            self.effective_skills_disabled(agent_id, disabled)
+        )
+
+    def effective_skills_disabled(self, agent_id: str, disabled: set[str]) -> set[str]:
+        """Merge private account preferences without changing the expert profile."""
+        from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
+
+        row = self._repos.agent_repo.get(agent_id)
+        if row is None or row.user_id is None:
+            return disabled
+        return disabled | BuiltinSkillPreferences(self._repos.settings_repo).filter_keys(
+            row.user_id
+        )
+
+    async def refresh_user_builtin_skills(self, user_id: int) -> None:
+        def refresh_owned() -> None:
+            for row in self._repos.agent_repo.list_by_user(user_id, include_disabled=False):
+                if row.user_id != user_id:
+                    continue
+                try:
+                    self.sync_skills_disabled(
+                        row.agent_id, skills_disabled_set(self.get_config(row.agent_id))
+                    )
+                except OctopError as exc:
+                    if exc.code not in {ErrorCode.AGENT_NOT_RUNNING, ErrorCode.AGENT_FAILED}:
+                        raise
+
+        await asyncio.get_running_loop().run_in_executor(None, refresh_owned)
 
     def sync_tools_disabled(self, agent_id: str, disabled: set[str]) -> None:
         """Push ``tools_disabled`` to the running harness agent (hot update).
@@ -4278,7 +4311,10 @@ class AgentManager:
             bootstrap_enabled=not team_host,
             acp_runners=acp_config.runners,
             acp_delegate_enabled=bool(acp_raw.get("tool_enabled", False)),
-            skills_disabled=frozenset(skills_disabled_set(cfg) | plugin_skills_disabled),
+            skills_disabled=frozenset(
+                self.effective_skills_disabled(row.agent_id, skills_disabled_set(cfg))
+                | plugin_skills_disabled
+            ),
             skills_dir=skill_dirs or None,
             default_timezone=self._config.default_timezone,
             media_generation=self._media_generation.harness_config(),

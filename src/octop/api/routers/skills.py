@@ -57,6 +57,7 @@ from octop.infra.agents.manager import (
     skills_disabled_set as _disabled_set,
 )
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
 from octop.infra.skills.presentation import apply_skill_presentation
 from octop.infra.skills.skill_archive import build_skill_zip, build_skills_zip
 from octop.infra.skills.skill_package_store import SkillPackageStore, normalize_copy_policy
@@ -87,6 +88,60 @@ router = APIRouter()
 
 _BUILTIN_ROOT = "_builtin_skills"
 _SKILLS_ROOT = "skills"
+
+
+class BuiltinSkillSummary(BaseModel):
+    slug: str
+    name: str
+    description: str
+    enabled: bool
+
+
+class BuiltinSkillUpdateBody(BaseModel):
+    slugs: list[str] = Field(
+        min_length=1, description="Shipped skill identifiers to update together."
+    )
+    enabled: bool = Field(description="Enable or disable these skills for your account.")
+
+
+@router.get(
+    "/skills/builtin",
+    summary="List preset skills and your account preferences",
+    description="Available without selecting an expert. Preferences apply to your local runtimes.",
+    response_model=list[BuiltinSkillSummary],
+)
+async def list_builtin_skills(
+    request: Request,
+    user: Any = Depends(require_permission("skills")),
+    server: Any = Depends(get_server),
+) -> list[BuiltinSkillSummary]:
+    preferences = BuiltinSkillPreferences(server.services.settings_repo)
+    rows = await asyncio.get_running_loop().run_in_executor(
+        None, preferences.list_skills, user.id, resolve_request_locale(request)
+    )
+    return [BuiltinSkillSummary(**row) for row in rows]
+
+
+@router.put(
+    "/skills/builtin",
+    summary="Enable or disable preset skills for your account",
+    description=(
+        "Updates only your preferences. Running local experts refresh immediately, future "
+        "runtimes inherit the preferences, and existing per-expert disables are preserved."
+    ),
+    status_code=204,
+)
+async def update_builtin_skills(
+    body: BuiltinSkillUpdateBody,
+    user: Any = Depends(require_permission("skills")),
+    server: Any = Depends(get_server),
+) -> None:
+    preferences = BuiltinSkillPreferences(server.services.settings_repo)
+    await asyncio.get_running_loop().run_in_executor(
+        None, lambda: preferences.update(user.id, body.slugs, enabled=body.enabled)
+    )
+    if server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_user_builtin_skills(user.id)
 
 
 @dataclass
@@ -741,7 +796,12 @@ async def get_skill(
     manifest = await _aread_text(ctx.workspace, manifest_path)
     assert manifest is not None
     meta, body = _parse_frontmatter(manifest)
-    disabled = _disabled_set(ctx.config)
+    disabled = await asyncio.get_running_loop().run_in_executor(
+        None,
+        server.app_runtime.agent_registry.effective_skills_disabled,
+        agent_id,
+        _disabled_set(ctx.config),
+    )
     return {
         **_summary_dict(
             name,

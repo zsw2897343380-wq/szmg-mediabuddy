@@ -14,6 +14,7 @@ from octop.infra.backend.skill_mounts import PACKAGE_SKILL_MOUNT, USER_SKILL_MOU
 from octop.infra.db.migrate import run_migrations
 from octop.infra.db.pool import SqlitePool
 from octop.infra.db.services import build_shared_services
+from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
 from octop.infra.skills.user_library import UserSkillLibrary
 from octop.infra.utils.paths import PathLayout
 
@@ -36,6 +37,18 @@ def _cache_root(manager: AgentManager, user_id: int, root: str) -> Path:
     if root.startswith(USER_SKILL_MOUNT):
         return manager.paths.user_skill_library_cache(user_id) / root.removeprefix(USER_SKILL_MOUNT)
     return Path(root)
+
+
+def test_new_runtime_inherits_only_its_owners_builtin_preferences(manager: AgentManager) -> None:
+    alice, _bob, _package_id = _seed(manager)
+    preferences = BuiltinSkillPreferences(manager._repos.settings_repo)
+    preferences.update(alice, ["apple-notes"], enabled=False)
+    for agent_id, expected in (("alice-agent", True), ("bob-agent", False), ("shared", False)):
+        row = manager.get_row(agent_id)
+        assert row is not None
+        config = manager._build_harness_config(row)
+        assert ("apple-notes" in config.skills_disabled) is expected
+    assert manager.get_config("alice-agent").get("skills_disabled", []) == []
 
 
 def _library(manager: AgentManager) -> UserSkillLibrary:

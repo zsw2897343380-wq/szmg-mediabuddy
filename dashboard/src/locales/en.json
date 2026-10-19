@@ -7276,6 +7276,9 @@
     "title": "Skill recording guide"
   },
   "skillsCenter": {
+    "presets": "Preset skills",
+    "presetsDescription": "Manage shipped skills for your account. Disabled skills are unavailable to general chat and all your local experts, including future experts. Files are kept and can be enabled again. Individual expert disables are preserved.",
+    "disableAllPresets": "Disable all presets",
     "backToMarket": "Back to skill market",
     "catalog": "Skill sources and rankings",
     "categories": "Skill categories",
