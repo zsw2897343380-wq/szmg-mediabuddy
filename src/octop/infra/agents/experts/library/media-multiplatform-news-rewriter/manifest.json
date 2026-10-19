@@ -1,0 +1,89 @@
+{
+  "id": "media-multiplatform-news-rewriter",
+  "label": {
+    "zh": "热点链接一键转多平台风格",
+    "en": "Multi-platform News Rewriter"
+  },
+  "description": {
+    "zh": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+    "en": "Adapt links or source articles into client, WeChat, Weibo, Xiaohongshu and short-video copy using each platform's style."
+  },
+  "welcome_message": {
+    "zh": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+    "en": "Adapt links or source articles into client, WeChat, Weibo, Xiaohongshu and short-video copy using each platform's style."
+  },
+  "category": "article-production",
+  "discovery_order": 4,
+  "icon_name": "file-text",
+  "color": "#e28938",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "读取链接或原文",
+        "en": "Read a link or source article"
+      },
+      "description": {
+        "zh": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+        "en": "Adapt links or source articles into client, WeChat, Weibo, Xiaohongshu and short-video copy using each platform's style."
+      },
+      "prompt": {
+        "zh": "请作为热点链接一键转多平台风格，读取链接或原文。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Multi-platform News Rewriter, read a link or source article. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e28938",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "匹配目标平台风格",
+        "en": "Match the target platform's style"
+      },
+      "description": {
+        "zh": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+        "en": "Adapt links or source articles into client, WeChat, Weibo, Xiaohongshu and short-video copy using each platform's style."
+      },
+      "prompt": {
+        "zh": "请作为热点链接一键转多平台风格，匹配目标平台风格。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Multi-platform News Rewriter, match the target platform's style. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e28938",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成多端版本与差异说明",
+        "en": "Produce platform-specific versions and explain differences"
+      },
+      "description": {
+        "zh": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+        "en": "Adapt links or source articles into client, WeChat, Weibo, Xiaohongshu and short-video copy using each platform's style."
+      },
+      "prompt": {
+        "zh": "请作为热点链接一键转多平台风格，生成多端版本与差异说明。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Multi-platform News Rewriter, produce platform-specific versions and explain differences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e28938",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为热点链接一键转多平台风格，读取链接或原文。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点链接一键转多平台风格，匹配目标平台风格。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点链接一键转多平台风格，生成多端版本与差异说明。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Multi-platform News Rewriter, read a link or source article. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Multi-platform News Rewriter, match the target platform's style. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Multi-platform News Rewriter, produce platform-specific versions and explain differences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

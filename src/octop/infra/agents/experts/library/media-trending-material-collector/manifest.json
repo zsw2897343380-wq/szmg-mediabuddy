@@ -1,0 +1,89 @@
+{
+  "id": "media-trending-material-collector",
+  "label": {
+    "zh": "热点素材批量爬取智能体",
+    "en": "Trending Material Collector"
+  },
+  "description": {
+    "zh": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+    "en": "Organize recent trending image, text and video leads by keyword into a filterable material list."
+  },
+  "welcome_message": {
+    "zh": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+    "en": "Organize recent trending image, text and video leads by keyword into a filterable material list."
+  },
+  "category": "office-collaboration",
+  "discovery_order": 24,
+  "icon_name": "briefcase",
+  "color": "#4e87d1",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "设置关键词和时间范围",
+        "en": "Set keywords and a time range"
+      },
+      "description": {
+        "zh": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+        "en": "Organize recent trending image, text and video leads by keyword into a filterable material list."
+      },
+      "prompt": {
+        "zh": "请作为热点素材批量爬取智能体，设置关键词和时间范围。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending Material Collector, set keywords and a time range. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e87d1",
+      "icon_name": "briefcase"
+    },
+    {
+      "title": {
+        "zh": "聚合授权范围内的素材线索",
+        "en": "Collect material leads within the authorized scope"
+      },
+      "description": {
+        "zh": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+        "en": "Organize recent trending image, text and video leads by keyword into a filterable material list."
+      },
+      "prompt": {
+        "zh": "请作为热点素材批量爬取智能体，聚合授权范围内的素材线索。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending Material Collector, collect material leads within the authorized scope. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e87d1",
+      "icon_name": "briefcase"
+    },
+    {
+      "title": {
+        "zh": "去重并输出素材清单",
+        "en": "Deduplicate material and produce a source list"
+      },
+      "description": {
+        "zh": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+        "en": "Organize recent trending image, text and video leads by keyword into a filterable material list."
+      },
+      "prompt": {
+        "zh": "请作为热点素材批量爬取智能体，去重并输出素材清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending Material Collector, deduplicate material and produce a source list. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e87d1",
+      "icon_name": "briefcase"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为热点素材批量爬取智能体，设置关键词和时间范围。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点素材批量爬取智能体，聚合授权范围内的素材线索。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点素材批量爬取智能体，去重并输出素材清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Trending Material Collector, set keywords and a time range. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Trending Material Collector, collect material leads within the authorized scope. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Trending Material Collector, deduplicate material and produce a source list. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

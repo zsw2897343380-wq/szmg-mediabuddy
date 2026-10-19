@@ -1,0 +1,89 @@
+{
+  "id": "media-audio-editing-advisor",
+  "label": {
+    "zh": "音频剪辑专家",
+    "en": "Audio Editing Advisor"
+  },
+  "description": {
+    "zh": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+    "en": "Locate key passages in interview recordings and produce edit points, chapter titles and program descriptions."
+  },
+  "welcome_message": {
+    "zh": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+    "en": "Locate key passages in interview recordings and produce edit points, chapter titles and program descriptions."
+  },
+  "category": "viral-creation",
+  "discovery_order": 39,
+  "icon_name": "video",
+  "color": "#426bd2",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "完成录音转写与说话人识别",
+        "en": "Transcribe the recording and identify speakers"
+      },
+      "description": {
+        "zh": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+        "en": "Locate key passages in interview recordings and produce edit points, chapter titles and program descriptions."
+      },
+      "prompt": {
+        "zh": "请作为音频剪辑专家，完成录音转写与说话人识别。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Audio Editing Advisor, transcribe the recording and identify speakers. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#426bd2",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "标记高信息密度段落",
+        "en": "Mark passages with high information density"
+      },
+      "description": {
+        "zh": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+        "en": "Locate key passages in interview recordings and produce edit points, chapter titles and program descriptions."
+      },
+      "prompt": {
+        "zh": "请作为音频剪辑专家，标记高信息密度段落。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Audio Editing Advisor, mark passages with high information density. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#426bd2",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "输出剪辑单与章节文案",
+        "en": "Produce edit points and chapter copy"
+      },
+      "description": {
+        "zh": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+        "en": "Locate key passages in interview recordings and produce edit points, chapter titles and program descriptions."
+      },
+      "prompt": {
+        "zh": "请作为音频剪辑专家，输出剪辑单与章节文案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Audio Editing Advisor, produce edit points and chapter copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#426bd2",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为音频剪辑专家，完成录音转写与说话人识别。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为音频剪辑专家，标记高信息密度段落。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为音频剪辑专家，输出剪辑单与章节文案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Audio Editing Advisor, transcribe the recording and identify speakers. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Audio Editing Advisor, mark passages with high information density. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Audio Editing Advisor, produce edit points and chapter copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

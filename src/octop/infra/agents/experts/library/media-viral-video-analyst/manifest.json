@@ -1,0 +1,89 @@
+{
+  "id": "media-viral-video-analyst",
+  "label": {
+    "zh": "爆款视频AI拆解专家",
+    "en": "Viral Video Analyst"
+  },
+  "description": {
+    "zh": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+    "en": "Analyze high-performing videos through story, delivery, pacing, commerce and visual style to identify reusable patterns."
+  },
+  "welcome_message": {
+    "zh": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+    "en": "Analyze high-performing videos through story, delivery, pacing, commerce and visual style to identify reusable patterns."
+  },
+  "category": "viral-creation",
+  "discovery_order": 22,
+  "icon_name": "video",
+  "color": "#246090",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "导入样本视频与数据",
+        "en": "Examine sample videos and performance data"
+      },
+      "description": {
+        "zh": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+        "en": "Analyze high-performing videos through story, delivery, pacing, commerce and visual style to identify reusable patterns."
+      },
+      "prompt": {
+        "zh": "请作为爆款视频AI拆解专家，导入样本视频与数据。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Viral Video Analyst, examine sample videos and performance data. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246090",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "拆解结构、节奏和表达",
+        "en": "Analyze structure, pacing and expression"
+      },
+      "description": {
+        "zh": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+        "en": "Analyze high-performing videos through story, delivery, pacing, commerce and visual style to identify reusable patterns."
+      },
+      "prompt": {
+        "zh": "请作为爆款视频AI拆解专家，拆解结构、节奏和表达。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Viral Video Analyst, analyze structure, pacing and expression. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246090",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "输出可复用创作模板",
+        "en": "Produce a reusable creative template"
+      },
+      "description": {
+        "zh": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+        "en": "Analyze high-performing videos through story, delivery, pacing, commerce and visual style to identify reusable patterns."
+      },
+      "prompt": {
+        "zh": "请作为爆款视频AI拆解专家，输出可复用创作模板。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Viral Video Analyst, produce a reusable creative template. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246090",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为爆款视频AI拆解专家，导入样本视频与数据。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为爆款视频AI拆解专家，拆解结构、节奏和表达。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为爆款视频AI拆解专家，输出可复用创作模板。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Viral Video Analyst, examine sample videos and performance data. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Viral Video Analyst, analyze structure, pacing and expression. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Viral Video Analyst, produce a reusable creative template. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "media-news-event-timeline",
+  "label": {
+    "zh": "全网热点事件脉络梳理专家",
+    "en": "News Event Timeline Expert"
+  },
+  "description": {
+    "zh": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+    "en": "Reconstruct an event's origins, milestones, changing viewpoints and latest developments across multiple sources."
+  },
+  "welcome_message": {
+    "zh": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+    "en": "Reconstruct an event's origins, milestones, changing viewpoints and latest developments across multiple sources."
+  },
+  "category": "topic-planning",
+  "discovery_order": 10,
+  "icon_name": "lightbulb",
+  "color": "#246cae",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "聚合多源报道与时间信息",
+        "en": "Aggregate reports and timestamps from multiple sources"
+      },
+      "description": {
+        "zh": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+        "en": "Reconstruct an event's origins, milestones, changing viewpoints and latest developments across multiple sources."
+      },
+      "prompt": {
+        "zh": "请作为全网热点事件脉络梳理专家，聚合多源报道与时间信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the News Event Timeline Expert, aggregate reports and timestamps from multiple sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246cae",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "识别关键节点和观点变化",
+        "en": "Identify milestones and changing viewpoints"
+      },
+      "description": {
+        "zh": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+        "en": "Reconstruct an event's origins, milestones, changing viewpoints and latest developments across multiple sources."
+      },
+      "prompt": {
+        "zh": "请作为全网热点事件脉络梳理专家，识别关键节点和观点变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the News Event Timeline Expert, identify milestones and changing viewpoints. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246cae",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "输出事件时间线与待核查项",
+        "en": "Build an event timeline and verification checklist"
+      },
+      "description": {
+        "zh": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+        "en": "Reconstruct an event's origins, milestones, changing viewpoints and latest developments across multiple sources."
+      },
+      "prompt": {
+        "zh": "请作为全网热点事件脉络梳理专家，输出事件时间线与待核查项。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the News Event Timeline Expert, build an event timeline and verification checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#246cae",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为全网热点事件脉络梳理专家，聚合多源报道与时间信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为全网热点事件脉络梳理专家，识别关键节点和观点变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为全网热点事件脉络梳理专家，输出事件时间线与待核查项。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the News Event Timeline Expert, aggregate reports and timestamps from multiple sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the News Event Timeline Expert, identify milestones and changing viewpoints. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the News Event Timeline Expert, build an event timeline and verification checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

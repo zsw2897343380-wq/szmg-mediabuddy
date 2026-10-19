@@ -1,0 +1,89 @@
+{
+  "id": "media-southeast-asian-news-translator",
+  "label": {
+    "zh": "东南亚小语种翻译官",
+    "en": "Southeast Asian News Translator"
+  },
+  "description": {
+    "zh": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+    "en": "Translate and edit Chinese news into Thai, Vietnamese, Indonesian and other Southeast Asian languages with cultural context."
+  },
+  "welcome_message": {
+    "zh": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+    "en": "Translate and edit Chinese news into Thai, Vietnamese, Indonesian and other Southeast Asian languages with cultural context."
+  },
+  "category": "international-communication",
+  "discovery_order": 5,
+  "icon_name": "globe",
+  "color": "#d46c45",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "识别新闻体裁和术语",
+        "en": "Identify the news genre and terminology"
+      },
+      "description": {
+        "zh": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+        "en": "Translate and edit Chinese news into Thai, Vietnamese, Indonesian and other Southeast Asian languages with cultural context."
+      },
+      "prompt": {
+        "zh": "请作为东南亚小语种翻译官，识别新闻体裁和术语。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Southeast Asian News Translator, identify the news genre and terminology. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46c45",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "使用机构词库完成编译",
+        "en": "Translate using the institutional glossary"
+      },
+      "description": {
+        "zh": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+        "en": "Translate and edit Chinese news into Thai, Vietnamese, Indonesian and other Southeast Asian languages with cultural context."
+      },
+      "prompt": {
+        "zh": "请作为东南亚小语种翻译官，使用机构词库完成编译。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Southeast Asian News Translator, translate using the institutional glossary. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46c45",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "进行文化表达与专名校验",
+        "en": "Check cultural expression and proper names"
+      },
+      "description": {
+        "zh": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+        "en": "Translate and edit Chinese news into Thai, Vietnamese, Indonesian and other Southeast Asian languages with cultural context."
+      },
+      "prompt": {
+        "zh": "请作为东南亚小语种翻译官，进行文化表达与专名校验。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Southeast Asian News Translator, check cultural expression and proper names. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46c45",
+      "icon_name": "globe"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为东南亚小语种翻译官，识别新闻体裁和术语。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为东南亚小语种翻译官，使用机构词库完成编译。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为东南亚小语种翻译官，进行文化表达与专名校验。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Southeast Asian News Translator, identify the news genre and terminology. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Southeast Asian News Translator, translate using the institutional glossary. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Southeast Asian News Translator, check cultural expression and proper names. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

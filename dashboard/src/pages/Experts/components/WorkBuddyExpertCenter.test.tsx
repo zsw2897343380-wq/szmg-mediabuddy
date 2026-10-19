@@ -8,9 +8,11 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MarketExpert } from "../../../api/modules/expertMarket";
 import WorkBuddyExpertCenter from "./WorkBuddyExpertCenter";
+import type { ExpertSummary } from "./ExpertCard";
 import type { OctopAgent } from "../../../context/AgentContext";
+import type { PublishedExpert } from "../../../api/modules/publishedExperts";
+import { MEDIA_EXPERT_CATEGORIES } from "./expertDiscovery";
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
@@ -34,12 +36,11 @@ vi.mock("../../../components/Markdown/LazyMarkdown", () => ({
 }));
 vi.mock("./iconForName", () => ({ ExpertIcon: () => <span /> }));
 
-const expert: MarketExpert = {
-  id: "skillhub:reporter",
-  slug: "reporter",
+const expert: ExpertSummary = {
+  id: "media-reporter",
   label: { zh: "采访专家" },
   description: { zh: "整理采访记录" },
-  scene: "media",
+  category: "article-production",
   quick_prompts: [
     {
       title: { zh: "拟采访提纲" },
@@ -48,8 +49,13 @@ const expert: MarketExpert = {
     },
   ],
 };
+const general: ExpertSummary = {
+  id: "general-assistant",
+  label: { zh: "通用助手" },
+  description: { zh: "通用任务" },
+};
 const defaultProps = {
-  experts: [],
+  experts: [general, expert],
   publishedExperts: [],
   agents: [],
   loading: false,
@@ -66,34 +72,46 @@ function Location() {
     </output>
   );
 }
+function renderCenter(
+  props: Partial<Parameters<typeof WorkBuddyExpertCenter>[0]> = {},
+) {
+  return render(
+    <MemoryRouter>
+      <WorkBuddyExpertCenter {...defaultProps} {...props} />
+      <Location />
+    </MemoryRouter>,
+  );
+}
+function openReporter() {
+  const cards = screen.getAllByRole("button", { name: /采访专家/ });
+  fireEvent.click(cards[cards.length - 1]!);
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.list.mockResolvedValue({ items: [expert], scenes: ["media"] });
-  mocks.get.mockResolvedValue(expert);
+  mocks.request.mockResolvedValue({
+    file_contents: [{ name: "SOUL.md", content: "采访能力详情" }],
+    quick_prompts: expert.quick_prompts,
+  });
 });
 
 describe("WorkBuddy expert center", () => {
-  it("opens real details and routes a quick question to the existing installed expert", async () => {
-    render(
-      <MemoryRouter>
-        <WorkBuddyExpertCenter
-          {...defaultProps}
-          agents={[
-            {
-              agent_id: "own-reporter",
-              template_name: expert.id,
-              config: {},
-            } as OctopAgent,
-          ]}
-        />
-        <Location />
-      </MemoryRouter>,
-    );
-    const cards = await screen.findAllByRole("button", { name: /采访专家/ });
-    fireEvent.click(cards[cards.length - 1]!);
+  it("opens catalog details and routes a quick question to the installed expert", async () => {
+    renderCenter({
+      agents: [
+        {
+          agent_id: "own-reporter",
+          template_name: expert.id,
+          config: {},
+        } as OctopAgent,
+      ],
+    });
+    openReporter();
     const dialog = await screen.findByRole("dialog");
-    await waitFor(() => expect(mocks.get).toHaveBeenCalledWith("reporter"));
+    await waitFor(() =>
+      expect(mocks.request).toHaveBeenCalledWith("/experts/media-reporter"),
+    );
+    expect(await within(dialog).findByText("采访能力详情")).toBeTruthy();
     fireEvent.click(
       await within(dialog).findByRole("button", { name: "拟采访提纲" }),
     );
@@ -108,43 +126,96 @@ describe("WorkBuddy expert center", () => {
   });
 
   it("ignores a detail request that finishes after its dialog is dismissed", async () => {
-    let resolve!: (value: MarketExpert) => void;
-    mocks.get.mockImplementation(
+    let resolve!: (value: object) => void;
+    mocks.request.mockImplementation(
       () =>
-        new Promise<MarketExpert>((done) => {
+        new Promise<object>((done) => {
           resolve = done;
         }),
     );
-    render(
-      <MemoryRouter>
-        <WorkBuddyExpertCenter {...defaultProps} />
-      </MemoryRouter>,
-    );
-    const cards = await screen.findAllByRole("button", { name: /采访专家/ });
-    fireEvent.click(cards[cards.length - 1]!);
+    renderCenter();
+    openReporter();
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     await act(async () => {
-      resolve({ ...expert, label: { zh: "过期详情" } });
+      resolve({ file_contents: [{ name: "SOUL.md", content: "过期详情" }] });
     });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(screen.queryByText("过期详情")).toBeNull();
   });
 
-  it("filters the real catalog and preserves expert team management", async () => {
-    render(
-      <MemoryRouter>
-        <WorkBuddyExpertCenter {...defaultProps} />
-      </MemoryRouter>,
-    );
-    await screen.findAllByRole("button", { name: /采访专家/ });
-    fireEvent.change(screen.getByRole("textbox"), {
-      target: { value: "不存在" },
+  it("uses the eight site categories in order and combines category filtering with search", () => {
+    renderCenter();
+    const filters = screen.getByRole("group", {
+      name: "experts.workbuddy.categories",
     });
+    expect(
+      within(filters)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual([
+      "experts.sceneAll",
+      ...MEDIA_EXPERT_CATEGORIES.map(
+        (category) => `experts.mediaCategories.${category}`,
+      ),
+    ]);
+    fireEvent.click(
+      within(filters).getByRole("button", {
+        name: "experts.mediaCategories.article-production",
+      }),
+    );
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "采访" },
+    });
+    expect(screen.getByRole("button", { name: /采访专家/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /通用助手/ })).toBeNull();
+    fireEvent.click(
+      within(filters).getByRole("button", {
+        name: "experts.mediaCategories.topic-planning",
+      }),
+    );
     expect(screen.getByText("experts.searchEmpty")).toBeTruthy();
+    fireEvent.click(
+      within(filters).getByRole("button", { name: "experts.sceneAll" }),
+    );
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "通用" },
+    });
+    expect(screen.getByRole("button", { name: /通用助手/ })).toBeTruthy();
+  });
+
+  it("does not fetch external listings or merge publications and preserves personal/team management", () => {
+    renderCenter({
+      publishedExperts: [
+        {
+          id: "own-publication",
+          name: "我的发布专家",
+          description: "个人数据",
+        } as PublishedExpert,
+      ],
+    });
+    expect(mocks.list).not.toHaveBeenCalled();
+    expect(mocks.get).not.toHaveBeenCalled();
+    expect(screen.queryByText("我的发布专家")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "experts.myExperts" }));
+    expect(defaultProps.onManage).toHaveBeenCalledOnce();
     fireEvent.click(
       screen.getByRole("tab", { name: "experts.workbuddy.teams" }),
     );
     expect(screen.getByText("Teams management")).toBeTruthy();
+  });
+
+  it("creates an uninstalled configured expert without changing its source", () => {
+    renderCenter();
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "采访" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "experts.workbuddy.summon" }),
+    );
+    expect(defaultProps.onCreate).toHaveBeenCalledWith(
+      { kind: "builtin", expert },
+      undefined,
+    );
   });
 });

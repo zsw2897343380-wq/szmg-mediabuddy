@@ -1,0 +1,89 @@
+{
+  "id": "media-trending-news-writer",
+  "label": {
+    "zh": "热点新闻文稿生成智能体",
+    "en": "Trending News Writer"
+  },
+  "description": {
+    "zh": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+    "en": "Turn verified trending-news material into news reports, explainers and social posts with accuracy, timeliness and readability."
+  },
+  "welcome_message": {
+    "zh": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+    "en": "Turn verified trending-news material into news reports, explainers and social posts with accuracy, timeliness and readability."
+  },
+  "category": "article-production",
+  "discovery_order": 8,
+  "icon_name": "file-text",
+  "color": "#354c70",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "整理热点事实与来源",
+        "en": "Organize trending-news facts and sources"
+      },
+      "description": {
+        "zh": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+        "en": "Turn verified trending-news material into news reports, explainers and social posts with accuracy, timeliness and readability."
+      },
+      "prompt": {
+        "zh": "请作为热点新闻文稿生成智能体，整理热点事实与来源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending News Writer, organize trending-news facts and sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#354c70",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "选择体裁和栏目语气",
+        "en": "Choose the genre and program tone"
+      },
+      "description": {
+        "zh": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+        "en": "Turn verified trending-news material into news reports, explainers and social posts with accuracy, timeliness and readability."
+      },
+      "prompt": {
+        "zh": "请作为热点新闻文稿生成智能体，选择体裁和栏目语气。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending News Writer, choose the genre and program tone. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#354c70",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成稿件并标注待核实信息",
+        "en": "Draft the article and flag facts awaiting verification"
+      },
+      "description": {
+        "zh": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+        "en": "Turn verified trending-news material into news reports, explainers and social posts with accuracy, timeliness and readability."
+      },
+      "prompt": {
+        "zh": "请作为热点新闻文稿生成智能体，生成稿件并标注待核实信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Trending News Writer, draft the article and flag facts awaiting verification. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#354c70",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为热点新闻文稿生成智能体，整理热点事实与来源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点新闻文稿生成智能体，选择体裁和栏目语气。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为热点新闻文稿生成智能体，生成稿件并标注待核实信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Trending News Writer, organize trending-news facts and sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Trending News Writer, choose the genre and program tone. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Trending News Writer, draft the article and flag facts awaiting verification. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

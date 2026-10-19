@@ -1,0 +1,89 @@
+{
+  "id": "media-advertising-copywriter",
+  "label": {
+    "zh": "全能广告文案生成专家",
+    "en": "Advertising Copywriter"
+  },
+  "description": {
+    "zh": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+    "en": "Develop Xiaohongshu, Moments, short-video and brand copy based on audience psychology and business objectives."
+  },
+  "welcome_message": {
+    "zh": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+    "en": "Develop Xiaohongshu, Moments, short-video and brand copy based on audience psychology and business objectives."
+  },
+  "category": "viral-creation",
+  "discovery_order": 16,
+  "icon_name": "video",
+  "color": "#8b6031",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "明确产品卖点和目标人群",
+        "en": "Clarify product benefits and target audiences"
+      },
+      "description": {
+        "zh": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+        "en": "Develop Xiaohongshu, Moments, short-video and brand copy based on audience psychology and business objectives."
+      },
+      "prompt": {
+        "zh": "请作为全能广告文案生成专家，明确产品卖点和目标人群。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Advertising Copywriter, clarify product benefits and target audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#8b6031",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "生成不同创意方向",
+        "en": "Develop several creative directions"
+      },
+      "description": {
+        "zh": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+        "en": "Develop Xiaohongshu, Moments, short-video and brand copy based on audience psychology and business objectives."
+      },
+      "prompt": {
+        "zh": "请作为全能广告文案生成专家，生成不同创意方向。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Advertising Copywriter, develop several creative directions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#8b6031",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "输出多平台文案和测试建议",
+        "en": "Produce platform-specific copy and testing suggestions"
+      },
+      "description": {
+        "zh": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+        "en": "Develop Xiaohongshu, Moments, short-video and brand copy based on audience psychology and business objectives."
+      },
+      "prompt": {
+        "zh": "请作为全能广告文案生成专家，输出多平台文案和测试建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Advertising Copywriter, produce platform-specific copy and testing suggestions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#8b6031",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为全能广告文案生成专家，明确产品卖点和目标人群。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为全能广告文案生成专家，生成不同创意方向。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为全能广告文案生成专家，输出多平台文案和测试建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Advertising Copywriter, clarify product benefits and target audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Advertising Copywriter, develop several creative directions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Advertising Copywriter, produce platform-specific copy and testing suggestions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

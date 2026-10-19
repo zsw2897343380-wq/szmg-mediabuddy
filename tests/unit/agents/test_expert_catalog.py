@@ -266,6 +266,118 @@ def test_bundled_office_automation_discovers_skills() -> None:
     assert "DOCX" in docx_skill
 
 
+def test_mediabuddy_collection_replaces_discovery_without_removing_legacy_templates() -> None:
+    from collections import Counter
+
+    from octop.infra.agents.experts.catalog import ExpertCatalog, default_library_root
+
+    root = default_library_root()
+    collection = json.loads((root / "mediabuddy.json").read_text(encoding="utf-8"))
+    catalog = ExpertCatalog(root)
+    catalog.refresh()
+    summaries = catalog.list_summaries()
+    assert len(summaries) == 40
+    assert [item.id for item in summaries] == [
+        "general-assistant",
+        *(item["id"] for item in collection["experts"]),
+    ]
+    assert Counter(item.category for item in summaries[1:]) == {
+        "topic-planning": 7,
+        "article-production": 8,
+        "viral-creation": 6,
+        "international-communication": 5,
+        "content-operations": 3,
+        "data-analysis": 6,
+        "office-collaboration": 1,
+        "review-proofreading": 3,
+    }
+    assert collection["source"]["sha256"] == (
+        "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+    )
+    assert summaries[1].label_zh == "资深GEO策略架构师"
+    assert summaries[-1].label_zh == "音频剪辑专家"
+    # Existing installations still resolve their old template and seed files.
+    assert catalog.get("default") is not None
+    assert catalog.get("ai-coding-coach") is not None
+    assert catalog.get("clinical-learning-subscription") is not None
+    assert catalog.get("office-automation") is not None
+    visible_ids = {item.id for item in catalog.list_summaries(include_market_cache=True)}
+    assert "ai-coding-coach" not in visible_ids
+    assert "default" not in visible_ids
+
+
+def test_all_media_roles_retain_source_descriptions_and_workflow() -> None:
+    from octop.infra.agents.experts.catalog import ExpertCatalog, default_library_root
+
+    root = default_library_root()
+    collection = json.loads((root / "mediabuddy.json").read_text(encoding="utf-8"))
+    catalog = ExpertCatalog(root)
+    catalog.refresh()
+    for item in collection["experts"]:
+        expert = catalog.get(item["id"])
+        assert expert is not None
+        assert expert.summary.label_zh == item["name"]
+        assert expert.summary.description_zh == item["description"]
+        assert expert.summary.category == item["category"]
+        assert expert.summary.discovery_order == item["order"]
+        assert expert.files == ["SOUL.md"]
+        assert expert.prompt_files == ["SOUL.md"]
+        soul = catalog.read_file_contents(item["id"])[0]["content"]
+        assert item["description"] in soul
+        assert all(step in soul for step in item["workflow"])
+        assert all(tag in soul for tag in item["tags"])
+        # Role metadata must not masquerade as a real platform/tool connection.
+        assert "不是源站公开的原始系统提示词" in soul
+        assert "当前已授权且可用的工具" in soul
+
+
+@pytest.mark.parametrize(
+    "expert_id",
+    ["media-fact-checker", "media-domestic-topic-planner", "media-bilingual-news-editor"],
+)
+async def test_media_role_seeds_real_workspace(tmp_path: Path, expert_id: str) -> None:
+    from deepagents.backends.local_shell import LocalShellBackend
+    from octop_harness.backends.workspace import BackendWorkspace
+
+    from octop.infra.agents.experts.catalog import (
+        WORKSPACE_MANIFEST_PATH,
+        ExpertCatalog,
+        default_library_root,
+        seed_expert_directory,
+    )
+
+    catalog = ExpertCatalog(default_library_root())
+    catalog.refresh()
+    workspace = BackendWorkspace(
+        LocalShellBackend(root_dir=str(tmp_path), virtual_mode=False), tmp_path
+    )
+    count = await seed_expert_directory(
+        expert_dir=catalog.expert_dir(expert_id), workspace=workspace
+    )
+    assert count == 2
+    manifest_text = await workspace.aread_text(WORKSPACE_MANIFEST_PATH)
+    assert manifest_text is not None
+    manifest = json.loads(manifest_text)
+    assert manifest["id"] == expert_id
+    assert manifest["category"]
+    soul = await workspace.aread_text("SOUL.md")
+    assert soul is not None
+    assert manifest["description"]["zh"] in soul
+
+
+def test_custom_catalog_is_not_restricted_to_mediabuddy_collection(tmp_path: Path) -> None:
+    from octop.infra.agents.experts.catalog import ExpertCatalog
+
+    expert_dir = tmp_path / "custom-role"
+    expert_dir.mkdir()
+    _write_manifest(expert_dir, extra={"category": "my-category"})
+    catalog = ExpertCatalog(tmp_path)
+    catalog.refresh()
+    assert [(item.id, item.category) for item in catalog.list_summaries()] == [
+        ("custom-role", "my-category")
+    ]
+
+
 def test_expert_quick_prompts_from_manifest(tmp_path: Path) -> None:
     from octop.infra.agents.experts.catalog import ExpertCatalog
 

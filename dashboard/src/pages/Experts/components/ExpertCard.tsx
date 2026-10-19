@@ -11,6 +11,7 @@ export interface ExpertSummary {
   id: string;
   label: { zh?: string; en?: string };
   description: { zh?: string; en?: string };
+  category?: string | null;
   welcome_message?: { zh?: string; en?: string };
   quick_prompts?: QuickPrompt[];
   icon_name?: string | null;

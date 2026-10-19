@@ -1,0 +1,89 @@
+{
+  "id": "media-converged-media-editor",
+  "label": {
+    "zh": "融媒编辑",
+    "en": "Converged Media Editor"
+  },
+  "description": {
+    "zh": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+    "en": "Turn interview material into news and feature reports adapted to clients, websites and social platforms."
+  },
+  "welcome_message": {
+    "zh": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+    "en": "Turn interview material into news and feature reports adapted to clients, websites and social platforms."
+  },
+  "category": "article-production",
+  "discovery_order": 30,
+  "icon_name": "file-text",
+  "color": "#7057d7",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "理解采访素材与报道角度",
+        "en": "Understand interview material and the reporting angle"
+      },
+      "description": {
+        "zh": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+        "en": "Turn interview material into news and feature reports adapted to clients, websites and social platforms."
+      },
+      "prompt": {
+        "zh": "请作为融媒编辑，理解采访素材与报道角度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Converged Media Editor, understand interview material and the reporting angle. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7057d7",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成主稿并优化信息层级",
+        "en": "Draft the main article and improve information hierarchy"
+      },
+      "description": {
+        "zh": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+        "en": "Turn interview material into news and feature reports adapted to clients, websites and social platforms."
+      },
+      "prompt": {
+        "zh": "请作为融媒编辑，生成主稿并优化信息层级。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Converged Media Editor, draft the main article and improve information hierarchy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7057d7",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "按发布端调整标题与篇幅",
+        "en": "Adapt titles and length to each publication platform"
+      },
+      "description": {
+        "zh": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+        "en": "Turn interview material into news and feature reports adapted to clients, websites and social platforms."
+      },
+      "prompt": {
+        "zh": "请作为融媒编辑，按发布端调整标题与篇幅。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Converged Media Editor, adapt titles and length to each publication platform. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7057d7",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为融媒编辑，理解采访素材与报道角度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为融媒编辑，生成主稿并优化信息层级。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为融媒编辑，按发布端调整标题与篇幅。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Converged Media Editor, understand interview material and the reporting angle. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Converged Media Editor, draft the main article and improve information hierarchy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Converged Media Editor, adapt titles and length to each publication platform. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

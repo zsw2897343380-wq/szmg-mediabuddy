@@ -1,0 +1,818 @@
+{
+  "source": {
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc",
+    "retrieved_on": "2026-10-19",
+    "source_field": "data.experts",
+    "prompt_authorship": "Role prompts are Octop implementations derived from public descriptions, tags and workflow steps; the website does not supply system prompts or tool bindings."
+  },
+  "categories": [
+    {
+      "key": "topic-planning",
+      "label": {
+        "zh": "选题策划",
+        "en": "Topic planning"
+      },
+      "order": 0
+    },
+    {
+      "key": "article-production",
+      "label": {
+        "zh": "稿件生产",
+        "en": "News production"
+      },
+      "order": 1
+    },
+    {
+      "key": "viral-creation",
+      "label": {
+        "zh": "爆款创作",
+        "en": "Viral content creation"
+      },
+      "order": 2
+    },
+    {
+      "key": "international-communication",
+      "label": {
+        "zh": "国际传播",
+        "en": "International communication"
+      },
+      "order": 3
+    },
+    {
+      "key": "content-operations",
+      "label": {
+        "zh": "内容运营",
+        "en": "Content operations"
+      },
+      "order": 4
+    },
+    {
+      "key": "data-analysis",
+      "label": {
+        "zh": "数据分析",
+        "en": "Data analysis"
+      },
+      "order": 5
+    },
+    {
+      "key": "office-collaboration",
+      "label": {
+        "zh": "办公协作",
+        "en": "Office collaboration"
+      },
+      "order": 6
+    },
+    {
+      "key": "review-proofreading",
+      "label": {
+        "zh": "审核校对",
+        "en": "Review and proofreading"
+      },
+      "order": 7
+    }
+  ],
+  "experts": [
+    {
+      "id": "media-geo-strategy-architect",
+      "name": "资深GEO策略架构师",
+      "description": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+      "category": "content-operations",
+      "order": 1,
+      "tags": [
+        "GEO",
+        "AI 搜索",
+        "内容策略"
+      ],
+      "workflow": [
+        "分析内容主题与检索意图",
+        "优化结构、实体和权威信号",
+        "输出 GEO 改造清单"
+      ],
+      "avatar_text": "GEO",
+      "avatar_background": "linear-gradient(145deg,#2876e8,#134a9f)"
+    },
+    {
+      "id": "media-international-topic-planner",
+      "name": "【国际】热点选题与策划智能体",
+      "description": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+      "category": "international-communication",
+      "order": 2,
+      "tags": [
+        "国际热点",
+        "选题",
+        "策划"
+      ],
+      "workflow": [
+        "聚合海外权威信源",
+        "识别议题趋势和受众关注",
+        "形成国际选题策划案"
+      ],
+      "avatar_text": "国",
+      "avatar_background": "linear-gradient(145deg,#5d4fc8,#332b82)"
+    },
+    {
+      "id": "media-international-trending-aggregator",
+      "name": "【国际】多平台热搜聚合分析智能体",
+      "description": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+      "category": "international-communication",
+      "order": 3,
+      "tags": [
+        "海外热搜",
+        "多平台",
+        "趋势"
+      ],
+      "workflow": [
+        "监测国际主流媒体",
+        "聚合热词与议题变化",
+        "输出 Top 热点和趋势解读"
+      ],
+      "avatar_text": "热",
+      "avatar_background": "linear-gradient(145deg,#9a59d1,#593080)"
+    },
+    {
+      "id": "media-multiplatform-news-rewriter",
+      "name": "热点链接一键转多平台风格",
+      "description": "识别目标平台调性，把链接或原文一键转换为客户端、微信、微博、小红书和短视频文案。",
+      "category": "article-production",
+      "order": 4,
+      "tags": [
+        "一键改写",
+        "多平台",
+        "风格适配"
+      ],
+      "workflow": [
+        "读取链接或原文",
+        "匹配目标平台风格",
+        "生成多端版本与差异说明"
+      ],
+      "avatar_text": "转",
+      "avatar_background": "linear-gradient(145deg,#e28938,#9a4a15)"
+    },
+    {
+      "id": "media-southeast-asian-news-translator",
+      "name": "东南亚小语种翻译官",
+      "description": "将中文新闻稿准确编译为泰语、越南语、印尼语等东南亚语言，兼顾文化表达。",
+      "category": "international-communication",
+      "order": 5,
+      "tags": [
+        "小语种",
+        "东南亚",
+        "新闻编译"
+      ],
+      "workflow": [
+        "识别新闻体裁和术语",
+        "使用机构词库完成编译",
+        "进行文化表达与专名校验"
+      ],
+      "avatar_text": "译",
+      "avatar_background": "linear-gradient(145deg,#d46c45,#8e381e)"
+    },
+    {
+      "id": "media-domestic-trending-aggregator",
+      "name": "【国内】多平台热搜聚合分析智能体",
+      "description": "实时监控抖音、头条、微博等平台，提供热点排行、深度分析与跨平台数据对比。",
+      "category": "data-analysis",
+      "order": 6,
+      "tags": [
+        "国内热搜",
+        "数据对比",
+        "热点榜"
+      ],
+      "workflow": [
+        "聚合国内平台热榜",
+        "去重并识别事件脉络",
+        "输出跨平台趋势对比"
+      ],
+      "avatar_text": "榜",
+      "avatar_background": "linear-gradient(145deg,#2e7cd4,#16497e)"
+    },
+    {
+      "id": "media-domestic-topic-planner",
+      "name": "【国内】热点选题与策划智能体",
+      "description": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+      "category": "topic-planning",
+      "order": 7,
+      "tags": [
+        "国内热点",
+        "报道角度",
+        "选题单"
+      ],
+      "workflow": [
+        "聚合热点和情绪信号",
+        "匹配栏目定位与受众",
+        "输出选题、采访对象和风险点"
+      ],
+      "avatar_text": "选",
+      "avatar_background": "linear-gradient(145deg,#5f68d8,#343b92)"
+    },
+    {
+      "id": "media-trending-news-writer",
+      "name": "热点新闻文稿生成智能体",
+      "description": "围绕热点素材快速生成新闻稿、解读稿和社媒文案，兼顾真实性、时效性与可读性。",
+      "category": "article-production",
+      "order": 8,
+      "tags": [
+        "热点成稿",
+        "新闻写作",
+        "多体裁"
+      ],
+      "workflow": [
+        "整理热点事实与来源",
+        "选择体裁和栏目语气",
+        "生成稿件并标注待核实信息"
+      ],
+      "avatar_text": "稿",
+      "avatar_background": "linear-gradient(145deg,#354c70,#18263d)"
+    },
+    {
+      "id": "media-trendradar-forecast",
+      "name": "【TrendRadar】热点分析预测",
+      "description": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+      "category": "data-analysis",
+      "order": 9,
+      "tags": [
+        "趋势预测",
+        "时间序列",
+        "热点分析"
+      ],
+      "workflow": [
+        "汇总历史和实时热度",
+        "识别增长、扩散与衰退阶段",
+        "输出趋势预测和监测建议"
+      ],
+      "avatar_text": "TR",
+      "avatar_background": "linear-gradient(145deg,#ef6a45,#a13722)"
+    },
+    {
+      "id": "media-news-event-timeline",
+      "name": "全网热点事件脉络梳理专家",
+      "description": "跨平台梳理事件起点、关键节点、观点变化和最新进展，形成清晰时间线。",
+      "category": "topic-planning",
+      "order": 10,
+      "tags": [
+        "事件脉络",
+        "时间线",
+        "信源"
+      ],
+      "workflow": [
+        "聚合多源报道与时间信息",
+        "识别关键节点和观点变化",
+        "输出事件时间线与待核查项"
+      ],
+      "avatar_text": "脉",
+      "avatar_background": "linear-gradient(145deg,#246cae,#103d68)"
+    },
+    {
+      "id": "media-potential-topic-recommender",
+      "name": "今日潜力选题推荐智能体",
+      "description": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+      "category": "topic-planning",
+      "order": 11,
+      "tags": [
+        "潜力选题",
+        "差异化",
+        "每日推荐"
+      ],
+      "workflow": [
+        "分析热点增速与竞争度",
+        "匹配栏目历史表现",
+        "推荐潜力选题和切入角度"
+      ],
+      "avatar_text": "潜",
+      "avatar_background": "linear-gradient(145deg,#51a8d8,#246586)"
+    },
+    {
+      "id": "media-international-news-commentator",
+      "name": "国传中心AI新闻时事评论员",
+      "description": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+      "category": "international-communication",
+      "order": 12,
+      "tags": [
+        "时事评论",
+        "国际视野",
+        "观点"
+      ],
+      "workflow": [
+        "梳理事件事实与多方观点",
+        "构建评论立场和论证链",
+        "生成评论稿并标注引用"
+      ],
+      "avatar_text": "评",
+      "avatar_background": "linear-gradient(145deg,#3e485c,#1e2635)"
+    },
+    {
+      "id": "media-longform-content-slicer",
+      "name": "长文案切片智能体",
+      "description": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+      "category": "article-production",
+      "order": 13,
+      "tags": [
+        "长文切片",
+        "多端分发",
+        "内容复用"
+      ],
+      "workflow": [
+        "识别长文核心观点和信息块",
+        "按平台重组内容切片",
+        "生成发布顺序与标题建议"
+      ],
+      "avatar_text": "切",
+      "avatar_background": "linear-gradient(145deg,#4a7fd1,#294d86)"
+    },
+    {
+      "id": "media-executive-interview-planner",
+      "name": "高端访谈策划架构师",
+      "description": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+      "category": "topic-planning",
+      "order": 14,
+      "tags": [
+        "高端访谈",
+        "问题树",
+        "嘉宾研究"
+      ],
+      "workflow": [
+        "研究嘉宾背景和节目目标",
+        "设计议题结构与追问路径",
+        "形成访谈手册和风险预案"
+      ],
+      "avatar_text": "访",
+      "avatar_background": "linear-gradient(145deg,#3470cf,#1c468f)"
+    },
+    {
+      "id": "media-social-account-data-analyst",
+      "name": "账号运营数据分析智能体",
+      "description": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+      "category": "data-analysis",
+      "order": 15,
+      "tags": [
+        "账号分析",
+        "运营指标",
+        "增长"
+      ],
+      "workflow": [
+        "统一各平台指标口径",
+        "识别内容和粉丝变化",
+        "输出增长问题与行动建议"
+      ],
+      "avatar_text": "数",
+      "avatar_background": "linear-gradient(145deg,#2480c0,#115078)"
+    },
+    {
+      "id": "media-advertising-copywriter",
+      "name": "全能广告文案生成专家",
+      "description": "结合受众心理和经营目标，生成小红书、朋友圈、短视频及品牌广告文案。",
+      "category": "viral-creation",
+      "order": 16,
+      "tags": [
+        "广告文案",
+        "消费洞察",
+        "多平台"
+      ],
+      "workflow": [
+        "明确产品卖点和目标人群",
+        "生成不同创意方向",
+        "输出多平台文案和测试建议"
+      ],
+      "avatar_text": "广",
+      "avatar_background": "linear-gradient(145deg,#8b6031,#523719)"
+    },
+    {
+      "id": "media-weekly-public-opinion-review",
+      "name": "本周热点舆情复盘与前瞻专家",
+      "description": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+      "category": "data-analysis",
+      "order": 17,
+      "tags": [
+        "周度复盘",
+        "舆情",
+        "前瞻"
+      ],
+      "workflow": [
+        "汇总一周热点与关键节点",
+        "分析情绪和传播路径",
+        "形成下周前瞻与监测清单"
+      ],
+      "avatar_text": "周",
+      "avatar_background": "linear-gradient(145deg,#e8774a,#9b3f21)"
+    },
+    {
+      "id": "media-douyin-viral-creator",
+      "name": "抖音爆款炼金术师",
+      "description": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+      "category": "viral-creation",
+      "order": 18,
+      "tags": [
+        "抖音",
+        "爆款脚本",
+        "流量钩子"
+      ],
+      "workflow": [
+        "分析主题和目标人群",
+        "设计前三秒钩子与节奏",
+        "生成脚本、标题和互动引导"
+      ],
+      "avatar_text": "抖",
+      "avatar_background": "linear-gradient(145deg,#193c5d,#091d31)"
+    },
+    {
+      "id": "media-senior-copy-editor",
+      "name": "资深文稿润色专家",
+      "description": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+      "category": "article-production",
+      "order": 19,
+      "tags": [
+        "文稿润色",
+        "结构优化",
+        "表达"
+      ],
+      "workflow": [
+        "识别体裁、受众和语气",
+        "优化结构和措辞",
+        "输出润色稿与修改说明"
+      ],
+      "avatar_text": "润",
+      "avatar_background": "linear-gradient(145deg,#5e9ada,#2c5c91)"
+    },
+    {
+      "id": "media-content-expansion-writer",
+      "name": "资深内容延展专家",
+      "description": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+      "category": "article-production",
+      "order": 20,
+      "tags": [
+        "内容扩写",
+        "长文",
+        "结构"
+      ],
+      "workflow": [
+        "确认核心观点和目标篇幅",
+        "构建层级结构与论据",
+        "生成完整长文并保留主旨"
+      ],
+      "avatar_text": "延",
+      "avatar_background": "linear-gradient(145deg,#6885d2,#3c4f91)"
+    },
+    {
+      "id": "media-bilingual-news-editor",
+      "name": "资深中英双语新闻主编与翻译官",
+      "description": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+      "category": "international-communication",
+      "order": 21,
+      "tags": [
+        "中英双语",
+        "新闻主编",
+        "国际传播"
+      ],
+      "workflow": [
+        "读取原稿和发布场景",
+        "完成双语编译与编辑",
+        "校验专名、事实和媒体规范"
+      ],
+      "avatar_text": "双",
+      "avatar_background": "linear-gradient(145deg,#b56b39,#72401f)"
+    },
+    {
+      "id": "media-viral-video-analyst",
+      "name": "爆款视频AI拆解专家",
+      "description": "从剧情、口播、节奏、带货、军事、美学等维度拆解高表现视频并提炼可复用模式。",
+      "category": "viral-creation",
+      "order": 22,
+      "tags": [
+        "视频拆解",
+        "爆款模式",
+        "节奏"
+      ],
+      "workflow": [
+        "导入样本视频与数据",
+        "拆解结构、节奏和表达",
+        "输出可复用创作模板"
+      ],
+      "avatar_text": "拆",
+      "avatar_background": "linear-gradient(145deg,#246090,#123853)"
+    },
+    {
+      "id": "media-information-summarizer",
+      "name": "信息精炼架构师",
+      "description": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+      "category": "article-production",
+      "order": 23,
+      "tags": [
+        "内容精炼",
+        "摘要",
+        "信息架构"
+      ],
+      "workflow": [
+        "识别主张、证据和层级",
+        "删除重复和低价值信息",
+        "生成摘要、要点与短版"
+      ],
+      "avatar_text": "炼",
+      "avatar_background": "linear-gradient(145deg,#6a3fc5,#3a2180)"
+    },
+    {
+      "id": "media-trending-material-collector",
+      "name": "热点素材批量爬取智能体",
+      "description": "按关键词批量整理最新热门的图文和视频线索，形成可筛选的素材清单。",
+      "category": "office-collaboration",
+      "order": 24,
+      "tags": [
+        "素材采集",
+        "热点",
+        "批量整理"
+      ],
+      "workflow": [
+        "设置关键词和时间范围",
+        "聚合授权范围内的素材线索",
+        "去重并输出素材清单"
+      ],
+      "avatar_text": "采",
+      "avatar_background": "linear-gradient(145deg,#4e87d1,#29588d)"
+    },
+    {
+      "id": "media-shenzhen-event-planner",
+      "name": "深圳线下活动策划专家",
+      "description": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+      "category": "topic-planning",
+      "order": 25,
+      "tags": [
+        "深圳",
+        "线下活动",
+        "执行方案"
+      ],
+      "workflow": [
+        "确认活动目标、受众和资源",
+        "设计流程与传播节点",
+        "输出预算、排期和执行清单"
+      ],
+      "avatar_text": "深",
+      "avatar_background": "linear-gradient(145deg,#5c85d0,#33528b)"
+    },
+    {
+      "id": "media-omnichannel-account-operator",
+      "name": "国内全域新媒体账号运营专家",
+      "description": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+      "category": "content-operations",
+      "order": 26,
+      "tags": [
+        "全域运营",
+        "账号定位",
+        "增长"
+      ],
+      "workflow": [
+        "分析账号现状与受众",
+        "制定平台定位和内容矩阵",
+        "输出运营节奏与增长指标"
+      ],
+      "avatar_text": "运",
+      "avatar_background": "linear-gradient(145deg,#365780,#192f4c)"
+    },
+    {
+      "id": "media-natural-style-editor",
+      "name": "文稿“去AI味”洗稿专家",
+      "description": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+      "category": "review-proofreading",
+      "order": 27,
+      "tags": [
+        "去AI味",
+        "人工表达",
+        "媒体规范"
+      ],
+      "workflow": [
+        "检测机械表达和重复句式",
+        "按媒体语境进行自然改写",
+        "核对事实、引用和原意"
+      ],
+      "avatar_text": "人",
+      "avatar_background": "linear-gradient(145deg,#4e9b89,#286154)"
+    },
+    {
+      "id": "media-program-topic-planner",
+      "name": "栏目策划专家",
+      "description": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+      "category": "topic-planning",
+      "order": 28,
+      "tags": [
+        "栏目定位",
+        "选题策划",
+        "采访提纲"
+      ],
+      "workflow": [
+        "读取栏目定位与近期选题",
+        "聚合热点线索与历史表现",
+        "形成策划案，提交主编确认"
+      ],
+      "avatar_text": "策",
+      "avatar_background": "linear-gradient(145deg,#1269ee,#0841a9)"
+    },
+    {
+      "id": "media-fact-checker",
+      "name": "事实核查专家",
+      "description": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+      "category": "review-proofreading",
+      "order": 29,
+      "tags": [
+        "事实核查",
+        "来源追溯",
+        "风险提示"
+      ],
+      "workflow": [
+        "拆解稿件中的事实主张",
+        "匹配权威来源与机构语料",
+        "输出证据链和存疑清单"
+      ],
+      "avatar_text": "核",
+      "avatar_background": "linear-gradient(145deg,#13a6b5,#08757f)"
+    },
+    {
+      "id": "media-converged-media-editor",
+      "name": "融媒编辑",
+      "description": "把采访素材整理成消息、通讯或深度稿，并适配客户端、网站与社交平台。",
+      "category": "article-production",
+      "order": 30,
+      "tags": [
+        "稿件成型",
+        "多端适配",
+        "结构优化"
+      ],
+      "workflow": [
+        "理解采访素材与报道角度",
+        "生成主稿并优化信息层级",
+        "按发布端调整标题与篇幅"
+      ],
+      "avatar_text": "编",
+      "avatar_background": "linear-gradient(145deg,#7057d7,#4935a2)"
+    },
+    {
+      "id": "media-presenter-script-editor",
+      "name": "主持人口播专家",
+      "description": "根据主持人语言习惯进行口语化改写，校准播报时长并补充重音与停连提示。",
+      "category": "article-production",
+      "order": 31,
+      "tags": [
+        "口语化",
+        "时长校准",
+        "播音提示"
+      ],
+      "workflow": [
+        "载入主持人风格与节目语境",
+        "完成口语化改写与时长估算",
+        "标注重音、停连和易错读音"
+      ],
+      "avatar_text": "播",
+      "avatar_background": "linear-gradient(145deg,#ee8b3e,#bb4e18)"
+    },
+    {
+      "id": "media-short-video-director",
+      "name": "短视频编导",
+      "description": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+      "category": "viral-creation",
+      "order": 32,
+      "tags": [
+        "短视频",
+        "分镜脚本",
+        "镜头节奏"
+      ],
+      "workflow": [
+        "识别核心信息与目标受众",
+        "生成脚本和镜头清单",
+        "适配竖屏、横屏与平台时长"
+      ],
+      "avatar_text": "导",
+      "avatar_background": "linear-gradient(145deg,#e34d65,#9c1934)"
+    },
+    {
+      "id": "media-public-opinion-analyst",
+      "name": "舆情分析师",
+      "description": "追踪事件热度、观点分布与关键传播节点，生成可引用的研判摘要。",
+      "category": "data-analysis",
+      "order": 33,
+      "tags": [
+        "舆情研判",
+        "趋势识别",
+        "观点聚类"
+      ],
+      "workflow": [
+        "设定事件与监测边界",
+        "识别热度曲线和关键节点",
+        "形成研判摘要与跟进建议"
+      ],
+      "avatar_text": "舆",
+      "avatar_background": "linear-gradient(145deg,#1aa06d,#0b6546)"
+    },
+    {
+      "id": "media-publication-compliance-advisor",
+      "name": "发布合规顾问",
+      "description": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+      "category": "review-proofreading",
+      "order": 34,
+      "tags": [
+        "合规审校",
+        "版权",
+        "发布规范"
+      ],
+      "workflow": [
+        "匹配机构审校规则",
+        "标记风险表述与版权问题",
+        "输出修改项，等待人工确认"
+      ],
+      "avatar_text": "审",
+      "avatar_background": "linear-gradient(145deg,#454f62,#202837)"
+    },
+    {
+      "id": "media-data-journalist",
+      "name": "数据新闻记者",
+      "description": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+      "category": "data-analysis",
+      "order": 35,
+      "tags": [
+        "数据清洗",
+        "新闻发现",
+        "图表叙事"
+      ],
+      "workflow": [
+        "检查数据口径与完整性",
+        "识别变化、异常与关系",
+        "形成数据新闻提纲和图表建议"
+      ],
+      "avatar_text": "数",
+      "avatar_background": "linear-gradient(145deg,#187fc8,#0a4c7b)"
+    },
+    {
+      "id": "media-video-packaging-assistant",
+      "name": "视频包装助理",
+      "description": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+      "category": "viral-creation",
+      "order": 36,
+      "tags": [
+        "包装规范",
+        "字幕",
+        "视觉节奏"
+      ],
+      "workflow": [
+        "载入频道视觉规范",
+        "生成字幕与角标文案",
+        "形成包装清单供制作确认"
+      ],
+      "avatar_text": "包",
+      "avatar_background": "linear-gradient(145deg,#7856bd,#463079)"
+    },
+    {
+      "id": "media-distribution-review-advisor",
+      "name": "传播复盘顾问",
+      "description": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+      "category": "content-operations",
+      "order": 37,
+      "tags": [
+        "传播分析",
+        "栏目复盘",
+        "策略建议"
+      ],
+      "workflow": [
+        "汇总各端数据与内容版本",
+        "对比标题、时段和内容结构",
+        "输出下一期可执行调整"
+      ],
+      "avatar_text": "复",
+      "avatar_background": "linear-gradient(145deg,#11a5a0,#076b72)"
+    },
+    {
+      "id": "media-interview-outline-assistant",
+      "name": "采访提纲助手",
+      "description": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+      "category": "topic-planning",
+      "order": 38,
+      "tags": [
+        "采访准备",
+        "问题树",
+        "追问"
+      ],
+      "workflow": [
+        "梳理选题目标和已知事实",
+        "构建主问题与追问路径",
+        "补充材料清单和风险提示"
+      ],
+      "avatar_text": "访",
+      "avatar_background": "linear-gradient(145deg,#d46a2b,#8f3d13)"
+    },
+    {
+      "id": "media-audio-editing-advisor",
+      "name": "音频剪辑专家",
+      "description": "从访谈录音中定位重点段落，生成剪辑点、章节标题与节目简介。",
+      "category": "viral-creation",
+      "order": 39,
+      "tags": [
+        "音频转写",
+        "剪辑点",
+        "节目包装"
+      ],
+      "workflow": [
+        "完成录音转写与说话人识别",
+        "标记高信息密度段落",
+        "输出剪辑单与章节文案"
+      ],
+      "avatar_text": "音",
+      "avatar_background": "linear-gradient(145deg,#426bd2,#243a87)"
+    }
+  ]
+}

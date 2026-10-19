@@ -14,6 +14,17 @@ export interface DiscoveryExpert {
 
 export type DiscoverySort = "reco" | "popular" | "newest";
 
+export const MEDIA_EXPERT_CATEGORIES = [
+  "topic-planning",
+  "article-production",
+  "viral-creation",
+  "international-communication",
+  "content-operations",
+  "data-analysis",
+  "office-collaboration",
+  "review-proofreading",
+] as const;
+
 export function matchesInstalledSource(
   agent: OctopAgent,
   source: CreateFromTemplateSource,
@@ -45,7 +56,11 @@ export function discoveryExpert(
     name,
     description,
     category:
-      source.kind === "market" ? source.expert.scene || "market" : source.kind,
+      source.kind === "builtin"
+        ? source.expert.category || ""
+        : source.kind === "market"
+        ? source.expert.scene || ""
+        : "",
     source,
     installedCount: agents.filter((agent) =>
       matchesInstalledSource(agent, source),

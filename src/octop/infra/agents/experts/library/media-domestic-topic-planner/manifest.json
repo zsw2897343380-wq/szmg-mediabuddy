@@ -1,0 +1,89 @@
+{
+  "id": "media-domestic-topic-planner",
+  "label": {
+    "zh": "【国内】热点选题与策划智能体",
+    "en": "Domestic News Topic Planner"
+  },
+  "description": {
+    "zh": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+    "en": "Analyze domestic trends and audience sentiment to produce actionable story ideas matched to a program's focus."
+  },
+  "welcome_message": {
+    "zh": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+    "en": "Analyze domestic trends and audience sentiment to produce actionable story ideas matched to a program's focus."
+  },
+  "category": "topic-planning",
+  "discovery_order": 7,
+  "icon_name": "lightbulb",
+  "color": "#5f68d8",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "聚合热点和情绪信号",
+        "en": "Aggregate trending topics and sentiment signals"
+      },
+      "description": {
+        "zh": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+        "en": "Analyze domestic trends and audience sentiment to produce actionable story ideas matched to a program's focus."
+      },
+      "prompt": {
+        "zh": "请作为【国内】热点选题与策划智能体，聚合热点和情绪信号。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Domestic News Topic Planner, aggregate trending topics and sentiment signals. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5f68d8",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "匹配栏目定位与受众",
+        "en": "Match the program's positioning and audience"
+      },
+      "description": {
+        "zh": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+        "en": "Analyze domestic trends and audience sentiment to produce actionable story ideas matched to a program's focus."
+      },
+      "prompt": {
+        "zh": "请作为【国内】热点选题与策划智能体，匹配栏目定位与受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Domestic News Topic Planner, match the program's positioning and audience. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5f68d8",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "输出选题、采访对象和风险点",
+        "en": "Suggest stories, interview subjects and risks"
+      },
+      "description": {
+        "zh": "解析国内热点的跨平台表现与情绪走向，结合栏目定位给出可执行选题。",
+        "en": "Analyze domestic trends and audience sentiment to produce actionable story ideas matched to a program's focus."
+      },
+      "prompt": {
+        "zh": "请作为【国内】热点选题与策划智能体，输出选题、采访对象和风险点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Domestic News Topic Planner, suggest stories, interview subjects and risks. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5f68d8",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为【国内】热点选题与策划智能体，聚合热点和情绪信号。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国内】热点选题与策划智能体，匹配栏目定位与受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国内】热点选题与策划智能体，输出选题、采访对象和风险点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Domestic News Topic Planner, aggregate trending topics and sentiment signals. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Domestic News Topic Planner, match the program's positioning and audience. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Domestic News Topic Planner, suggest stories, interview subjects and risks. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

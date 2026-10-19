@@ -378,6 +378,7 @@ def _summary_dict(s: Any) -> dict[str, Any]:
         "color": s.color,
         "quick_prompts": [_quick_prompt_dict(p) for p in getattr(s, "quick_prompts", ())],
         "task_examples": getattr(s, "task_examples", None),
+        "category": getattr(s, "category", None),
     }
 
 
@@ -690,7 +691,11 @@ async def install_published_expert(
     return result
 
 
-@router.get("/experts")
+@router.get(
+    "/experts",
+    summary="List available bundled expert templates",
+    description="Returns the configured discovery collection, including media categories.",
+)
 async def list_experts(
     _: Any = Depends(current_user),
     server: Any = Depends(get_server),

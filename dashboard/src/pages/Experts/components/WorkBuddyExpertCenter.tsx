@@ -1,19 +1,8 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, Button, Input, Modal, Spin } from "antd";
 import { ArrowRight, Search, UserRound, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  expertMarketApi,
-  type MarketExpert,
-} from "../../../api/modules/expertMarket";
 import type { PublishedExpert } from "../../../api/modules/publishedExperts";
 import { request } from "../../../api/request";
 import { useAgent, type OctopAgent } from "../../../context/AgentContext";
@@ -29,6 +18,7 @@ import {
   discoveryExpert,
   filterDiscoveryExperts,
   matchesInstalledSource,
+  MEDIA_EXPERT_CATEGORIES,
   type DiscoveryExpert,
   type DiscoverySort,
 } from "./expertDiscovery";
@@ -47,7 +37,6 @@ interface Props {
 
 export default function WorkBuddyExpertCenter({
   experts,
-  publishedExperts,
   agents,
   loading,
   lang,
@@ -58,9 +47,6 @@ export default function WorkBuddyExpertCenter({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setActiveAgent } = useAgent();
-  const [market, setMarket] = useState<MarketExpert[]>([]);
-  const [marketLoading, setMarketLoading] = useState(true);
-  const [marketError, setMarketError] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [section, setSection] = useState<"expert" | "team">("expert");
@@ -71,23 +57,6 @@ export default function WorkBuddyExpertCenter({
   const [detailBody, setDetailBody] = useState("");
   const generation = useRef(0);
 
-  const loadMarket = useCallback(async () => {
-    setMarketLoading(true);
-    try {
-      const response = await expertMarketApi.list("");
-      setMarket(response.items);
-      setMarketError("");
-    } catch (error) {
-      setMarketError(
-        apiErrorMessage(error, t("experts.marketDetailLoadFailed"), t),
-      );
-    } finally {
-      setMarketLoading(false);
-    }
-  }, [t]);
-  useEffect(() => {
-    void loadMarket();
-  }, [loadMarket]);
   useEffect(
     () => () => {
       generation.current += 1;
@@ -96,81 +65,48 @@ export default function WorkBuddyExpertCenter({
   );
 
   const entries = useMemo(
-    () => [
-      ...experts.map((expert) =>
+    () =>
+      experts.map((expert) =>
         discoveryExpert({ kind: "builtin", expert }, agents, lang),
       ),
-      ...publishedExperts.map((expert) =>
-        discoveryExpert({ kind: "published", expert }, agents, lang),
-      ),
-      ...market.map((expert) =>
-        discoveryExpert({ kind: "market", expert }, agents, lang),
-      ),
-    ],
-    [experts, publishedExperts, market, agents, lang],
+    [experts, agents, lang],
   );
-  const categories = useMemo(
-    () => [...new Set(entries.map((entry) => entry.category))],
-    [entries],
-  );
+  const categories = MEDIA_EXPERT_CATEGORIES;
   const visible = useMemo(
     () => filterDiscoveryExperts(entries, query, category, sort),
     [entries, query, category, sort],
   );
   const categoryLabel = (value: string) => {
     if (!value) return t("experts.sceneAll");
-    if (value === "builtin") return t("experts.workbuddy.builtin");
-    if (value === "published") return t("experts.published.badge");
-    if (value === "market") return t("experts.expertMarket");
-    return t(`experts.scenes.${value}`, { defaultValue: value });
+    return t(`experts.mediaCategories.${value}`, { defaultValue: value });
   };
   const openDetail = async (entry: DiscoveryExpert) => {
+    if (entry.source.kind !== "builtin") return;
     const current = ++generation.current;
     setSelected(entry);
     setDetailError("");
     setDetailBody("");
     setDetailLoading(true);
     try {
-      if (entry.source.kind === "market") {
-        const expert = await expertMarketApi.get(entry.source.expert.slug);
-        if (generation.current === current)
-          setSelected(
-            discoveryExpert({ kind: "market", expert }, agents, lang),
-          );
-      } else {
-        const path =
-          entry.source.kind === "published"
-            ? `/experts/published/${encodeURIComponent(entry.source.expert.id)}`
-            : `/experts/${encodeURIComponent(entry.source.expert.id)}`;
-        const detail = await request<{
-          file_contents?: { name: string; content: string }[];
-          quick_prompts?: QuickPrompt[];
-        }>(path);
-        if (generation.current === current) {
-          setDetailBody(
-            detail.file_contents?.find((file) => file.name === "SOUL.md")
-              ?.content ?? "",
-          );
-          const source =
-            entry.source.kind === "published"
-              ? {
-                  kind: "published" as const,
-                  expert: {
-                    ...entry.source.expert,
-                    quick_prompts:
-                      detail.quick_prompts ?? entry.source.expert.quick_prompts,
-                  },
-                }
-              : {
-                  kind: "builtin" as const,
-                  expert: {
-                    ...entry.source.expert,
-                    quick_prompts:
-                      detail.quick_prompts ?? entry.source.expert.quick_prompts,
-                  },
-                };
-          setSelected(discoveryExpert(source, agents, lang));
-        }
+      const path = `/experts/${encodeURIComponent(entry.source.expert.id)}`;
+      const detail = await request<{
+        file_contents?: { name: string; content: string }[];
+        quick_prompts?: QuickPrompt[];
+      }>(path);
+      if (generation.current === current) {
+        setDetailBody(
+          detail.file_contents?.find((file) => file.name === "SOUL.md")
+            ?.content ?? "",
+        );
+        const source = {
+          kind: "builtin" as const,
+          expert: {
+            ...entry.source.expert,
+            quick_prompts:
+              detail.quick_prompts ?? entry.source.expert.quick_prompts,
+          },
+        };
+        setSelected(discoveryExpert(source, agents, lang));
       }
     } catch (error) {
       if (generation.current === current)
@@ -200,10 +136,7 @@ export default function WorkBuddyExpertCenter({
     } else onCreate(source, prompt);
   };
   const detailSource = selected?.source;
-  const detailContent =
-    detailSource?.kind === "market"
-      ? pickLocale(detailSource.expert.content, lang)
-      : detailBody;
+  const detailContent = detailBody;
   const quickPrompts = detailSource?.expert.quick_prompts ?? [];
   const examples =
     detailSource && "task_examples" in detailSource.expert
@@ -233,7 +166,7 @@ export default function WorkBuddyExpertCenter({
             className={styles.featuredScenes}
             aria-label={t("experts.workbuddy.featuredScenes")}
           >
-            {categories.slice(0, 6).map((value, index) => (
+            {categories.map((value, index) => (
               <article
                 key={value}
                 className={styles.featuredScene}
@@ -335,30 +268,13 @@ export default function WorkBuddyExpertCenter({
                 </button>
               ))}
             </div>
-            {marketError && (
-              <Alert
-                type="warning"
-                showIcon
-                message={t("experts.workbuddy.marketUnavailable")}
-                description={marketError}
-                action={
-                  <Button
-                    size="small"
-                    loading={marketLoading}
-                    onClick={() => void loadMarket()}
-                  >
-                    {t("common.retry")}
-                  </Button>
-                }
-              />
-            )}
             {loading && entries.length === 0 ? (
               <div className={styles.loadingState}>
                 <Spin />
               </div>
             ) : visible.length === 0 ? (
               <div className={styles.searchEmpty}>
-                {marketLoading ? <Spin /> : t("experts.searchEmpty")}
+                {t("experts.searchEmpty")}
               </div>
             ) : (
               <div className={styles.discoveryGrid}>
@@ -382,7 +298,9 @@ export default function WorkBuddyExpertCenter({
                             {entry.name}
                           </span>
                           <span className={styles.discoveryTags}>
-                            <span>{categoryLabel(entry.category)}</span>
+                            {entry.category && (
+                              <span>{categoryLabel(entry.category)}</span>
+                            )}
                             {entry.installedCount > 0 && (
                               <span>{t("experts.installedBadge")}</span>
                             )}
@@ -399,7 +317,7 @@ export default function WorkBuddyExpertCenter({
                         ? t("experts.workbuddy.createdCopies", {
                             count: entry.installedCount,
                           })
-                        : categoryLabel(entry.category)}
+                        : entry.category && categoryLabel(entry.category)}
                     </div>
                     <button
                       type="button"
@@ -447,9 +365,11 @@ export default function WorkBuddyExpertCenter({
                 <p>{selected.description}</p>
               </div>
             </div>
-            <div className={styles.discoveryTags}>
-              <span>{categoryLabel(selected.category)}</span>
-            </div>
+            {selected.category && (
+              <div className={styles.discoveryTags}>
+                <span>{categoryLabel(selected.category)}</span>
+              </div>
+            )}
             {detailError && (
               <Alert type="warning" showIcon message={detailError} />
             )}
@@ -488,17 +408,6 @@ export default function WorkBuddyExpertCenter({
                 <Markdown content={detailContent} />
               </section>
             )}
-            {detailSource?.kind === "market" &&
-              !!detailSource.expert.skill_slugs?.length && (
-                <section className={styles.expertDetailSection}>
-                  <h3>{t("experts.workbuddy.skills")}</h3>
-                  <div className={styles.discoveryTags}>
-                    {detailSource.expert.skill_slugs.map((slug) => (
-                      <span key={slug}>{slug}</span>
-                    ))}
-                  </div>
-                </section>
-              )}
             <section className={styles.expertDetailSection}>
               <h3>{t("experts.workbuddy.more")}</h3>
               <p>ID: {selected.source.expert.id}</p>

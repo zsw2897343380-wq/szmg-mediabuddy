@@ -4,6 +4,7 @@ import {
   discoveryExpert,
   filterDiscoveryExperts,
   matchesInstalledSource,
+  MEDIA_EXPERT_CATEGORIES,
 } from "./expertDiscovery";
 import type { CreateFromTemplateSource } from "./CreateFromExpertDrawer";
 
@@ -13,6 +14,7 @@ const builtin: CreateFromTemplateSource = {
     id: "writer",
     label: { zh: "写作专家", en: "Writer" },
     description: { en: "Draft articles" },
+    category: "article-production",
   },
 };
 const market: CreateFromTemplateSource = {
@@ -73,14 +75,48 @@ describe("expert discovery", () => {
         (item) => item.key,
       ),
     ).toEqual(["market:reporter"]);
-    expect(filterDiscoveryExperts(entries, "采访", "builtin", "reco")).toEqual(
-      [],
-    );
+    expect(
+      filterDiscoveryExperts(entries, "采访", "article-production", "reco"),
+    ).toEqual([]);
     expect(
       filterDiscoveryExperts(entries, "ARTICLES", "", "reco").map(
         (item) => item.key,
       ),
     ).toEqual(["builtin:writer"]);
+  });
+
+  it("uses the site category order and keeps uncategorized experts only in all", () => {
+    expect(MEDIA_EXPERT_CATEGORIES).toEqual([
+      "topic-planning",
+      "article-production",
+      "viral-creation",
+      "international-communication",
+      "content-operations",
+      "data-analysis",
+      "office-collaboration",
+      "review-proofreading",
+    ]);
+    const general = discoveryExpert(
+      {
+        kind: "builtin",
+        expert: {
+          id: "general-assistant",
+          label: { en: "General assistant" },
+          description: {},
+          category: null,
+        },
+      },
+      [],
+      "en",
+    );
+    expect(general.category).toBe("");
+    expect(discoveryExpert(published, [], "zh").category).toBe("");
+    expect(filterDiscoveryExperts([general], "general", "", "reco")).toEqual([
+      general,
+    ]);
+    expect(
+      filterDiscoveryExperts([general], "", "topic-planning", "reco"),
+    ).toEqual([]);
   });
 
   it("orders by real installed copy counts or known publication dates without inventing timestamps", () => {

@@ -1,0 +1,89 @@
+{
+  "id": "media-natural-style-editor",
+  "label": {
+    "zh": "文稿“去AI味”洗稿专家",
+    "en": "Natural Style Editor"
+  },
+  "description": {
+    "zh": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+    "en": "Replace formulaic, mechanical expression with natural publication-ready writing while preserving facts and meaning."
+  },
+  "welcome_message": {
+    "zh": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+    "en": "Replace formulaic, mechanical expression with natural publication-ready writing while preserving facts and meaning."
+  },
+  "category": "review-proofreading",
+  "discovery_order": 27,
+  "icon_name": "shield",
+  "color": "#4e9b89",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "检测机械表达和重复句式",
+        "en": "Identify mechanical wording and repetitive sentence patterns"
+      },
+      "description": {
+        "zh": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+        "en": "Replace formulaic, mechanical expression with natural publication-ready writing while preserving facts and meaning."
+      },
+      "prompt": {
+        "zh": "请作为文稿“去AI味”洗稿专家，检测机械表达和重复句式。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Natural Style Editor, identify mechanical wording and repetitive sentence patterns. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e9b89",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "按媒体语境进行自然改写",
+        "en": "Rewrite naturally for the media context"
+      },
+      "description": {
+        "zh": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+        "en": "Replace formulaic, mechanical expression with natural publication-ready writing while preserving facts and meaning."
+      },
+      "prompt": {
+        "zh": "请作为文稿“去AI味”洗稿专家，按媒体语境进行自然改写。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Natural Style Editor, rewrite naturally for the media context. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e9b89",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "核对事实、引用和原意",
+        "en": "Check facts, quotations and original meaning"
+      },
+      "description": {
+        "zh": "识别模板化和机械表达，在不改变事实的前提下重写为符合媒体出版标准的自然稿件。",
+        "en": "Replace formulaic, mechanical expression with natural publication-ready writing while preserving facts and meaning."
+      },
+      "prompt": {
+        "zh": "请作为文稿“去AI味”洗稿专家，核对事实、引用和原意。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Natural Style Editor, check facts, quotations and original meaning. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4e9b89",
+      "icon_name": "shield"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为文稿“去AI味”洗稿专家，检测机械表达和重复句式。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为文稿“去AI味”洗稿专家，按媒体语境进行自然改写。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为文稿“去AI味”洗稿专家，核对事实、引用和原意。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Natural Style Editor, identify mechanical wording and repetitive sentence patterns. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Natural Style Editor, rewrite naturally for the media context. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Natural Style Editor, check facts, quotations and original meaning. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

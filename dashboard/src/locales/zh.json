@@ -1215,6 +1215,16 @@
       "createTeam": "创建专家团",
       "advancedManagement": "高级管理",
       "moreManagement": "更多专家管理"
+    },
+    "mediaCategories": {
+      "topic-planning": "选题策划",
+      "article-production": "稿件生产",
+      "viral-creation": "爆款创作",
+      "international-communication": "国际传播",
+      "content-operations": "内容运营",
+      "data-analysis": "数据分析",
+      "office-collaboration": "办公协作",
+      "review-proofreading": "审核校对"
     }
   },
   "subagents": {
@@ -1852,7 +1862,13 @@
     "historyRetry": "重试",
     "creatingSession": "正在创建会话，请稍候",
     "resizePopup": "调整窗口大小",
-    "unreadMessages": "未读消息"
+    "unreadMessages": "未读消息",
+    "generalChat": {
+      "label": "通用对话（不使用专家）",
+      "preparing": "正在准备通用对话…",
+      "failed": "暂时无法准备通用对话",
+      "settings": "通用助理设置"
+    }
   },
   "tools": {
     "unknown": "未知工具",

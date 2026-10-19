@@ -1,0 +1,89 @@
+{
+  "id": "media-social-account-data-analyst",
+  "label": {
+    "zh": "账号运营数据分析智能体",
+    "en": "Social Account Data Analyst"
+  },
+  "description": {
+    "zh": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+    "en": "Explain social-account metrics in accessible language and turn performance findings into actionable operating decisions."
+  },
+  "welcome_message": {
+    "zh": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+    "en": "Explain social-account metrics in accessible language and turn performance findings into actionable operating decisions."
+  },
+  "category": "data-analysis",
+  "discovery_order": 15,
+  "icon_name": "bar-chart-2",
+  "color": "#2480c0",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "统一各平台指标口径",
+        "en": "Standardize metric definitions across platforms"
+      },
+      "description": {
+        "zh": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+        "en": "Explain social-account metrics in accessible language and turn performance findings into actionable operating decisions."
+      },
+      "prompt": {
+        "zh": "请作为账号运营数据分析智能体，统一各平台指标口径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Social Account Data Analyst, standardize metric definitions across platforms. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2480c0",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "识别内容和粉丝变化",
+        "en": "Identify changes in content performance and followers"
+      },
+      "description": {
+        "zh": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+        "en": "Explain social-account metrics in accessible language and turn performance findings into actionable operating decisions."
+      },
+      "prompt": {
+        "zh": "请作为账号运营数据分析智能体，识别内容和粉丝变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Social Account Data Analyst, identify changes in content performance and followers. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2480c0",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "输出增长问题与行动建议",
+        "en": "Explain growth problems and recommend actions"
+      },
+      "description": {
+        "zh": "汇总社交媒体账号数据，将后台指标翻译成易懂结论和可执行的运营动作。",
+        "en": "Explain social-account metrics in accessible language and turn performance findings into actionable operating decisions."
+      },
+      "prompt": {
+        "zh": "请作为账号运营数据分析智能体，输出增长问题与行动建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Social Account Data Analyst, explain growth problems and recommend actions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2480c0",
+      "icon_name": "bar-chart-2"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为账号运营数据分析智能体，统一各平台指标口径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为账号运营数据分析智能体，识别内容和粉丝变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为账号运营数据分析智能体，输出增长问题与行动建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Social Account Data Analyst, standardize metric definitions across platforms. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Social Account Data Analyst, identify changes in content performance and followers. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Social Account Data Analyst, explain growth problems and recommend actions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

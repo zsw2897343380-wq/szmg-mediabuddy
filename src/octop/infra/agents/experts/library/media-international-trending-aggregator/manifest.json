@@ -1,0 +1,89 @@
+{
+  "id": "media-international-trending-aggregator",
+  "label": {
+    "zh": "【国际】多平台热搜聚合分析智能体",
+    "en": "International Trending News Aggregator"
+  },
+  "description": {
+    "zh": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+    "en": "Track international media such as the BBC and The New York Times, organizing major events, keywords and trends."
+  },
+  "welcome_message": {
+    "zh": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+    "en": "Track international media such as the BBC and The New York Times, organizing major events, keywords and trends."
+  },
+  "category": "international-communication",
+  "discovery_order": 3,
+  "icon_name": "globe",
+  "color": "#9a59d1",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "监测国际主流媒体",
+        "en": "Monitor major international media"
+      },
+      "description": {
+        "zh": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+        "en": "Track international media such as the BBC and The New York Times, organizing major events, keywords and trends."
+      },
+      "prompt": {
+        "zh": "请作为【国际】多平台热搜聚合分析智能体，监测国际主流媒体。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Trending News Aggregator, monitor major international media. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#9a59d1",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "聚合热词与议题变化",
+        "en": "Aggregate changing keywords and topics"
+      },
+      "description": {
+        "zh": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+        "en": "Track international media such as the BBC and The New York Times, organizing major events, keywords and trends."
+      },
+      "prompt": {
+        "zh": "请作为【国际】多平台热搜聚合分析智能体，聚合热词与议题变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Trending News Aggregator, aggregate changing keywords and topics. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#9a59d1",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "输出 Top 热点和趋势解读",
+        "en": "Summarize leading stories and interpret trends"
+      },
+      "description": {
+        "zh": "追踪 BBC、纽约时报等国际主流媒体动态，结构化解析重点事件、热词和趋势。",
+        "en": "Track international media such as the BBC and The New York Times, organizing major events, keywords and trends."
+      },
+      "prompt": {
+        "zh": "请作为【国际】多平台热搜聚合分析智能体，输出 Top 热点和趋势解读。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Trending News Aggregator, summarize leading stories and interpret trends. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#9a59d1",
+      "icon_name": "globe"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为【国际】多平台热搜聚合分析智能体，监测国际主流媒体。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国际】多平台热搜聚合分析智能体，聚合热词与议题变化。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国际】多平台热搜聚合分析智能体，输出 Top 热点和趋势解读。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the International Trending News Aggregator, monitor major international media. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International Trending News Aggregator, aggregate changing keywords and topics. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International Trending News Aggregator, summarize leading stories and interpret trends. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

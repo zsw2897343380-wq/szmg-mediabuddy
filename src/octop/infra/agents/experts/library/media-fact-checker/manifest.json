@@ -1,0 +1,89 @@
+{
+  "id": "media-fact-checker",
+  "label": {
+    "zh": "事实核查专家",
+    "en": "Fact-checking Expert"
+  },
+  "description": {
+    "zh": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+    "en": "Check people, dates, places, figures and quotations, flag uncertain claims and suggest verification steps."
+  },
+  "welcome_message": {
+    "zh": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+    "en": "Check people, dates, places, figures and quotations, flag uncertain claims and suggest verification steps."
+  },
+  "category": "review-proofreading",
+  "discovery_order": 29,
+  "icon_name": "shield",
+  "color": "#13a6b5",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "拆解稿件中的事实主张",
+        "en": "Identify factual claims in the article"
+      },
+      "description": {
+        "zh": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+        "en": "Check people, dates, places, figures and quotations, flag uncertain claims and suggest verification steps."
+      },
+      "prompt": {
+        "zh": "请作为事实核查专家，拆解稿件中的事实主张。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Fact-checking Expert, identify factual claims in the article. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#13a6b5",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "匹配权威来源与机构语料",
+        "en": "Match authoritative sources and institutional reference material"
+      },
+      "description": {
+        "zh": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+        "en": "Check people, dates, places, figures and quotations, flag uncertain claims and suggest verification steps."
+      },
+      "prompt": {
+        "zh": "请作为事实核查专家，匹配权威来源与机构语料。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Fact-checking Expert, match authoritative sources and institutional reference material. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#13a6b5",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "输出证据链和存疑清单",
+        "en": "Produce evidence trails and a list of uncertain claims"
+      },
+      "description": {
+        "zh": "核对人物、时间、地点、数字与引用来源，标记存疑内容并给出验证建议。",
+        "en": "Check people, dates, places, figures and quotations, flag uncertain claims and suggest verification steps."
+      },
+      "prompt": {
+        "zh": "请作为事实核查专家，输出证据链和存疑清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Fact-checking Expert, produce evidence trails and a list of uncertain claims. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#13a6b5",
+      "icon_name": "shield"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为事实核查专家，拆解稿件中的事实主张。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为事实核查专家，匹配权威来源与机构语料。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为事实核查专家，输出证据链和存疑清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Fact-checking Expert, identify factual claims in the article. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Fact-checking Expert, match authoritative sources and institutional reference material. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Fact-checking Expert, produce evidence trails and a list of uncertain claims. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

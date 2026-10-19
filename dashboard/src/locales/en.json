@@ -1215,6 +1215,16 @@
       "createTeam": "Create Expert Team",
       "advancedManagement": "Advanced Management",
       "moreManagement": "More expert management"
+    },
+    "mediaCategories": {
+      "topic-planning": "Topic planning",
+      "article-production": "News production",
+      "viral-creation": "Viral content creation",
+      "international-communication": "International communication",
+      "content-operations": "Content operations",
+      "data-analysis": "Data analysis",
+      "office-collaboration": "Office collaboration",
+      "review-proofreading": "Review and proofreading"
     }
   },
   "subagents": {
@@ -1852,7 +1862,13 @@
     "historyRetry": "Retry",
     "creatingSession": "Creating session…",
     "resizePopup": "Resize window",
-    "unreadMessages": "Unread messages"
+    "unreadMessages": "Unread messages",
+    "generalChat": {
+      "label": "General chat (no expert)",
+      "preparing": "Preparing general chat…",
+      "failed": "Could not prepare general chat",
+      "settings": "General assistant settings"
+    }
   },
   "tools": {
     "unknown": "Unknown tool",

@@ -1,0 +1,89 @@
+{
+  "id": "media-omnichannel-account-operator",
+  "label": {
+    "zh": "国内全域新媒体账号运营专家",
+    "en": "Omnichannel Account Operator"
+  },
+  "description": {
+    "zh": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+    "en": "Develop positioning and operations across Xiaohongshu, Douyin, Bilibili, WeChat Official Accounts and Channels."
+  },
+  "welcome_message": {
+    "zh": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+    "en": "Develop positioning and operations across Xiaohongshu, Douyin, Bilibili, WeChat Official Accounts and Channels."
+  },
+  "category": "content-operations",
+  "discovery_order": 26,
+  "icon_name": "trending-up",
+  "color": "#365780",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "分析账号现状与受众",
+        "en": "Analyze account positioning and audiences"
+      },
+      "description": {
+        "zh": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+        "en": "Develop positioning and operations across Xiaohongshu, Douyin, Bilibili, WeChat Official Accounts and Channels."
+      },
+      "prompt": {
+        "zh": "请作为国内全域新媒体账号运营专家，分析账号现状与受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Omnichannel Account Operator, analyze account positioning and audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#365780",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "制定平台定位和内容矩阵",
+        "en": "Develop platform positioning and a content matrix"
+      },
+      "description": {
+        "zh": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+        "en": "Develop positioning and operations across Xiaohongshu, Douyin, Bilibili, WeChat Official Accounts and Channels."
+      },
+      "prompt": {
+        "zh": "请作为国内全域新媒体账号运营专家，制定平台定位和内容矩阵。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Omnichannel Account Operator, develop platform positioning and a content matrix. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#365780",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "输出运营节奏与增长指标",
+        "en": "Recommend an operating schedule and growth metrics"
+      },
+      "description": {
+        "zh": "覆盖小红书、抖音、B站、微信公众号和视频号的全域账号定位与运营。",
+        "en": "Develop positioning and operations across Xiaohongshu, Douyin, Bilibili, WeChat Official Accounts and Channels."
+      },
+      "prompt": {
+        "zh": "请作为国内全域新媒体账号运营专家，输出运营节奏与增长指标。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Omnichannel Account Operator, recommend an operating schedule and growth metrics. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#365780",
+      "icon_name": "trending-up"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为国内全域新媒体账号运营专家，分析账号现状与受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为国内全域新媒体账号运营专家，制定平台定位和内容矩阵。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为国内全域新媒体账号运营专家，输出运营节奏与增长指标。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Omnichannel Account Operator, analyze account positioning and audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Omnichannel Account Operator, develop platform positioning and a content matrix. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Omnichannel Account Operator, recommend an operating schedule and growth metrics. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

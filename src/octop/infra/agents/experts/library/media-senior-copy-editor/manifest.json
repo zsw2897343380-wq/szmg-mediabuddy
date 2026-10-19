@@ -1,0 +1,89 @@
+{
+  "id": "media-senior-copy-editor",
+  "label": {
+    "zh": "资深文稿润色专家",
+    "en": "Senior Copy Editor"
+  },
+  "description": {
+    "zh": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+    "en": "Improve structure, wording and tone for news, business email, academic writing and social content."
+  },
+  "welcome_message": {
+    "zh": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+    "en": "Improve structure, wording and tone for news, business email, academic writing and social content."
+  },
+  "category": "article-production",
+  "discovery_order": 19,
+  "icon_name": "file-text",
+  "color": "#5e9ada",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "识别体裁、受众和语气",
+        "en": "Identify the genre, audience and tone"
+      },
+      "description": {
+        "zh": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+        "en": "Improve structure, wording and tone for news, business email, academic writing and social content."
+      },
+      "prompt": {
+        "zh": "请作为资深文稿润色专家，识别体裁、受众和语气。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Senior Copy Editor, identify the genre, audience and tone. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5e9ada",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "优化结构和措辞",
+        "en": "Improve structure and wording"
+      },
+      "description": {
+        "zh": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+        "en": "Improve structure, wording and tone for news, business email, academic writing and social content."
+      },
+      "prompt": {
+        "zh": "请作为资深文稿润色专家，优化结构和措辞。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Senior Copy Editor, improve structure and wording. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5e9ada",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "输出润色稿与修改说明",
+        "en": "Deliver polished copy and explain the edits"
+      },
+      "description": {
+        "zh": "面向新闻稿、商务邮件、学术论文和社媒内容进行结构、措辞与语气润色。",
+        "en": "Improve structure, wording and tone for news, business email, academic writing and social content."
+      },
+      "prompt": {
+        "zh": "请作为资深文稿润色专家，输出润色稿与修改说明。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Senior Copy Editor, deliver polished copy and explain the edits. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5e9ada",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为资深文稿润色专家，识别体裁、受众和语气。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深文稿润色专家，优化结构和措辞。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深文稿润色专家，输出润色稿与修改说明。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Senior Copy Editor, identify the genre, audience and tone. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Senior Copy Editor, improve structure and wording. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Senior Copy Editor, deliver polished copy and explain the edits. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

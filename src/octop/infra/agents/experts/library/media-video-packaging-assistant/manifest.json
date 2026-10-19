@@ -1,0 +1,89 @@
+{
+  "id": "media-video-packaging-assistant",
+  "label": {
+    "zh": "视频包装助理",
+    "en": "Video Packaging Assistant"
+  },
+  "description": {
+    "zh": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+    "en": "Develop subtitles, on-screen labels, intros, outros and visual pacing suggestions under channel branding rules."
+  },
+  "welcome_message": {
+    "zh": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+    "en": "Develop subtitles, on-screen labels, intros, outros and visual pacing suggestions under channel branding rules."
+  },
+  "category": "viral-creation",
+  "discovery_order": 36,
+  "icon_name": "video",
+  "color": "#7856bd",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "载入频道视觉规范",
+        "en": "Read channel branding guidelines"
+      },
+      "description": {
+        "zh": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+        "en": "Develop subtitles, on-screen labels, intros, outros and visual pacing suggestions under channel branding rules."
+      },
+      "prompt": {
+        "zh": "请作为视频包装助理，载入频道视觉规范。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Video Packaging Assistant, read channel branding guidelines. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7856bd",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "生成字幕与角标文案",
+        "en": "Develop subtitle and on-screen label copy"
+      },
+      "description": {
+        "zh": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+        "en": "Develop subtitles, on-screen labels, intros, outros and visual pacing suggestions under channel branding rules."
+      },
+      "prompt": {
+        "zh": "请作为视频包装助理，生成字幕与角标文案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Video Packaging Assistant, develop subtitle and on-screen label copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7856bd",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "形成包装清单供制作确认",
+        "en": "Prepare a packaging checklist for production review"
+      },
+      "description": {
+        "zh": "根据频道包装规范生成字幕、角标、片头片尾和视觉节奏建议。",
+        "en": "Develop subtitles, on-screen labels, intros, outros and visual pacing suggestions under channel branding rules."
+      },
+      "prompt": {
+        "zh": "请作为视频包装助理，形成包装清单供制作确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Video Packaging Assistant, prepare a packaging checklist for production review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#7856bd",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为视频包装助理，载入频道视觉规范。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为视频包装助理，生成字幕与角标文案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为视频包装助理，形成包装清单供制作确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Video Packaging Assistant, read channel branding guidelines. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Video Packaging Assistant, develop subtitle and on-screen label copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Video Packaging Assistant, prepare a packaging checklist for production review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

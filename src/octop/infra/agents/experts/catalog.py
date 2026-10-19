@@ -133,6 +133,8 @@ class ExpertSummary:
     color: str | None = None
     quick_prompts: tuple[ExpertQuickPrompt, ...] = ()
     task_examples: dict[str, list[str]] | None = None
+    category: str | None = None
+    discovery_order: int = 0
 
 
 @dataclass(frozen=True)
@@ -747,6 +749,14 @@ class ExpertCatalog:
         self._experts: dict[str, Expert] = {}
         self._expert_dirs: dict[str, Path] = {}
         self._bundled_ids: set[str] = set()
+        self._discovery_ids: set[str] | None = None
+        if library_root.resolve() == default_library_root().resolve():
+            collection = _read_manifest(library_root / "mediabuddy.json")
+            if isinstance(collection, dict):
+                self._discovery_ids = {
+                    "general-assistant",
+                    *(str(item["id"]) for item in collection["experts"]),
+                }
 
     @property
     def root(self) -> Path:
@@ -817,6 +827,8 @@ class ExpertCatalog:
                     color=data.get("color"),
                     quick_prompts=_parse_quick_prompts(data),
                     task_examples=normalize_task_examples_for_display(parse_task_examples(data)),
+                    category=str(data.get("category") or "").strip() or None,
+                    discovery_order=int(data.get("discovery_order") or 0),
                 )
                 # Primary library wins on id collision; market cache fills gaps.
                 if ex_id in out and not from_primary:
@@ -854,8 +866,16 @@ class ExpertCatalog:
                 continue
             if not include_market_cache and ex_id not in self._bundled_ids:
                 continue
+            if (
+                self._discovery_ids is not None
+                and ex_id in self._bundled_ids
+                and ex_id not in self._discovery_ids
+            ):
+                continue
             summaries.append(expert.summary)
-        summaries.sort(key=lambda s: (0 if s.id == "general-assistant" else 1, s.id))
+        summaries.sort(
+            key=lambda s: (0 if s.id == "general-assistant" else 1, s.discovery_order, s.id)
+        )
         return summaries
 
     def get(self, expert_id: str) -> Expert | None:

@@ -1,0 +1,89 @@
+{
+  "id": "media-information-summarizer",
+  "label": {
+    "zh": "信息精炼架构师",
+    "en": "Information Summarizer"
+  },
+  "description": {
+    "zh": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+    "en": "Condense complex texts into information-rich summaries, key-point cards and versions of different lengths."
+  },
+  "welcome_message": {
+    "zh": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+    "en": "Condense complex texts into information-rich summaries, key-point cards and versions of different lengths."
+  },
+  "category": "article-production",
+  "discovery_order": 23,
+  "icon_name": "file-text",
+  "color": "#6a3fc5",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "识别主张、证据和层级",
+        "en": "Identify claims, evidence and information hierarchy"
+      },
+      "description": {
+        "zh": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+        "en": "Condense complex texts into information-rich summaries, key-point cards and versions of different lengths."
+      },
+      "prompt": {
+        "zh": "请作为信息精炼架构师，识别主张、证据和层级。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Information Summarizer, identify claims, evidence and information hierarchy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6a3fc5",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "删除重复和低价值信息",
+        "en": "Remove repetition and low-value information"
+      },
+      "description": {
+        "zh": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+        "en": "Condense complex texts into information-rich summaries, key-point cards and versions of different lengths."
+      },
+      "prompt": {
+        "zh": "请作为信息精炼架构师，删除重复和低价值信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Information Summarizer, remove repetition and low-value information. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6a3fc5",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成摘要、要点与短版",
+        "en": "Produce a summary, key points and a short version"
+      },
+      "description": {
+        "zh": "将复杂长文本压缩为高信息密度摘要、要点卡片和不同长度版本。",
+        "en": "Condense complex texts into information-rich summaries, key-point cards and versions of different lengths."
+      },
+      "prompt": {
+        "zh": "请作为信息精炼架构师，生成摘要、要点与短版。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Information Summarizer, produce a summary, key points and a short version. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6a3fc5",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为信息精炼架构师，识别主张、证据和层级。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为信息精炼架构师，删除重复和低价值信息。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为信息精炼架构师，生成摘要、要点与短版。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Information Summarizer, identify claims, evidence and information hierarchy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Information Summarizer, remove repetition and low-value information. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Information Summarizer, produce a summary, key points and a short version. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "media-international-topic-planner",
+  "label": {
+    "zh": "【国际】热点选题与策划智能体",
+    "en": "International News Topic Planner"
+  },
+  "description": {
+    "zh": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+    "en": "Analyze international events and overseas coverage to develop reporting angles, story plans and interview suggestions."
+  },
+  "welcome_message": {
+    "zh": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+    "en": "Analyze international events and overseas coverage to develop reporting angles, story plans and interview suggestions."
+  },
+  "category": "international-communication",
+  "discovery_order": 2,
+  "icon_name": "globe",
+  "color": "#5d4fc8",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "聚合海外权威信源",
+        "en": "Aggregate authoritative international sources"
+      },
+      "description": {
+        "zh": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+        "en": "Analyze international events and overseas coverage to develop reporting angles, story plans and interview suggestions."
+      },
+      "prompt": {
+        "zh": "请作为【国际】热点选题与策划智能体，聚合海外权威信源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International News Topic Planner, aggregate authoritative international sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5d4fc8",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "识别议题趋势和受众关注",
+        "en": "Identify topic trends and audience interests"
+      },
+      "description": {
+        "zh": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+        "en": "Analyze international events and overseas coverage to develop reporting angles, story plans and interview suggestions."
+      },
+      "prompt": {
+        "zh": "请作为【国际】热点选题与策划智能体，识别议题趋势和受众关注。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International News Topic Planner, identify topic trends and audience interests. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5d4fc8",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "形成国际选题策划案",
+        "en": "Develop an international story plan"
+      },
+      "description": {
+        "zh": "深度分析国际热点事件及海外媒体表现，提供报道角度、选题策划与采访建议。",
+        "en": "Analyze international events and overseas coverage to develop reporting angles, story plans and interview suggestions."
+      },
+      "prompt": {
+        "zh": "请作为【国际】热点选题与策划智能体，形成国际选题策划案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International News Topic Planner, develop an international story plan. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5d4fc8",
+      "icon_name": "globe"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为【国际】热点选题与策划智能体，聚合海外权威信源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国际】热点选题与策划智能体，识别议题趋势和受众关注。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【国际】热点选题与策划智能体，形成国际选题策划案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the International News Topic Planner, aggregate authoritative international sources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International News Topic Planner, identify topic trends and audience interests. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International News Topic Planner, develop an international story plan. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

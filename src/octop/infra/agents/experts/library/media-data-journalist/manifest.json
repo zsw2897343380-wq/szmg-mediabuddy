@@ -1,0 +1,89 @@
+{
+  "id": "media-data-journalist",
+  "label": {
+    "zh": "数据新闻记者",
+    "en": "Data Journalist"
+  },
+  "description": {
+    "zh": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+    "en": "Organize structured data, find newsworthy patterns and propose chart narratives with traceable data notes."
+  },
+  "welcome_message": {
+    "zh": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+    "en": "Organize structured data, find newsworthy patterns and propose chart narratives with traceable data notes."
+  },
+  "category": "data-analysis",
+  "discovery_order": 35,
+  "icon_name": "bar-chart-2",
+  "color": "#187fc8",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "检查数据口径与完整性",
+        "en": "Check data definitions and completeness"
+      },
+      "description": {
+        "zh": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+        "en": "Organize structured data, find newsworthy patterns and propose chart narratives with traceable data notes."
+      },
+      "prompt": {
+        "zh": "请作为数据新闻记者，检查数据口径与完整性。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Data Journalist, check data definitions and completeness. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#187fc8",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "识别变化、异常与关系",
+        "en": "Identify changes, anomalies and relationships"
+      },
+      "description": {
+        "zh": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+        "en": "Organize structured data, find newsworthy patterns and propose chart narratives with traceable data notes."
+      },
+      "prompt": {
+        "zh": "请作为数据新闻记者，识别变化、异常与关系。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Data Journalist, identify changes, anomalies and relationships. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#187fc8",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "形成数据新闻提纲和图表建议",
+        "en": "Develop a data-story outline and chart suggestions"
+      },
+      "description": {
+        "zh": "整理结构化数据，发现新闻点，生成图表叙事建议和可追溯的数据说明。",
+        "en": "Organize structured data, find newsworthy patterns and propose chart narratives with traceable data notes."
+      },
+      "prompt": {
+        "zh": "请作为数据新闻记者，形成数据新闻提纲和图表建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Data Journalist, develop a data-story outline and chart suggestions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#187fc8",
+      "icon_name": "bar-chart-2"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为数据新闻记者，检查数据口径与完整性。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为数据新闻记者，识别变化、异常与关系。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为数据新闻记者，形成数据新闻提纲和图表建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Data Journalist, check data definitions and completeness. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Data Journalist, identify changes, anomalies and relationships. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Data Journalist, develop a data-story outline and chart suggestions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

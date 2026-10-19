@@ -1,0 +1,89 @@
+{
+  "id": "media-international-news-commentator",
+  "label": {
+    "zh": "国传中心AI新闻时事评论员",
+    "en": "International Affairs Commentator"
+  },
+  "description": {
+    "zh": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+    "en": "Explain global events with an international perspective and develop commentary with clear positions and supporting evidence."
+  },
+  "welcome_message": {
+    "zh": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+    "en": "Explain global events with an international perspective and develop commentary with clear positions and supporting evidence."
+  },
+  "category": "international-communication",
+  "discovery_order": 12,
+  "icon_name": "globe",
+  "color": "#3e485c",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "梳理事件事实与多方观点",
+        "en": "Organize event facts and competing viewpoints"
+      },
+      "description": {
+        "zh": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+        "en": "Explain global events with an international perspective and develop commentary with clear positions and supporting evidence."
+      },
+      "prompt": {
+        "zh": "请作为国传中心AI新闻时事评论员，梳理事件事实与多方观点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Affairs Commentator, organize event facts and competing viewpoints. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3e485c",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "构建评论立场和论证链",
+        "en": "Develop a commentary position and argument"
+      },
+      "description": {
+        "zh": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+        "en": "Explain global events with an international perspective and develop commentary with clear positions and supporting evidence."
+      },
+      "prompt": {
+        "zh": "请作为国传中心AI新闻时事评论员，构建评论立场和论证链。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Affairs Commentator, develop a commentary position and argument. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3e485c",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "生成评论稿并标注引用",
+        "en": "Draft commentary with attributed references"
+      },
+      "description": {
+        "zh": "以国际视野梳理全球事件逻辑，生成观点鲜明、论据完整且适合传播的时事评论。",
+        "en": "Explain global events with an international perspective and develop commentary with clear positions and supporting evidence."
+      },
+      "prompt": {
+        "zh": "请作为国传中心AI新闻时事评论员，生成评论稿并标注引用。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the International Affairs Commentator, draft commentary with attributed references. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3e485c",
+      "icon_name": "globe"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为国传中心AI新闻时事评论员，梳理事件事实与多方观点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为国传中心AI新闻时事评论员，构建评论立场和论证链。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为国传中心AI新闻时事评论员，生成评论稿并标注引用。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the International Affairs Commentator, organize event facts and competing viewpoints. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International Affairs Commentator, develop a commentary position and argument. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the International Affairs Commentator, draft commentary with attributed references. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

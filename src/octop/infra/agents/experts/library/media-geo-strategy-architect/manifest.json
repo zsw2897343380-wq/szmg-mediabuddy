@@ -1,0 +1,89 @@
+{
+  "id": "media-geo-strategy-architect",
+  "label": {
+    "zh": "资深GEO策略架构师",
+    "en": "GEO Strategy Architect"
+  },
+  "description": {
+    "zh": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+    "en": "Improve content structure, semantic coverage and authority signals for AI search discovery and citation."
+  },
+  "welcome_message": {
+    "zh": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+    "en": "Improve content structure, semantic coverage and authority signals for AI search discovery and citation."
+  },
+  "category": "content-operations",
+  "discovery_order": 1,
+  "icon_name": "trending-up",
+  "color": "#2876e8",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "分析内容主题与检索意图",
+        "en": "Analyze the content topic and search intent"
+      },
+      "description": {
+        "zh": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+        "en": "Improve content structure, semantic coverage and authority signals for AI search discovery and citation."
+      },
+      "prompt": {
+        "zh": "请作为资深GEO策略架构师，分析内容主题与检索意图。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the GEO Strategy Architect, analyze the content topic and search intent. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2876e8",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "优化结构、实体和权威信号",
+        "en": "Improve structure, entities and authority signals"
+      },
+      "description": {
+        "zh": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+        "en": "Improve content structure, semantic coverage and authority signals for AI search discovery and citation."
+      },
+      "prompt": {
+        "zh": "请作为资深GEO策略架构师，优化结构、实体和权威信号。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the GEO Strategy Architect, improve structure, entities and authority signals. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2876e8",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "输出 GEO 改造清单",
+        "en": "Produce a GEO improvement checklist"
+      },
+      "description": {
+        "zh": "面向 AI 搜索引擎优化内容结构、语义覆盖和权威信号，让优质报道更容易被检索与引用。",
+        "en": "Improve content structure, semantic coverage and authority signals for AI search discovery and citation."
+      },
+      "prompt": {
+        "zh": "请作为资深GEO策略架构师，输出 GEO 改造清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the GEO Strategy Architect, produce a GEO improvement checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#2876e8",
+      "icon_name": "trending-up"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为资深GEO策略架构师，分析内容主题与检索意图。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深GEO策略架构师，优化结构、实体和权威信号。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深GEO策略架构师，输出 GEO 改造清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the GEO Strategy Architect, analyze the content topic and search intent. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the GEO Strategy Architect, improve structure, entities and authority signals. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the GEO Strategy Architect, produce a GEO improvement checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "media-douyin-viral-creator",
+  "label": {
+    "zh": "抖音爆款炼金术师",
+    "en": "Douyin Viral Content Creator"
+  },
+  "description": {
+    "zh": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+    "en": "Turn ordinary material into Douyin-oriented short-video scripts, opening hooks and titles."
+  },
+  "welcome_message": {
+    "zh": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+    "en": "Turn ordinary material into Douyin-oriented short-video scripts, opening hooks and titles."
+  },
+  "category": "viral-creation",
+  "discovery_order": 18,
+  "icon_name": "video",
+  "color": "#193c5d",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "分析主题和目标人群",
+        "en": "Analyze the topic and target audience"
+      },
+      "description": {
+        "zh": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+        "en": "Turn ordinary material into Douyin-oriented short-video scripts, opening hooks and titles."
+      },
+      "prompt": {
+        "zh": "请作为抖音爆款炼金术师，分析主题和目标人群。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Douyin Viral Content Creator, analyze the topic and target audience. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#193c5d",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "设计前三秒钩子与节奏",
+        "en": "Design a three-second opening hook and pacing"
+      },
+      "description": {
+        "zh": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+        "en": "Turn ordinary material into Douyin-oriented short-video scripts, opening hooks and titles."
+      },
+      "prompt": {
+        "zh": "请作为抖音爆款炼金术师，设计前三秒钩子与节奏。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Douyin Viral Content Creator, design a three-second opening hook and pacing. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#193c5d",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "生成脚本、标题和互动引导",
+        "en": "Produce scripts, titles and interaction prompts"
+      },
+      "description": {
+        "zh": "把普通内容改造成更适合抖音传播的短视频脚本、开场钩子和标题。",
+        "en": "Turn ordinary material into Douyin-oriented short-video scripts, opening hooks and titles."
+      },
+      "prompt": {
+        "zh": "请作为抖音爆款炼金术师，生成脚本、标题和互动引导。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Douyin Viral Content Creator, produce scripts, titles and interaction prompts. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#193c5d",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为抖音爆款炼金术师，分析主题和目标人群。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为抖音爆款炼金术师，设计前三秒钩子与节奏。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为抖音爆款炼金术师，生成脚本、标题和互动引导。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Douyin Viral Content Creator, analyze the topic and target audience. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Douyin Viral Content Creator, design a three-second opening hook and pacing. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Douyin Viral Content Creator, produce scripts, titles and interaction prompts. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

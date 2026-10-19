@@ -1,0 +1,89 @@
+{
+  "id": "media-distribution-review-advisor",
+  "label": {
+    "zh": "传播复盘顾问",
+    "en": "Distribution Review Advisor"
+  },
+  "description": {
+    "zh": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+    "en": "Compare platforms to assess how titles, posting times and content structure affected distribution performance."
+  },
+  "welcome_message": {
+    "zh": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+    "en": "Compare platforms to assess how titles, posting times and content structure affected distribution performance."
+  },
+  "category": "content-operations",
+  "discovery_order": 37,
+  "icon_name": "trending-up",
+  "color": "#11a5a0",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "汇总各端数据与内容版本",
+        "en": "Aggregate platform data and content versions"
+      },
+      "description": {
+        "zh": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+        "en": "Compare platforms to assess how titles, posting times and content structure affected distribution performance."
+      },
+      "prompt": {
+        "zh": "请作为传播复盘顾问，汇总各端数据与内容版本。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Distribution Review Advisor, aggregate platform data and content versions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#11a5a0",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "对比标题、时段和内容结构",
+        "en": "Compare titles, posting times and content structure"
+      },
+      "description": {
+        "zh": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+        "en": "Compare platforms to assess how titles, posting times and content structure affected distribution performance."
+      },
+      "prompt": {
+        "zh": "请作为传播复盘顾问，对比标题、时段和内容结构。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Distribution Review Advisor, compare titles, posting times and content structure. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#11a5a0",
+      "icon_name": "trending-up"
+    },
+    {
+      "title": {
+        "zh": "输出下一期可执行调整",
+        "en": "Suggest actionable adjustments for the next release"
+      },
+      "description": {
+        "zh": "汇总多平台表现，分析标题、发布时间与内容结构对传播结果的影响。",
+        "en": "Compare platforms to assess how titles, posting times and content structure affected distribution performance."
+      },
+      "prompt": {
+        "zh": "请作为传播复盘顾问，输出下一期可执行调整。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Distribution Review Advisor, suggest actionable adjustments for the next release. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#11a5a0",
+      "icon_name": "trending-up"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为传播复盘顾问，汇总各端数据与内容版本。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为传播复盘顾问，对比标题、时段和内容结构。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为传播复盘顾问，输出下一期可执行调整。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Distribution Review Advisor, aggregate platform data and content versions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Distribution Review Advisor, compare titles, posting times and content structure. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Distribution Review Advisor, suggest actionable adjustments for the next release. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

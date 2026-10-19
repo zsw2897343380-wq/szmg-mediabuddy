@@ -1,0 +1,89 @@
+{
+  "id": "media-interview-outline-assistant",
+  "label": {
+    "zh": "采访提纲助手",
+    "en": "Interview Outline Assistant"
+  },
+  "description": {
+    "zh": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+    "en": "Develop question trees, follow-up paths and preparation lists from the story background and interview subject."
+  },
+  "welcome_message": {
+    "zh": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+    "en": "Develop question trees, follow-up paths and preparation lists from the story background and interview subject."
+  },
+  "category": "topic-planning",
+  "discovery_order": 38,
+  "icon_name": "lightbulb",
+  "color": "#d46a2b",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "梳理选题目标和已知事实",
+        "en": "Organize reporting objectives and known facts"
+      },
+      "description": {
+        "zh": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+        "en": "Develop question trees, follow-up paths and preparation lists from the story background and interview subject."
+      },
+      "prompt": {
+        "zh": "请作为采访提纲助手，梳理选题目标和已知事实。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Interview Outline Assistant, organize reporting objectives and known facts. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46a2b",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "构建主问题与追问路径",
+        "en": "Build main questions and follow-up paths"
+      },
+      "description": {
+        "zh": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+        "en": "Develop question trees, follow-up paths and preparation lists from the story background and interview subject."
+      },
+      "prompt": {
+        "zh": "请作为采访提纲助手，构建主问题与追问路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Interview Outline Assistant, build main questions and follow-up paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46a2b",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "补充材料清单和风险提示",
+        "en": "Add a preparation checklist and risk notes"
+      },
+      "description": {
+        "zh": "基于选题背景与采访对象，生成问题树、追问路径和材料准备清单。",
+        "en": "Develop question trees, follow-up paths and preparation lists from the story background and interview subject."
+      },
+      "prompt": {
+        "zh": "请作为采访提纲助手，补充材料清单和风险提示。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Interview Outline Assistant, add a preparation checklist and risk notes. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#d46a2b",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为采访提纲助手，梳理选题目标和已知事实。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为采访提纲助手，构建主问题与追问路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为采访提纲助手，补充材料清单和风险提示。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Interview Outline Assistant, organize reporting objectives and known facts. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Interview Outline Assistant, build main questions and follow-up paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Interview Outline Assistant, add a preparation checklist and risk notes. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

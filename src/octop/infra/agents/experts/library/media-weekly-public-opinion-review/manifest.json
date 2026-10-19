@@ -1,0 +1,89 @@
+{
+  "id": "media-weekly-public-opinion-review",
+  "label": {
+    "zh": "本周热点舆情复盘与前瞻专家",
+    "en": "Weekly Public Opinion Reviewer"
+  },
+  "description": {
+    "zh": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+    "en": "Review the week's major public-discussion topics, analyze propagation milestones and anticipate issues that may continue."
+  },
+  "welcome_message": {
+    "zh": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+    "en": "Review the week's major public-discussion topics, analyze propagation milestones and anticipate issues that may continue."
+  },
+  "category": "data-analysis",
+  "discovery_order": 17,
+  "icon_name": "bar-chart-2",
+  "color": "#e8774a",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "汇总一周热点与关键节点",
+        "en": "Summarize the week's major topics and milestones"
+      },
+      "description": {
+        "zh": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+        "en": "Review the week's major public-discussion topics, analyze propagation milestones and anticipate issues that may continue."
+      },
+      "prompt": {
+        "zh": "请作为本周热点舆情复盘与前瞻专家，汇总一周热点与关键节点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Weekly Public Opinion Reviewer, summarize the week's major topics and milestones. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e8774a",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "分析情绪和传播路径",
+        "en": "Analyze sentiment and distribution paths"
+      },
+      "description": {
+        "zh": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+        "en": "Review the week's major public-discussion topics, analyze propagation milestones and anticipate issues that may continue."
+      },
+      "prompt": {
+        "zh": "请作为本周热点舆情复盘与前瞻专家，分析情绪和传播路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Weekly Public Opinion Reviewer, analyze sentiment and distribution paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e8774a",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "形成下周前瞻与监测清单",
+        "en": "Prepare next-week outlooks and monitoring lists"
+      },
+      "description": {
+        "zh": "复盘过去一周的重要舆情热点，分析传播节点并预测下周可能延续的议题。",
+        "en": "Review the week's major public-discussion topics, analyze propagation milestones and anticipate issues that may continue."
+      },
+      "prompt": {
+        "zh": "请作为本周热点舆情复盘与前瞻专家，形成下周前瞻与监测清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Weekly Public Opinion Reviewer, prepare next-week outlooks and monitoring lists. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e8774a",
+      "icon_name": "bar-chart-2"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为本周热点舆情复盘与前瞻专家，汇总一周热点与关键节点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为本周热点舆情复盘与前瞻专家，分析情绪和传播路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为本周热点舆情复盘与前瞻专家，形成下周前瞻与监测清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Weekly Public Opinion Reviewer, summarize the week's major topics and milestones. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Weekly Public Opinion Reviewer, analyze sentiment and distribution paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Weekly Public Opinion Reviewer, prepare next-week outlooks and monitoring lists. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

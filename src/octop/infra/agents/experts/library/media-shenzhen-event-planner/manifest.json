@@ -1,0 +1,89 @@
+{
+  "id": "media-shenzhen-event-planner",
+  "label": {
+    "zh": "深圳线下活动策划专家",
+    "en": "Shenzhen Event Planner"
+  },
+  "description": {
+    "zh": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+    "en": "Plan Shenzhen events from objectives and run-of-show to promotion, budgets and execution checklists."
+  },
+  "welcome_message": {
+    "zh": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+    "en": "Plan Shenzhen events from objectives and run-of-show to promotion, budgets and execution checklists."
+  },
+  "category": "topic-planning",
+  "discovery_order": 25,
+  "icon_name": "lightbulb",
+  "color": "#5c85d0",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "确认活动目标、受众和资源",
+        "en": "Confirm event objectives, audiences and resources"
+      },
+      "description": {
+        "zh": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+        "en": "Plan Shenzhen events from objectives and run-of-show to promotion, budgets and execution checklists."
+      },
+      "prompt": {
+        "zh": "请作为深圳线下活动策划专家，确认活动目标、受众和资源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Shenzhen Event Planner, confirm event objectives, audiences and resources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5c85d0",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "设计流程与传播节点",
+        "en": "Design the schedule and promotional milestones"
+      },
+      "description": {
+        "zh": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+        "en": "Plan Shenzhen events from objectives and run-of-show to promotion, budgets and execution checklists."
+      },
+      "prompt": {
+        "zh": "请作为深圳线下活动策划专家，设计流程与传播节点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Shenzhen Event Planner, design the schedule and promotional milestones. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5c85d0",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "输出预算、排期和执行清单",
+        "en": "Produce a budget, timeline and execution checklist"
+      },
+      "description": {
+        "zh": "面向深圳本地活动，从定位、流程、传播到执行清单形成完整策划方案。",
+        "en": "Plan Shenzhen events from objectives and run-of-show to promotion, budgets and execution checklists."
+      },
+      "prompt": {
+        "zh": "请作为深圳线下活动策划专家，输出预算、排期和执行清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Shenzhen Event Planner, produce a budget, timeline and execution checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#5c85d0",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为深圳线下活动策划专家，确认活动目标、受众和资源。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为深圳线下活动策划专家，设计流程与传播节点。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为深圳线下活动策划专家，输出预算、排期和执行清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Shenzhen Event Planner, confirm event objectives, audiences and resources. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Shenzhen Event Planner, design the schedule and promotional milestones. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Shenzhen Event Planner, produce a budget, timeline and execution checklist. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

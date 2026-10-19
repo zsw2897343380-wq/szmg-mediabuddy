@@ -1,0 +1,89 @@
+{
+  "id": "media-trendradar-forecast",
+  "label": {
+    "zh": "【TrendRadar】热点分析预测",
+    "en": "TrendRadar Forecast Analyst"
+  },
+  "description": {
+    "zh": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+    "en": "Analyze multiple time series and historical data to assess trending topics and forecast their possible development."
+  },
+  "welcome_message": {
+    "zh": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+    "en": "Analyze multiple time series and historical data to assess trending topics and forecast their possible development."
+  },
+  "category": "data-analysis",
+  "discovery_order": 9,
+  "icon_name": "bar-chart-2",
+  "color": "#ef6a45",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "汇总历史和实时热度",
+        "en": "Combine historical and current attention data"
+      },
+      "description": {
+        "zh": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+        "en": "Analyze multiple time series and historical data to assess trending topics and forecast their possible development."
+      },
+      "prompt": {
+        "zh": "请作为【TrendRadar】热点分析预测，汇总历史和实时热度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the TrendRadar Forecast Analyst, combine historical and current attention data. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#ef6a45",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "识别增长、扩散与衰退阶段",
+        "en": "Identify growth, diffusion and decline phases"
+      },
+      "description": {
+        "zh": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+        "en": "Analyze multiple time series and historical data to assess trending topics and forecast their possible development."
+      },
+      "prompt": {
+        "zh": "请作为【TrendRadar】热点分析预测，识别增长、扩散与衰退阶段。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the TrendRadar Forecast Analyst, identify growth, diffusion and decline phases. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#ef6a45",
+      "icon_name": "bar-chart-2"
+    },
+    {
+      "title": {
+        "zh": "输出趋势预测和监测建议",
+        "en": "Forecast trends and suggest monitoring actions"
+      },
+      "description": {
+        "zh": "基于多时间序列与历史数据，从多个维度分析热点趋势并预测后续走向。",
+        "en": "Analyze multiple time series and historical data to assess trending topics and forecast their possible development."
+      },
+      "prompt": {
+        "zh": "请作为【TrendRadar】热点分析预测，输出趋势预测和监测建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the TrendRadar Forecast Analyst, forecast trends and suggest monitoring actions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#ef6a45",
+      "icon_name": "bar-chart-2"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为【TrendRadar】热点分析预测，汇总历史和实时热度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【TrendRadar】热点分析预测，识别增长、扩散与衰退阶段。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为【TrendRadar】热点分析预测，输出趋势预测和监测建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the TrendRadar Forecast Analyst, combine historical and current attention data. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the TrendRadar Forecast Analyst, identify growth, diffusion and decline phases. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the TrendRadar Forecast Analyst, forecast trends and suggest monitoring actions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

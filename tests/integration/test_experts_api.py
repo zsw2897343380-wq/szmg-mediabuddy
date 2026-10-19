@@ -21,11 +21,42 @@ async def test_list_experts_returns_bundled_library(env: Any) -> None:
     ids = {row["id"] for row in rows}
     # The bundled library lists ``general-assistant``; ``default`` is hidden from the list API.
     assert "general-assistant" in ids
-    assert len(rows) >= 1
+    assert len(rows) == 40
+    assert "ai-coding-coach" not in ids
+    assert "clinical-learning-subscription" not in ids
+    assert "default" not in ids
     sample = next(r for r in rows if r["id"] == "general-assistant")
     assert "label" in sample and "zh" in sample["label"] and "en" in sample["label"]
     assert sample["task_examples"]["zh"]
     assert len(sample["task_examples"]["zh"]) == 3
+    assert sample["category"] is None
+    media = next(row for row in rows if row["id"] == "media-fact-checker")
+    assert media["category"] == "review-proofreading"
+    assert media["label"]["zh"] == "事实核查专家"
+    assert rows[1]["id"] == "media-geo-strategy-architect"
+    assert rows[-1]["id"] == "media-audio-editing-advisor"
+
+
+async def test_media_expert_detail_and_create_use_real_role_template(env: Any) -> None:
+    c, srv, auth = env
+    response = await c.get("/api/experts/media-fact-checker", headers=auth)
+    assert response.status_code == 200
+    detail = response.json()
+    assert detail["category"] == "review-proofreading"
+    assert detail["prompt_files"] == ["SOUL.md"]
+    soul = next(item["content"] for item in detail["file_contents"] if item["name"] == "SOUL.md")
+    assert "拆解稿件中的事实主张" in soul
+    assert "输出证据链和存疑清单" in soul
+    created = await c.post(
+        "/api/agents/from-expert/media-fact-checker",
+        headers=auth,
+        json={"name": "media-fact-check-test"},
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["expert_id"] == "media-fact-checker"
+    row = srv.app_runtime.agent_registry.get_row(created.json()["agent_id"])
+    assert row is not None
+    assert row.template_name == "media-fact-checker"
 
 
 async def test_get_expert_includes_prompt_files(env: Any) -> None:

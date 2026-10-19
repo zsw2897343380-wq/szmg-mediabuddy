@@ -1,0 +1,89 @@
+{
+  "id": "media-potential-topic-recommender",
+  "label": {
+    "zh": "今日潜力选题推荐智能体",
+    "en": "Emerging Story Recommender"
+  },
+  "description": {
+    "zh": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+    "en": "Find emerging topics with growth signals and lower coverage saturation to suggest distinctive reporting angles."
+  },
+  "welcome_message": {
+    "zh": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+    "en": "Find emerging topics with growth signals and lower coverage saturation to suggest distinctive reporting angles."
+  },
+  "category": "topic-planning",
+  "discovery_order": 11,
+  "icon_name": "lightbulb",
+  "color": "#51a8d8",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "分析热点增速与竞争度",
+        "en": "Analyze topic growth and coverage competition"
+      },
+      "description": {
+        "zh": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+        "en": "Find emerging topics with growth signals and lower coverage saturation to suggest distinctive reporting angles."
+      },
+      "prompt": {
+        "zh": "请作为今日潜力选题推荐智能体，分析热点增速与竞争度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Emerging Story Recommender, analyze topic growth and coverage competition. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#51a8d8",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "匹配栏目历史表现",
+        "en": "Match the program's historical performance"
+      },
+      "description": {
+        "zh": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+        "en": "Find emerging topics with growth signals and lower coverage saturation to suggest distinctive reporting angles."
+      },
+      "prompt": {
+        "zh": "请作为今日潜力选题推荐智能体，匹配栏目历史表现。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Emerging Story Recommender, match the program's historical performance. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#51a8d8",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "推荐潜力选题和切入角度",
+        "en": "Recommend emerging stories and reporting angles"
+      },
+      "description": {
+        "zh": "挖掘当日尚未过度拥挤、但具有增长信号的潜力议题，为栏目提供差异化选题。",
+        "en": "Find emerging topics with growth signals and lower coverage saturation to suggest distinctive reporting angles."
+      },
+      "prompt": {
+        "zh": "请作为今日潜力选题推荐智能体，推荐潜力选题和切入角度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Emerging Story Recommender, recommend emerging stories and reporting angles. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#51a8d8",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为今日潜力选题推荐智能体，分析热点增速与竞争度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为今日潜力选题推荐智能体，匹配栏目历史表现。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为今日潜力选题推荐智能体，推荐潜力选题和切入角度。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Emerging Story Recommender, analyze topic growth and coverage competition. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Emerging Story Recommender, match the program's historical performance. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Emerging Story Recommender, recommend emerging stories and reporting angles. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

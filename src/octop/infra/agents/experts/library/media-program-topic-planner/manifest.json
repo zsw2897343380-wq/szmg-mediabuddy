@@ -1,0 +1,89 @@
+{
+  "id": "media-program-topic-planner",
+  "label": {
+    "zh": "栏目策划专家",
+    "en": "Program Topic Planner"
+  },
+  "description": {
+    "zh": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+    "en": "Use program positioning, audiences and current events to develop story lists, plans and interview assignments."
+  },
+  "welcome_message": {
+    "zh": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+    "en": "Use program positioning, audiences and current events to develop story lists, plans and interview assignments."
+  },
+  "category": "topic-planning",
+  "discovery_order": 28,
+  "icon_name": "lightbulb",
+  "color": "#1269ee",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "读取栏目定位与近期选题",
+        "en": "Read the program positioning and recent story selection"
+      },
+      "description": {
+        "zh": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+        "en": "Use program positioning, audiences and current events to develop story lists, plans and interview assignments."
+      },
+      "prompt": {
+        "zh": "请作为栏目策划专家，读取栏目定位与近期选题。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Program Topic Planner, read the program positioning and recent story selection. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#1269ee",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "聚合热点线索与历史表现",
+        "en": "Aggregate news leads and historical performance"
+      },
+      "description": {
+        "zh": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+        "en": "Use program positioning, audiences and current events to develop story lists, plans and interview assignments."
+      },
+      "prompt": {
+        "zh": "请作为栏目策划专家，聚合热点线索与历史表现。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Program Topic Planner, aggregate news leads and historical performance. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#1269ee",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "形成策划案，提交主编确认",
+        "en": "Develop a story plan for editor review"
+      },
+      "description": {
+        "zh": "结合栏目定位、受众与近期热点，输出选题清单、策划案和采访任务分工。",
+        "en": "Use program positioning, audiences and current events to develop story lists, plans and interview assignments."
+      },
+      "prompt": {
+        "zh": "请作为栏目策划专家，形成策划案，提交主编确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Program Topic Planner, develop a story plan for editor review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#1269ee",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为栏目策划专家，读取栏目定位与近期选题。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为栏目策划专家，聚合热点线索与历史表现。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为栏目策划专家，形成策划案，提交主编确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Program Topic Planner, read the program positioning and recent story selection. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Program Topic Planner, aggregate news leads and historical performance. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Program Topic Planner, develop a story plan for editor review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

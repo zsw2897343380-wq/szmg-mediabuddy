@@ -1,0 +1,89 @@
+{
+  "id": "media-publication-compliance-advisor",
+  "label": {
+    "zh": "发布合规顾问",
+    "en": "Publication Compliance Advisor"
+  },
+  "description": {
+    "zh": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+    "en": "Review sensitive wording, copyright notices, attribution and platform publication requirements with specific edits."
+  },
+  "welcome_message": {
+    "zh": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+    "en": "Review sensitive wording, copyright notices, attribution and platform publication requirements with specific edits."
+  },
+  "category": "review-proofreading",
+  "discovery_order": 34,
+  "icon_name": "shield",
+  "color": "#454f62",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "匹配机构审校规则",
+        "en": "Apply institutional editorial review rules"
+      },
+      "description": {
+        "zh": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+        "en": "Review sensitive wording, copyright notices, attribution and platform publication requirements with specific edits."
+      },
+      "prompt": {
+        "zh": "请作为发布合规顾问，匹配机构审校规则。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Publication Compliance Advisor, apply institutional editorial review rules. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#454f62",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "标记风险表述与版权问题",
+        "en": "Flag sensitive wording and copyright issues"
+      },
+      "description": {
+        "zh": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+        "en": "Review sensitive wording, copyright notices, attribution and platform publication requirements with specific edits."
+      },
+      "prompt": {
+        "zh": "请作为发布合规顾问，标记风险表述与版权问题。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Publication Compliance Advisor, flag sensitive wording and copyright issues. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#454f62",
+      "icon_name": "shield"
+    },
+    {
+      "title": {
+        "zh": "输出修改项，等待人工确认",
+        "en": "Produce a revision checklist for editorial review"
+      },
+      "description": {
+        "zh": "检查敏感表述、版权标识、来源署名与平台发布规范，输出逐项修改建议。",
+        "en": "Review sensitive wording, copyright notices, attribution and platform publication requirements with specific edits."
+      },
+      "prompt": {
+        "zh": "请作为发布合规顾问，输出修改项，等待人工确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Publication Compliance Advisor, produce a revision checklist for editorial review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#454f62",
+      "icon_name": "shield"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为发布合规顾问，匹配机构审校规则。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为发布合规顾问，标记风险表述与版权问题。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为发布合规顾问，输出修改项，等待人工确认。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Publication Compliance Advisor, apply institutional editorial review rules. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Publication Compliance Advisor, flag sensitive wording and copyright issues. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Publication Compliance Advisor, produce a revision checklist for editorial review. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

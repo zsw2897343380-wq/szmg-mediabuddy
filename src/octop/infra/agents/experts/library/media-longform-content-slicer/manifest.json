@@ -1,0 +1,89 @@
+{
+  "id": "media-longform-content-slicer",
+  "label": {
+    "zh": "长文案切片智能体",
+    "en": "Long-form Content Slicer"
+  },
+  "description": {
+    "zh": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+    "en": "Transform long articles into a publishable series for Weibo, Xiaohongshu, Douyin and WeChat Channels."
+  },
+  "welcome_message": {
+    "zh": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+    "en": "Transform long articles into a publishable series for Weibo, Xiaohongshu, Douyin and WeChat Channels."
+  },
+  "category": "article-production",
+  "discovery_order": 13,
+  "icon_name": "file-text",
+  "color": "#4a7fd1",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "识别长文核心观点和信息块",
+        "en": "Identify a long article's key points and information blocks"
+      },
+      "description": {
+        "zh": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+        "en": "Transform long articles into a publishable series for Weibo, Xiaohongshu, Douyin and WeChat Channels."
+      },
+      "prompt": {
+        "zh": "请作为长文案切片智能体，识别长文核心观点和信息块。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Long-form Content Slicer, identify a long article's key points and information blocks. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4a7fd1",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "按平台重组内容切片",
+        "en": "Reorganize content into platform-specific segments"
+      },
+      "description": {
+        "zh": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+        "en": "Transform long articles into a publishable series for Weibo, Xiaohongshu, Douyin and WeChat Channels."
+      },
+      "prompt": {
+        "zh": "请作为长文案切片智能体，按平台重组内容切片。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Long-form Content Slicer, reorganize content into platform-specific segments. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4a7fd1",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成发布顺序与标题建议",
+        "en": "Suggest a publication sequence and titles"
+      },
+      "description": {
+        "zh": "把长文拆分为微博、小红书、抖音和视频号等平台可发布的系列内容。",
+        "en": "Transform long articles into a publishable series for Weibo, Xiaohongshu, Douyin and WeChat Channels."
+      },
+      "prompt": {
+        "zh": "请作为长文案切片智能体，生成发布顺序与标题建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Long-form Content Slicer, suggest a publication sequence and titles. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#4a7fd1",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为长文案切片智能体，识别长文核心观点和信息块。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为长文案切片智能体，按平台重组内容切片。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为长文案切片智能体，生成发布顺序与标题建议。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Long-form Content Slicer, identify a long article's key points and information blocks. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Long-form Content Slicer, reorganize content into platform-specific segments. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Long-form Content Slicer, suggest a publication sequence and titles. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

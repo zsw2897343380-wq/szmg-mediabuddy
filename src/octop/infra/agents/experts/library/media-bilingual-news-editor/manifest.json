@@ -1,0 +1,89 @@
+{
+  "id": "media-bilingual-news-editor",
+  "label": {
+    "zh": "资深中英双语新闻主编与翻译官",
+    "en": "Bilingual News Editor and Translator"
+  },
+  "description": {
+    "zh": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+    "en": "Produce accurate Chinese and English news that follows media conventions and supports international communication."
+  },
+  "welcome_message": {
+    "zh": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+    "en": "Produce accurate Chinese and English news that follows media conventions and supports international communication."
+  },
+  "category": "international-communication",
+  "discovery_order": 21,
+  "icon_name": "globe",
+  "color": "#b56b39",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "读取原稿和发布场景",
+        "en": "Read the source and publication context"
+      },
+      "description": {
+        "zh": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+        "en": "Produce accurate Chinese and English news that follows media conventions and supports international communication."
+      },
+      "prompt": {
+        "zh": "请作为资深中英双语新闻主编与翻译官，读取原稿和发布场景。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Bilingual News Editor and Translator, read the source and publication context. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#b56b39",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "完成双语编译与编辑",
+        "en": "Translate and edit bilingual copy"
+      },
+      "description": {
+        "zh": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+        "en": "Produce accurate Chinese and English news that follows media conventions and supports international communication."
+      },
+      "prompt": {
+        "zh": "请作为资深中英双语新闻主编与翻译官，完成双语编译与编辑。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Bilingual News Editor and Translator, translate and edit bilingual copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#b56b39",
+      "icon_name": "globe"
+    },
+    {
+      "title": {
+        "zh": "校验专名、事实和媒体规范",
+        "en": "Verify names, facts and media conventions"
+      },
+      "description": {
+        "zh": "生成符合中英文媒体规范的高质量新闻内容，兼顾表达准确性和国际传播视角。",
+        "en": "Produce accurate Chinese and English news that follows media conventions and supports international communication."
+      },
+      "prompt": {
+        "zh": "请作为资深中英双语新闻主编与翻译官，校验专名、事实和媒体规范。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Bilingual News Editor and Translator, verify names, facts and media conventions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#b56b39",
+      "icon_name": "globe"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为资深中英双语新闻主编与翻译官，读取原稿和发布场景。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深中英双语新闻主编与翻译官，完成双语编译与编辑。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深中英双语新闻主编与翻译官，校验专名、事实和媒体规范。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Bilingual News Editor and Translator, read the source and publication context. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Bilingual News Editor and Translator, translate and edit bilingual copy. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Bilingual News Editor and Translator, verify names, facts and media conventions. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "media-content-expansion-writer",
+  "label": {
+    "zh": "资深内容延展专家",
+    "en": "Content Expansion Writer"
+  },
+  "description": {
+    "zh": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+    "en": "Expand outlines, short statements and keywords into logically structured, informative long-form content."
+  },
+  "welcome_message": {
+    "zh": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+    "en": "Expand outlines, short statements and keywords into logically structured, informative long-form content."
+  },
+  "category": "article-production",
+  "discovery_order": 20,
+  "icon_name": "file-text",
+  "color": "#6885d2",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "确认核心观点和目标篇幅",
+        "en": "Confirm the core message and target length"
+      },
+      "description": {
+        "zh": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+        "en": "Expand outlines, short statements and keywords into logically structured, informative long-form content."
+      },
+      "prompt": {
+        "zh": "请作为资深内容延展专家，确认核心观点和目标篇幅。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Content Expansion Writer, confirm the core message and target length. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6885d2",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "构建层级结构与论据",
+        "en": "Build a structured outline and supporting arguments"
+      },
+      "description": {
+        "zh": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+        "en": "Expand outlines, short statements and keywords into logically structured, informative long-form content."
+      },
+      "prompt": {
+        "zh": "请作为资深内容延展专家，构建层级结构与论据。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Content Expansion Writer, build a structured outline and supporting arguments. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6885d2",
+      "icon_name": "file-text"
+    },
+    {
+      "title": {
+        "zh": "生成完整长文并保留主旨",
+        "en": "Produce a complete article that preserves the original intent"
+      },
+      "description": {
+        "zh": "把提纲、短句或关键词扩展为逻辑严密、信息丰富的长文内容。",
+        "en": "Expand outlines, short statements and keywords into logically structured, informative long-form content."
+      },
+      "prompt": {
+        "zh": "请作为资深内容延展专家，生成完整长文并保留主旨。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Content Expansion Writer, produce a complete article that preserves the original intent. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#6885d2",
+      "icon_name": "file-text"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为资深内容延展专家，确认核心观点和目标篇幅。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深内容延展专家，构建层级结构与论据。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为资深内容延展专家，生成完整长文并保留主旨。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Content Expansion Writer, confirm the core message and target length. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Content Expansion Writer, build a structured outline and supporting arguments. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Content Expansion Writer, produce a complete article that preserves the original intent. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

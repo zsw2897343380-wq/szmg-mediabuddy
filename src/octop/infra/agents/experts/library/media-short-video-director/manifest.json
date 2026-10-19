@@ -1,0 +1,89 @@
+{
+  "id": "media-short-video-director",
+  "label": {
+    "zh": "短视频编导",
+    "en": "Short-video Director"
+  },
+  "description": {
+    "zh": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+    "en": "Turn news topics into scripts, shot lists and pacing suggestions for portrait and landscape formats."
+  },
+  "welcome_message": {
+    "zh": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+    "en": "Turn news topics into scripts, shot lists and pacing suggestions for portrait and landscape formats."
+  },
+  "category": "viral-creation",
+  "discovery_order": 32,
+  "icon_name": "video",
+  "color": "#e34d65",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "识别核心信息与目标受众",
+        "en": "Identify core information and target audiences"
+      },
+      "description": {
+        "zh": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+        "en": "Turn news topics into scripts, shot lists and pacing suggestions for portrait and landscape formats."
+      },
+      "prompt": {
+        "zh": "请作为短视频编导，识别核心信息与目标受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Short-video Director, identify core information and target audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e34d65",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "生成脚本和镜头清单",
+        "en": "Produce a script and shot list"
+      },
+      "description": {
+        "zh": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+        "en": "Turn news topics into scripts, shot lists and pacing suggestions for portrait and landscape formats."
+      },
+      "prompt": {
+        "zh": "请作为短视频编导，生成脚本和镜头清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Short-video Director, produce a script and shot list. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e34d65",
+      "icon_name": "video"
+    },
+    {
+      "title": {
+        "zh": "适配竖屏、横屏与平台时长",
+        "en": "Adapt for portrait, landscape and platform duration"
+      },
+      "description": {
+        "zh": "把新闻主题拆成短视频脚本、镜头清单与节奏建议，支持竖屏和横屏版本。",
+        "en": "Turn news topics into scripts, shot lists and pacing suggestions for portrait and landscape formats."
+      },
+      "prompt": {
+        "zh": "请作为短视频编导，适配竖屏、横屏与平台时长。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Short-video Director, adapt for portrait, landscape and platform duration. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#e34d65",
+      "icon_name": "video"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为短视频编导，识别核心信息与目标受众。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为短视频编导，生成脚本和镜头清单。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为短视频编导，适配竖屏、横屏与平台时长。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Short-video Director, identify core information and target audiences. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Short-video Director, produce a script and shot list. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Short-video Director, adapt for portrait, landscape and platform duration. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}

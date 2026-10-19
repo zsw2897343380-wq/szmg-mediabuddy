@@ -1,0 +1,89 @@
+{
+  "id": "media-executive-interview-planner",
+  "label": {
+    "zh": "高端访谈策划架构师",
+    "en": "Executive Interview Planner"
+  },
+  "description": {
+    "zh": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+    "en": "Design interview structures, key topics, follow-up paths and contingency plans for prominent guests."
+  },
+  "welcome_message": {
+    "zh": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+    "en": "Design interview structures, key topics, follow-up paths and contingency plans for prominent guests."
+  },
+  "category": "topic-planning",
+  "discovery_order": 14,
+  "icon_name": "lightbulb",
+  "color": "#3470cf",
+  "prompt_files": [
+    "SOUL.md"
+  ],
+  "source": {
+    "type": "mediabuddy",
+    "url": "https://www.sztv.com.cn/huodong/zzx/mediabuddy/index.html",
+    "sha256": "9934b0afec81f4aa776974dd434434d94901adde0adbd685d329d567c7c5e0bc"
+  },
+  "quick_prompts": [
+    {
+      "title": {
+        "zh": "研究嘉宾背景和节目目标",
+        "en": "Research the guest and program objectives"
+      },
+      "description": {
+        "zh": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+        "en": "Design interview structures, key topics, follow-up paths and contingency plans for prominent guests."
+      },
+      "prompt": {
+        "zh": "请作为高端访谈策划架构师，研究嘉宾背景和节目目标。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Executive Interview Planner, research the guest and program objectives. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3470cf",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "设计议题结构与追问路径",
+        "en": "Design topic structure and follow-up paths"
+      },
+      "description": {
+        "zh": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+        "en": "Design interview structures, key topics, follow-up paths and contingency plans for prominent guests."
+      },
+      "prompt": {
+        "zh": "请作为高端访谈策划架构师，设计议题结构与追问路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Executive Interview Planner, design topic structure and follow-up paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3470cf",
+      "icon_name": "lightbulb"
+    },
+    {
+      "title": {
+        "zh": "形成访谈手册和风险预案",
+        "en": "Prepare an interview handbook and contingency plan"
+      },
+      "description": {
+        "zh": "面向政商学界重要嘉宾设计访谈结构、核心议题、追问路径与风险预案。",
+        "en": "Design interview structures, key topics, follow-up paths and contingency plans for prominent guests."
+      },
+      "prompt": {
+        "zh": "请作为高端访谈策划架构师，形成访谈手册和风险预案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+        "en": "As the Executive Interview Planner, prepare an interview handbook and contingency plan. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+      },
+      "color": "#3470cf",
+      "icon_name": "lightbulb"
+    }
+  ],
+  "task_examples": {
+    "zh": [
+      "请作为高端访谈策划架构师，研究嘉宾背景和节目目标。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为高端访谈策划架构师，设计议题结构与追问路径。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n",
+      "请作为高端访谈策划架构师，形成访谈手册和风险预案。依据我提供的素材和当前可用的工具完成，列出关键依据；必要素材缺失时说明需要补充的信息。\n\n任务素材：\n"
+    ],
+    "en": [
+      "As the Executive Interview Planner, research the guest and program objectives. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Executive Interview Planner, design topic structure and follow-up paths. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n",
+      "As the Executive Interview Planner, prepare an interview handbook and contingency plan. Use the materials I provide and currently available tools, include supporting evidence, and identify any essential missing information.\n\nTask materials:\n"
+    ]
+  }
+}
