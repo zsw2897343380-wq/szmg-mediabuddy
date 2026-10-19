@@ -934,6 +934,8 @@ function ChatPageInner() {
 
   const handleNewChat = useCallback(() => {
     welcomeDrafts.current.clear();
+    prefillInputRef.current = "";
+    chatInputRef.current?.setPrefillText("");
     clearQueued();
     startNewChat();
   }, [clearQueued, startNewChat]);
@@ -942,6 +944,8 @@ function ChatPageInner() {
     const start = () => {
       if (!resolvedAgentId) return;
       welcomeDrafts.current.clear();
+      prefillInputRef.current = "";
+      chatInputRef.current?.setPrefillText("");
       clearQueued();
       handleNewChatWithAgent(resolvedAgentId);
       chatInputRef.current?.focusComposer();
@@ -1311,10 +1315,11 @@ function ChatPageInner() {
       `${resolvedAgentId}:${welcomeScene}`,
       chatInputRef.current?.readText() ?? "",
     );
+    const nextDraft =
+      welcomeDrafts.current.get(`${resolvedAgentId}:${scene}`) ?? "";
+    prefillInputRef.current = nextDraft;
     setWelcomeScene(scene);
-    chatInputRef.current?.setPrefillText(
-      welcomeDrafts.current.get(`${resolvedAgentId}:${scene}`) ?? "",
-    );
+    chatInputRef.current?.setPrefillText(nextDraft);
   };
 
   useEffect(() => {
@@ -1374,6 +1379,8 @@ function ChatPageInner() {
       onAgentSelect={navigateToAgent}
       onNewChatWithAgent={(agentId) => {
         welcomeDrafts.current.clear();
+        prefillInputRef.current = "";
+        chatInputRef.current?.setPrefillText("");
         clearQueued();
         handleNewChatWithAgent(agentId);
       }}
