@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 
 // Lazy-loaded pages — Common
 const CapabilityCenter = lazy(() => import("../pages/CapabilityCenter"));
+const AssistantsPage = lazy(() => import("../pages/Assistants"));
 const CronJobsPage = lazy(() => import("../pages/Control/CronJobs"));
 const KnowledgeBasesPage = lazy(() => import("../pages/KnowledgeBases"));
 const BridgePage = lazy(() => import("../pages/Settings/Bridge"));
@@ -46,6 +47,7 @@ export interface RouteConfig {
 
 export const pathToKey: Record<string, string> = {
   "/chat": "chat",
+  "/assistants": "chat",
   // Common
   "/experts": "experts",
   "/tasks": "tasks",
@@ -96,6 +98,7 @@ export const pathToKey: Record<string, string> = {
  * Pages that should fill the entire content area without padding/scroll wrapper.
  */
 export const FULLSCREEN_PATHS = new Set([
+  "/assistants",
   "/workbench",
   "/workbench/terminal",
   "/workbench/browser",
@@ -148,6 +151,7 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/chat/:agentId/:threadId", element: null, useWrapper: true },
 
   // Common
+  { path: "/assistants", element: <AssistantsPage /> },
   { path: "/experts", element: <CapabilityCenter /> },
   { path: "/tasks", element: <CronJobsPage /> },
   { path: "/connectors", element: <CapabilityCenter /> },

@@ -15,6 +15,16 @@ const adminUser = {
 } as OctopUser;
 
 describe("sidebarNav", () => {
+  it("opens the assistant workspace independently of a new task", () => {
+    const assistant = buildNavSections(adminUser)[0]?.items[0];
+    expect(assistant).toMatchObject({
+      key: "chat",
+      path: "/assistants",
+      labelKey: "nav.assistant",
+      badge: "BETA",
+    });
+  });
+
   it("marks catalog keys as grouped", () => {
     for (const key of SIDEBAR_GROUPED_NAV_KEYS) {
       expect(isGroupedNavKey(key)).toBe(true);

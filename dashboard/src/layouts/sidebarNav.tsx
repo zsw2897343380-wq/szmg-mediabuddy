@@ -154,9 +154,10 @@ export function buildNavSections(
   const topItems: NavItem[] = [
     {
       key: "chat",
-      path: "/chat",
+      path: "/assistants",
       icon: <Bot size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.assistant",
+      badge: "BETA",
     },
   ];
   const centerPath = navAllowed(user, "experts")

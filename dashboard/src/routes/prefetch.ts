@@ -1,6 +1,7 @@
 /** Map sidebar paths to their lazy route chunks for hover prefetch. */
 const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/chat": () => import("../pages/Chat"),
+  "/assistants": () => import("../pages/Assistants"),
   "/experts": () => import("../pages/CapabilityCenter"),
   "/tasks": () => import("../pages/Control/CronJobs"),
   "/connectors": () => import("../pages/CapabilityCenter"),

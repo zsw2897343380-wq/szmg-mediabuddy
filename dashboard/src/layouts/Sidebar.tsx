@@ -219,7 +219,11 @@ function NavItemButton({
           ) : null}
           {item.badge && (
             <span
-              className="nav-badge-new"
+              className={
+                item.path === "/assistants"
+                  ? styles.assistantBeta
+                  : "nav-badge-new"
+              }
               style={{
                 fontSize: typeSize(9, isMobile),
                 fontWeight: 600,
@@ -662,7 +666,9 @@ export default function Sidebar({
           <div className={styles.minimalPrimaryBlock}>
             <NavList
               sections={navSections}
-              selectedKey={selectedKey === "chat" ? "" : selectedKey}
+              selectedKey={
+                selectedKey === "chat" && onChatPath ? "" : selectedKey
+              }
               onNavigate={handleNavigate}
               onToggleChatRail={handleToggleChatRail}
               showChatRailToggle={false}
