@@ -93,6 +93,45 @@
   }
 }
 
+/* Empty task: keep heading, composer and suggestions together in one column. */
+.chatMainWelcome {
+  --chat-column-max: 800px;
+  overflow-y: auto;
+
+  .chatTitleBar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .chatContent {
+    flex: 0 0 auto;
+    margin-top: auto;
+  }
+
+  .chatInput {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .textarea {
+    min-height: 92px;
+  }
+
+  @media (max-width: 767px) {
+    .chatInput {
+      padding-bottom: max(
+        env(safe-area-inset-bottom, 0px),
+        var(--keyboard-offset, 0px)
+      );
+    }
+
+    .textarea {
+      min-height: 72px;
+    }
+  }
+}
+
 .chatTitleBar {
   display: flex;
   align-items: center;

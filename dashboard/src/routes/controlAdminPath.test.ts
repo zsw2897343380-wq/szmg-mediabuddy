@@ -124,3 +124,26 @@ describe("unknown dashboard paths", () => {
     expect(routeConfigs.some((rc) => rc.path === "*")).toBe(true);
   });
 });
+
+describe("combined capability center routes", () => {
+  it("selects one navigation entry while keeping per-resource permissions", () => {
+    for (const path of [
+      "/experts",
+      "/skills",
+      "/connectors",
+      "/skill-packages",
+    ]) {
+      expect(resolveSelectedKey(path)).toBe("experts");
+      expect(routeConfigs.some((rc) => rc.path === path)).toBe(true);
+    }
+    expect(canAccessPath({ role: "user", permissions: [] }, "/skills")).toBe(
+      true,
+    );
+    expect(
+      canAccessPath({ role: "user", permissions: [] }, "/connectors"),
+    ).toBe(false);
+    expect(
+      canAccessPath({ role: "user", permissions: [] }, "/skill-packages"),
+    ).toBe(false);
+  });
+});

@@ -48,7 +48,14 @@ describe("sidebarNav", () => {
     const keys = buildNavSections(adminUser, { mobileEnabled: true }).flatMap(
       (section) => section.items.map((item) => item.key),
     );
-    expect(new Set(keys)).toEqual(new Set(SIDEBAR_NAV_KEYS));
+    // Legacy persisted keys remain accepted; their UI now lives in the center.
+    expect(new Set(keys)).toEqual(
+      new Set(
+        SIDEBAR_NAV_KEYS.filter(
+          (key) => key !== "connectors" && key !== "skill-packages",
+        ),
+      ),
+    );
     const grouped = buildNavSections(adminUser, { mobileEnabled: true }).filter(
       (section) => section.id,
     );

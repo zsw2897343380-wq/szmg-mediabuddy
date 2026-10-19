@@ -2192,7 +2192,11 @@ const CONNECTOR_TABS: TabBarItem<ConnectorTab>[] = [
   { key: "custom", labelKey: "connectors.tabCustom", icon: Wrench },
 ];
 
-export default function ConnectorsPage() {
+export default function ConnectorsPage({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ConnectorTab>("enabled");
@@ -2273,6 +2277,7 @@ export default function ConnectorsPage() {
 
   return (
     <PageShell.Tabbed
+      embedded={embedded}
       title={t("pageShell.connectors.title")}
       subtitle={t("pageShell.connectors.subtitle")}
       tabBar={

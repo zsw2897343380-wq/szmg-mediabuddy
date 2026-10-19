@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ArrowUpRight } from "lucide-react";
 import { ExpertIcon } from "../../Experts/components/iconForName";
 import { pastelIconBackground } from "../../../utils/pastelIconBackground";
 import { expertMentionToken, withExpertMention } from "../utils/expertMention";
@@ -11,7 +12,6 @@ interface WelcomeQuickCardsProps {
   expanded: boolean;
   onToggle: () => void;
   onPromptClick: (text: string, options?: { prefill?: boolean }) => void;
-  sectionTitleRef: React.Ref<HTMLSpanElement>;
 }
 
 export default function WelcomeQuickCards({
@@ -20,7 +20,6 @@ export default function WelcomeQuickCards({
   expanded,
   onToggle,
   onPromptClick,
-  sectionTitleRef,
 }: WelcomeQuickCardsProps) {
   const { t } = useTranslation();
 
@@ -28,7 +27,7 @@ export default function WelcomeQuickCards({
 
   return (
     <div className={styles.quickSection}>
-      <span className={styles.quickSectionTitle} ref={sectionTitleRef}>
+      <span className={styles.quickSectionTitle}>
         {t("chatWelcome.promptSectionTitle")}
       </span>
       <div className={styles.quickCards}>
@@ -41,13 +40,14 @@ export default function WelcomeQuickCards({
               key={`${card.expertName ?? ""}-${card.title}-${i}`}
               type="button"
               className={styles.quickCard}
+              title={card.description}
               style={{ animationDelay: `${i * 40}ms` }}
               onClick={() =>
                 onPromptClick(
                   card.expertName
                     ? withExpertMention(card.prompt, card.expertName)
                     : card.prompt,
-                  { prefill: Boolean(card.expertName) },
+                  { prefill: true },
                 )
               }
             >
@@ -73,6 +73,11 @@ export default function WelcomeQuickCards({
                 </span>
                 <span className={styles.quickCardDesc}>{card.description}</span>
               </div>
+              <ArrowUpRight
+                size={14}
+                className={styles.quickCardArrow}
+                aria-hidden
+              />
             </button>
           );
         })}
@@ -100,28 +105,6 @@ export default function WelcomeQuickCards({
           </svg>
         </button>
       )}
-    </div>
-  );
-}
-
-interface WelcomeQuickCardProbeProps {
-  probeRef: React.Ref<HTMLDivElement>;
-}
-
-export function WelcomeQuickCardProbe({
-  probeRef,
-}: WelcomeQuickCardProbeProps) {
-  return (
-    <div
-      ref={probeRef}
-      aria-hidden
-      className={`${styles.quickCard} ${styles.quickCardProbe}`}
-    >
-      <div className={styles.quickCardIcon} />
-      <div className={styles.quickCardBody}>
-        <span className={styles.quickCardTitle}>probe</span>
-        <span className={styles.quickCardDesc}>probe</span>
-      </div>
     </div>
   );
 }

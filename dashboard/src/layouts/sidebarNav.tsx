@@ -5,7 +5,6 @@ import {
   Timer,
   SlidersHorizontal,
   Waypoints,
-  Link2,
   Database,
   Cpu,
   Users as UsersIcon,
@@ -13,7 +12,6 @@ import {
   Share2,
   Sparkles,
   Puzzle,
-  Package,
   HardDrive,
   GraduationCap,
   Shield,
@@ -22,7 +20,7 @@ import {
 import type { OctopUser } from "../api/modules/auth";
 import { navAllowed, userCan } from "../utils/permissions";
 
-export const EXPANDED_WIDTH = 220;
+export const EXPANDED_WIDTH = 272;
 export const COLLAPSED_WIDTH = 56;
 
 const iconSize = 16;
@@ -46,7 +44,10 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Every nav item key the sidebar can show. Keep in sync with `SIDEBAR_NAV_KEYS` in `octop.infra.users.preferences`. */
+/** Persisted nav keys, synced with `octop.infra.users.preferences`.
+ * Keep legacy connectors/skill-packages keys compatible with saved layouts;
+ * their pages now share the experts navigation entry.
+ */
 export const SIDEBAR_NAV_KEYS = [
   "chat",
   "experts",
@@ -145,7 +146,7 @@ export function buildNavSections(
           key: "experts",
           path: "/experts",
           icon: <GraduationCap size={iconSize} strokeWidth={iconStroke} />,
-          labelKey: "nav.experts",
+          labelKey: "capabilityCenter.title",
         },
         {
           key: "tasks",
@@ -166,7 +167,7 @@ export function buildNavSections(
   const settingsItems: NavItem[] = [
     {
       key: "personalization",
-      path: "/personalization/skills",
+      path: "/personalization/tools",
       icon: <Sparkles size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.personalization",
     },
@@ -177,22 +178,6 @@ export function buildNavSections(
       path: "/personalization/channels",
       icon: <Waypoints size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.channels",
-    });
-  }
-  if (navAllowed(user, "connectors")) {
-    settingsItems.push({
-      key: "connectors",
-      path: "/connectors",
-      icon: <Link2 size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.connectors",
-    });
-  }
-  if (navAllowed(user, "skill-packages")) {
-    settingsItems.push({
-      key: "skill-packages",
-      path: "/skill-packages",
-      icon: <Package size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.skillPackages",
     });
   }
   if (navAllowed(user, "knowledge-bases")) {

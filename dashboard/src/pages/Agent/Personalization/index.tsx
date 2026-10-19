@@ -1,22 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Empty } from "antd";
-import {
-  Bot,
-  Brain,
-  Notebook,
-  Puzzle,
-  Sparkles,
-  Waypoints,
-  Wrench,
-} from "lucide-react";
+import { Bot, Brain, Notebook, Puzzle, Waypoints, Wrench } from "lucide-react";
 import PageShell, { pageShellStyles } from "../../../layouts/PageShell";
 import { useAgent } from "../../../context/AgentContext";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { usePathTabs } from "../../../hooks/usePathTabs";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { userCan } from "../../../utils/permissions";
-import SkillsTabs from "../Skills/components/SkillsTabs";
 import ToolsTabs from "../Tools/ToolsTabs";
 import SubagentManager from "../../Experts/components/SubagentManager";
 import MBTISelector from "./components/MBTISelector";
@@ -26,7 +17,6 @@ import ChannelsPanel from "../Channels/ChannelsPanel";
 import styles from "./index.module.less";
 
 export type PersonalizationTab =
-  | "skills"
   | "subagents"
   | "tools"
   | "plugins"
@@ -35,7 +25,6 @@ export type PersonalizationTab =
   | "channels";
 
 const PERSONALIZATION_TABS = [
-  "skills",
   "subagents",
   "tools",
   "plugins",
@@ -45,7 +34,6 @@ const PERSONALIZATION_TABS = [
 ] as const satisfies readonly PersonalizationTab[];
 
 const TAB_ICONS = {
-  skills: Sparkles,
   subagents: Bot,
   tools: Wrench,
   plugins: Puzzle,
@@ -72,7 +60,7 @@ export default function PersonalizationPage() {
     basePath: "/personalization",
     tabs: PERSONALIZATION_TABS,
     storageKey: "octop:personalization:tab",
-    defaultTab: "skills",
+    defaultTab: "tools",
     isAllowed,
   });
 
@@ -107,18 +95,6 @@ export default function PersonalizationPage() {
       pathTabs={pathTabs}
     >
       <div className={styles.panels}>
-        {isMounted("skills") && (
-          <div
-            className={styles.panel}
-            style={{ display: activeTab === "skills" ? "flex" : "none" }}
-            aria-hidden={activeTab !== "skills"}
-          >
-            <div className={pageShellStyles.fillChild}>
-              <SkillsTabs agentId={activeAgentId} />
-            </div>
-          </div>
-        )}
-
         {isMounted("tools") && (
           <div
             className={styles.panel}

@@ -38,6 +38,8 @@ interface PageShellProps {
   agentScoped?: boolean;
   /** When true, the content area does not scroll; children fill remaining height. */
   fill?: boolean;
+  /** Render within a shared management surface without another page heading. */
+  embedded?: boolean;
   children: React.ReactNode;
 }
 
@@ -93,12 +95,13 @@ function PageShell({
   pathTabs,
   agentScoped,
   fill,
+  embedded = false,
   children,
 }: PageShellProps) {
   const isMobile = useIsMobile();
-  const outerPad = isMobile ? 12 : 32;
-  const outerPadTop = isMobile ? 12 : 24;
-  const contentPad = isMobile ? 12 : 24;
+  const outerPad = embedded ? 0 : isMobile ? 12 : 32;
+  const outerPadTop = embedded ? 0 : isMobile ? 12 : 24;
+  const contentPad = embedded ? 0 : isMobile ? 12 : 24;
   /** Fill layout, or mobile path-tabs that must stay pinned above the body. */
   const pinBody = Boolean(fill || (isMobile && pathTabs));
   /**
@@ -136,42 +139,46 @@ function PageShell({
       }}
     >
       {/* Title row — fixed, never scrolls */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 12,
-          flexShrink: 0,
-          marginBottom: agentScoped ? 12 : 24,
-          paddingRight: titleRowEndPadding(outerPad),
-        }}
-      >
-        <div>
-          <Title
-            level={4}
-            style={{
-              margin: 0,
-              lineHeight: "28px",
-              fontSize: 20,
-              fontWeight: 600,
-            }}
-          >
-            {title}
-          </Title>
-          {subtitle && (
-            <Text
-              type="secondary"
-              style={{ fontSize: 13, marginTop: 4, display: "block" }}
-            >
-              {subtitle}
-            </Text>
+      {(!embedded || titleActions) && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+            flexShrink: 0,
+            marginBottom: agentScoped ? 12 : 24,
+            paddingRight: titleRowEndPadding(outerPad),
+          }}
+        >
+          {!embedded && (
+            <div>
+              <Title
+                level={4}
+                style={{
+                  margin: 0,
+                  lineHeight: "28px",
+                  fontSize: 20,
+                  fontWeight: 600,
+                }}
+              >
+                {title}
+              </Title>
+              {subtitle && (
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 13, marginTop: 4, display: "block" }}
+                >
+                  {subtitle}
+                </Text>
+              )}
+            </div>
+          )}
+          {titleActions && (
+            <div style={{ flexShrink: 0, paddingTop: 2 }}>{titleActions}</div>
           )}
         </div>
-        {titleActions && (
-          <div style={{ flexShrink: 0, paddingTop: 2 }}>{titleActions}</div>
-        )}
-      </div>
+      )}
 
       {agentScoped && (
         <div className={styles.agentBar}>

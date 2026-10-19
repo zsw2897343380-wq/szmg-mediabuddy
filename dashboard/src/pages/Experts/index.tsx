@@ -98,7 +98,11 @@ function installedExpertIdsFromAgents(
   return ids;
 }
 
-export default function ExpertsPage() {
+export default function ExpertsPage({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const lang: "zh" | "en" = i18n.language?.startsWith("zh") ? "zh" : "en";
   const isMobile = useIsMobile();
@@ -707,6 +711,7 @@ export default function ExpertsPage() {
 
   return (
     <PageShell.FillTabs
+      embedded={embedded}
       title={t("pageShell.experts.title")}
       subtitle={t("pageShell.experts.subtitle")}
     >

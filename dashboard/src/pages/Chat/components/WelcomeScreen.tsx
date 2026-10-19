@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useWelcomeQuickCardsLayout } from "../hooks/useWelcomeQuickCardsLayout";
-import WelcomeQuickCards, { WelcomeQuickCardProbe } from "./WelcomeQuickCards";
+import { Hammer, ListTodo, MessageCircleQuestion } from "lucide-react";
+import WelcomeQuickCards from "./WelcomeQuickCards";
+import type { ConversationMode } from "../utils/conversationMode";
 import styles from "../index.module.less";
 
 // Animated WebP keeps alpha on Safari; VP9 WebM alpha is unreliable there.
@@ -30,46 +31,35 @@ export interface WelcomeQuickCard {
 }
 
 interface WelcomeScreenProps {
-  onPromptClick: (text: string, options?: { prefill?: boolean }) => void;
   agentName?: string | null;
   welcomeSuffix?: string | null;
-  quickCards: WelcomeQuickCard[];
   hideMascot?: boolean;
   isTeam?: boolean;
+  conversationMode: ConversationMode;
+  onConversationModeChange: (mode: ConversationMode) => void;
 }
 
 export default function WelcomeScreen({
-  onPromptClick,
   agentName,
   welcomeSuffix,
-  quickCards,
   hideMascot = false,
   isTeam = false,
+  conversationMode,
+  onConversationModeChange,
 }: WelcomeScreenProps) {
   const { t } = useTranslation();
   const [mascotSrc, setMascotSrc] = useState(MASCOT_PEEK);
-  const {
-    welcomeRef,
-    headingRef,
-    sectionTitleRef,
-    probeRef,
-    expanded,
-    setExpanded,
-    cards,
-    showToggle,
-    autoHideMascot,
-  } = useWelcomeQuickCardsLayout(quickCards);
 
   const handleMascotClick = () => {
     setMascotSrc((prev) => getRandomMascot(prev));
   };
 
-  const showMascot = !hideMascot && !autoHideMascot;
+  const showMascot = !hideMascot;
 
   return (
-    <div className={styles.welcome} ref={welcomeRef}>
+    <div className={styles.welcome}>
       <div className={styles.welcomeInner}>
-        <div className={styles.welcomeHeading} ref={headingRef}>
+        <div className={styles.welcomeHeading}>
           {showMascot && (
             <img
               className={styles.welcomeMascot}
@@ -80,7 +70,7 @@ export default function WelcomeScreen({
               role="button"
               tabIndex={0}
               title={t("chatWelcome.mascotSwitchHint")}
-              aria-label="MediaBuddy mascot"
+              aria-label={t("chatWelcome.mascotSwitchHint")}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -118,19 +108,52 @@ export default function WelcomeScreen({
           </p>
         </div>
 
-        {quickCards.length > 0 && (
-          <WelcomeQuickCards
-            cards={cards}
-            showToggle={showToggle}
-            expanded={expanded}
-            onToggle={() => setExpanded((prev) => !prev)}
-            onPromptClick={onPromptClick}
-            sectionTitleRef={sectionTitleRef}
-          />
-        )}
+        <div
+          className={styles.welcomeModes}
+          role="group"
+          aria-label={t("chat.conversationMode.picker")}
+        >
+          {(
+            [
+              { mode: "craft", Icon: Hammer },
+              { mode: "plan", Icon: ListTodo },
+              { mode: "ask", Icon: MessageCircleQuestion },
+            ] as const
+          ).map(({ mode, Icon }) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={conversationMode === mode}
+              title={t(`chat.conversationMode.${mode}Hint`)}
+              onClick={() => onConversationModeChange(mode)}
+            >
+              <Icon size={15} />
+              {t(`chat.conversationMode.${mode}`)}
+            </button>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
 
-      {quickCards.length > 0 && <WelcomeQuickCardProbe probeRef={probeRef} />}
+export function WelcomeSuggestions({
+  quickCards,
+  onPromptClick,
+}: {
+  quickCards: WelcomeQuickCard[];
+  onPromptClick: (text: string, options?: { prefill?: boolean }) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className={styles.welcomeSuggestions}>
+      <WelcomeQuickCards
+        cards={expanded ? quickCards : quickCards.slice(0, 4)}
+        showToggle={quickCards.length > 4}
+        expanded={expanded}
+        onToggle={() => setExpanded((prev) => !prev)}
+        onPromptClick={onPromptClick}
+      />
     </div>
   );
 }

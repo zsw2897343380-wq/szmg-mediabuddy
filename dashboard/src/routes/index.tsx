@@ -2,10 +2,8 @@ import { lazy } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 // Lazy-loaded pages — Common
-const ExpertsPage = lazy(() => import("../pages/Experts"));
+const CapabilityCenter = lazy(() => import("../pages/CapabilityCenter"));
 const CronJobsPage = lazy(() => import("../pages/Control/CronJobs"));
-const ConnectorsPage = lazy(() => import("../pages/Agent/Connectors"));
-const SkillPackagesPage = lazy(() => import("../pages/SkillPackages"));
 const KnowledgeBasesPage = lazy(() => import("../pages/KnowledgeBases"));
 const PersonalizationPage = lazy(
   () => import("../pages/Agent/Personalization"),
@@ -50,18 +48,18 @@ export const pathToKey: Record<string, string> = {
   // Common
   "/experts": "experts",
   "/tasks": "tasks",
-  "/connectors": "connectors",
-  "/skill-packages": "skill-packages",
+  "/connectors": "experts",
+  "/skill-packages": "experts",
   "/knowledge-bases": "knowledge-bases",
   "/personalization": "personalization",
-  "/personalization/skills": "personalization",
+  "/personalization/skills": "experts",
   "/personalization/tools": "personalization",
   "/personalization/plugins": "personalization",
   "/personalization/subagents": "personalization",
   "/personalization/channels": "channels",
   "/personalization/mbti": "personalization",
   "/personalization/memory": "personalization",
-  "/skills": "personalization",
+  "/skills": "experts",
   "/token-usage": "token-usage",
   "/agent-config": "agent-config",
   // Control
@@ -148,19 +146,23 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/chat/:agentId/:threadId", element: null, useWrapper: true },
 
   // Common
-  { path: "/experts", element: <ExpertsPage /> },
+  { path: "/experts", element: <CapabilityCenter /> },
   { path: "/tasks", element: <CronJobsPage /> },
-  { path: "/connectors", element: <ConnectorsPage /> },
-  { path: "/skill-packages", element: <SkillPackagesPage /> },
+  { path: "/connectors", element: <CapabilityCenter /> },
+  { path: "/skill-packages", element: <CapabilityCenter /> },
   { path: "/knowledge-bases", element: <KnowledgeBasesPage /> },
   {
     path: "/personalization/acp",
     element: <RedirectPreserveSearch to="/acp" />,
   },
+  {
+    path: "/personalization/skills",
+    element: <RedirectPreserveSearch to="/skills" />,
+  },
   { path: "/personalization/*", element: <PersonalizationPage /> },
   {
     path: "/skills",
-    element: <RedirectPreserveSearch to="/personalization/skills" />,
+    element: <CapabilityCenter />,
   },
   { path: "/token-usage", element: <TokenUsagePage /> },
 

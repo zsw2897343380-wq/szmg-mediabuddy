@@ -5,7 +5,13 @@ import type { TFunction } from "i18next";
 import AvatarDropdown from "../components/AvatarDropdown";
 import AppVersionBadge from "../components/AppVersionBadge";
 import CurrentVersionBadge from "../components/CurrentVersionBadge";
-import { ArrowRightLeft, ChevronDown, X } from "lucide-react";
+import {
+  ArrowRightLeft,
+  ChevronDown,
+  MessageSquarePlus,
+  X,
+} from "lucide-react";
+import { useAgent } from "../context/AgentContext";
 import { useLayoutMode } from "../context/LayoutModeContext";
 import { useUserRole } from "../hooks/useUserRole";
 import { useCurrentUser, useSetCurrentUser } from "../hooks/useCurrentUser";
@@ -17,6 +23,7 @@ import { EXPAND_CHAT_RAIL_EVENT } from "../pages/Chat/components/ChatSidebarPane
 import {
   CHAT_HISTORY_RAIL_ID,
   OPEN_NAV_RECORDS_EVENT,
+  NEW_CHAT_EVENT,
   isChatPath,
 } from "./chatHistoryRail";
 import type { MinimalNavPane } from "./layoutModeStorage";
@@ -382,6 +389,7 @@ export default function Sidebar({
   isMobile,
 }: SidebarProps) {
   const navigate = useNavigate();
+  const { activeAgentId } = useAgent();
   const location = useLocation();
   const { t } = useTranslation();
   const role = useUserRole();
@@ -463,6 +471,18 @@ export default function Sidebar({
     if (isMobile) onToggle();
   };
 
+  const startNewChat = () => {
+    if (onChatPath) {
+      window.dispatchEvent(new Event(NEW_CHAT_EVENT));
+    } else {
+      navigate(activeAgentId ? `/chat/${activeAgentId}` : "/chat", {
+        state: { newChat: true },
+      });
+    }
+    setMinimalPane("records");
+    if (isMobile) onToggle();
+  };
+
   const handleExpandChatRail = useCallback(() => {
     if (isMinimal) {
       selectMinimalPane("records", { expand: true });
@@ -486,7 +506,9 @@ export default function Sidebar({
   const brandInner = (
     <>
       <img
-        src={isRailCollapsed ? "/mediabuddy-app-icon.svg" : "/mediabuddy-logo.png"}
+        src={
+          isRailCollapsed ? "/mediabuddy-app-icon.svg" : "/mediabuddy-logo.png"
+        }
         alt="MediaBuddy"
         style={{
           height: isRailCollapsed ? 32 : isMobile ? 38 : 36,
@@ -663,12 +685,29 @@ export default function Sidebar({
     </div>
   );
 
-  const navScrollBody = isMinimal ? minimalNavBody : classicNavBody;
+  const navScrollBody = (
+    <>
+      <button
+        type="button"
+        className={`${styles.newChatButton} ${
+          isRailCollapsed ? styles.newChatButtonCollapsed : ""
+        }`}
+        onClick={startNewChat}
+        aria-label={t("chatWelcome.newChat")}
+        title={t("chatWelcome.newChat")}
+      >
+        <MessageSquarePlus size={17} strokeWidth={1.8} />
+        {!isRailCollapsed && t("chatWelcome.newChat")}
+      </button>
+      {isMinimal ? minimalNavBody : classicNavBody}
+    </>
+  );
 
   // Mobile: fixed overlay drawer
   if (isMobile) {
     return (
       <div
+        className={styles.sidebarShell}
         style={{
           position: "fixed",
           top: 0,
@@ -763,6 +802,7 @@ export default function Sidebar({
   // Right border is drawn by MainLayout's RailEdgeControl.
   return (
     <div
+      className={styles.sidebarShell}
       style={{
         width: isRailCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
         minWidth: isRailCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,

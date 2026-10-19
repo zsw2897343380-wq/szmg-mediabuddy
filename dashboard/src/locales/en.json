@@ -1,4 +1,10 @@
 {
+  "capabilityCenter": {
+    "title": "Experts · Skills · Connectors",
+    "skillsManagement": "Skills management",
+    "agentSkills": "Expert skills",
+    "skillPackages": "Manage skill packages"
+  },
   "app": {
     "pageTitle": "MediaBuddy - An intelligent partner that understands you, helps you, and grows with you"
   },
@@ -2061,8 +2067,8 @@
     "pptx": "PowerPoint",
     "file_reader": "File Reader",
     "news": "News",
-    "octop-assistant": "MediaBuddy Assistant",
-    "octop_assistant": "MediaBuddy Assistant",
+    "octop-assistant": "Octop Assistant",
+    "octop_assistant": "Octop Assistant",
     "daily-hot-news": "Daily Hot News",
     "stock-info": "Stock Info",
     "cvm-ai-doctor": "CVM AI Doctor",
@@ -3471,7 +3477,7 @@
     "loadFailed": "Failed to load proactive reminder settings"
   },
   "chatWelcome": {
-    "greeting": "Hi! Your personal AI sidekick is here",
+    "greeting": "What would you like to get done?",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "Team",
     "mascotSwitchHint": "Tap to switch the mascot",
@@ -3479,7 +3485,7 @@
     "descriptionWithTeamSuffix": "— an expert team that answers together",
     "description": "Work or life — just tell me what you need, I'll handle it",
     "newChat": "New Chat",
-    "inputPlaceholder": "Say something to your AI Assistant...",
+    "inputPlaceholder": "Describe your task, @ add context, / use skills and commands",
     "aiDisclaimer": "AI-generated content. Please verify carefully.",
     "hideThinking": "Hide thinking",
     "showThinking": "Show thinking",

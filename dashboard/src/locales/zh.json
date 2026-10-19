@@ -1,4 +1,10 @@
 {
+  "capabilityCenter": {
+    "title": "专家·技能·连接器",
+    "skillsManagement": "技能管理",
+    "agentSkills": "专家技能",
+    "skillPackages": "技能包管理"
+  },
   "app": {
     "pageTitle": "MediaBuddy - 懂你、帮你、陪你成长的智能伙伴"
   },
@@ -2060,8 +2066,8 @@
     "pptx": "PPT 演示",
     "file_reader": "文件读取",
     "news": "资讯获取",
-    "octop-assistant": "MediaBuddy 配置助手",
-    "octop_assistant": "MediaBuddy 配置助手",
+    "octop-assistant": "Octop 配置助手",
+    "octop_assistant": "Octop 配置助手",
     "daily-hot-news": "每日热点",
     "stock-info": "股票信息",
     "cvm-ai-doctor": "CVM AI 诊断",
@@ -3468,7 +3474,7 @@
     "loadFailed": "主动提醒设置加载失败"
   },
   "chatWelcome": {
-    "greeting": "嗨！你专属的智能伙伴来啦～",
+    "greeting": "今天想完成什么？",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "团队",
     "mascotSwitchHint": "点一下换个表情～",
@@ -3476,7 +3482,7 @@
     "descriptionWithTeamSuffix": "这是一个专家团队，成员会一起回答你的问题",
     "description": "无论工作还是生活，说出你的想法，我来搞定",
     "newChat": "新建对话",
-    "inputPlaceholder": "和 AI 小助手说点什么吧～",
+    "inputPlaceholder": "描述你的任务，@ 添加上下文，/ 调用技能与指令",
     "aiDisclaimer": "AI 生成内容，请注意甄别",
     "hideThinking": "隐藏思维过程",
     "showThinking": "查看思维过程",

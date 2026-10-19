@@ -53,6 +53,7 @@ export default function SidebarMinimalPaneToggle({
           aria-label={nextLabel}
         >
           <ArrowLeftRight size={14} strokeWidth={1.8} aria-hidden />
+          {nextLabel}
         </button>
       </Tooltip>
     </div>

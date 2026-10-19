@@ -53,7 +53,7 @@ import type { TokenUsage } from "../../api/types";
 import type { ChatAttachment } from "./hooks/useChat";
 import MessageList from "./components/MessageList";
 import ChatInput, { type ChatInputHandle } from "./components/ChatInput";
-import WelcomeScreen from "./components/WelcomeScreen";
+import WelcomeScreen, { WelcomeSuggestions } from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
 import AgentProfileDrawer from "../../components/AgentProfileDrawer";
 import TrajectoryDrawer from "./components/TrajectoryDrawer";
@@ -99,7 +99,10 @@ import HistoryMigrationBanner from "./components/HistoryMigrationBanner";
 import { apiErrorMessage } from "../../utils/apiError";
 import PwaInstallPrompt from "../../components/PwaInstallPrompt";
 import { promptNeedsUserInput } from "../../utils/quickInputPrefill";
-import { OPEN_NAV_RECORDS_EVENT } from "../../layouts/chatHistoryRail";
+import {
+  NEW_CHAT_EVENT,
+  OPEN_NAV_RECORDS_EVENT,
+} from "../../layouts/chatHistoryRail";
 import {
   usePluginToolUis,
   setPluginUiDockHandlers,
@@ -805,6 +808,17 @@ function ChatPageInner() {
   }, [clearQueued, startNewChat]);
 
   useEffect(() => {
+    const start = () => {
+      if (!resolvedAgentId) return;
+      clearQueued();
+      handleNewChatWithAgent(resolvedAgentId);
+      chatInputRef.current?.focusComposer();
+    };
+    window.addEventListener(NEW_CHAT_EVENT, start);
+    return () => window.removeEventListener(NEW_CHAT_EVENT, start);
+  }, [clearQueued, handleNewChatWithAgent, resolvedAgentId]);
+
+  useEffect(() => {
     return chatStore.onSlashAction((ev) => {
       if (ev.action === "switch_agent" && ev.agent_id) {
         navigateToAgent(ev.agent_id);
@@ -1168,6 +1182,9 @@ function ChatPageInner() {
           <div
             className={[
               styles.chatMain,
+              showWelcome && agentChatReady && !noAgents
+                ? styles.chatMainWelcome
+                : "",
               turnRailVisible ? styles.chatMainWithTurnRail : "",
             ]
               .filter(Boolean)
@@ -1312,8 +1329,8 @@ function ChatPageInner() {
                 <WelcomeScreen
                   agentName={activeAgent?.name ?? null}
                   welcomeSuffix={welcomeSuffix}
-                  quickCards={expertQuickCards}
-                  onPromptClick={handlePromptClick}
+                  conversationMode={conversationMode}
+                  onConversationModeChange={handleConversationModeChange}
                   hideMascot={isStreaming || liveSpeakers.length > 0}
                   isTeam={isTeamChat}
                 />
@@ -1629,6 +1646,13 @@ function ChatPageInner() {
               contextUsedTokens={contextUsedTokens}
               contextMaxTokens={contextMaxTokens}
             />
+            {showWelcome && agentChatReady && !noAgents && (
+              <WelcomeSuggestions
+                key={resolvedAgentId}
+                quickCards={expertQuickCards}
+                onPromptClick={handlePromptClick}
+              />
+            )}
           </div>
 
           <ChatDockPanels

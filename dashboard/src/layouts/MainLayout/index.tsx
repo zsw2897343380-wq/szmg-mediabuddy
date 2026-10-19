@@ -158,7 +158,14 @@ export default function MainLayout() {
       <Routes>
         {routeConfigs.map((rc) => {
           let el = rc.useWrapper ? <ChatWithKey /> : rc.element;
-          if (!rc.useWrapper && routeNeedsPermission(rc.path)) {
+          // Keep the combined management center under the same component tree
+          // when moving between public expert/skill tabs and restricted tabs.
+          if (
+            !rc.useWrapper &&
+            (routeNeedsPermission(rc.path) ||
+              rc.path === "/experts" ||
+              rc.path === "/skills")
+          ) {
             el = <RequirePermission>{el}</RequirePermission>;
           }
           return <Route key={rc.path} path={rc.path} element={el} />;

@@ -155,7 +155,11 @@ function PackageIconPicker({
   );
 }
 
-export default function SkillPackagesPage() {
+export default function SkillPackagesPage({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { viewMode, setViewMode, showCardView } = useCardTableView("card");
@@ -577,6 +581,7 @@ export default function SkillPackagesPage() {
 
   return (
     <PageShell
+      embedded={embedded}
       title={t("skillPackages.title")}
       subtitle={isMobile ? undefined : t("skillPackages.subtitle")}
       fill
