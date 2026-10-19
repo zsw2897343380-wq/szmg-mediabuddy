@@ -11,6 +11,7 @@ import {
   Terminal,
   FolderOpen,
   Activity,
+  MessageCircle,
 } from "lucide-react";
 import { Alert, Button, Tooltip } from "antd";
 import { message as antMessage } from "@/utils/antdMessage";
@@ -68,6 +69,8 @@ import WelcomeScreen, {
   type WelcomeCategory,
 } from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
+import GeneralChatEntry from "./components/GeneralChatEntry";
+import { isDefaultChatAgent } from "../../utils/defaultChat";
 import ModelConfigEmpty from "./components/ModelConfigEmpty";
 import AgentProfileDrawer from "../../components/AgentProfileDrawer";
 import TrajectoryDrawer from "./components/TrajectoryDrawer";
@@ -125,7 +128,8 @@ import {
 import styles from "./index.module.less";
 
 export default function ChatPage() {
-  return <ChatPageInner />;
+  const { agentId } = useParams<{ agentId?: string }>();
+  return agentId ? <ChatPageInner /> : <GeneralChatEntry />;
 }
 
 function ChatPageInner() {
@@ -226,6 +230,7 @@ function ChatPageInner() {
     activeAgent !== null && activeAgent.config?.enable_trajectory !== false;
   const sharedExpertViewer = isSharedExpertViewer(activeAgent ?? {});
   const isTeamChat = isTeamAgent(activeAgent);
+  const generalChat = isDefaultChatAgent(activeAgent);
   const [agentProfileOpen, setAgentProfileOpen] = useState(false);
   const [profileAgentId, setProfileAgentId] = useState<string | null>(null);
   const profileAgent = useMemo(() => {
@@ -244,10 +249,16 @@ function ChatPageInner() {
       description: null,
     };
   }, [profileAgentId, agents, activeAgent]);
-  const profileOpenLabel = isTeamChat
+  const profileOpenLabel = generalChat
+    ? t("chat.generalChat.settings")
+    : isTeamChat
     ? t("chat.agentProfile.openTeam")
     : t("chat.agentProfile.open");
-  const ProfileIcon = isTeamChat ? Users : GraduationCap;
+  const ProfileIcon = generalChat
+    ? MessageCircle
+    : isTeamChat
+    ? Users
+    : GraduationCap;
   const noAgents = !agentsLoading && agents.length === 0;
 
   // Sidebar only lists "enabled" experts (harness running). Stopped / failed
@@ -687,7 +698,7 @@ function ChatPageInner() {
   // cannot reach them; peer ask_agent cannot reach local experts).
   const chatAgentOptionsPickable = useMemo(() => {
     let list = selectEnabledExperts(agents, null, { pinActive: false }).filter(
-      (item) => !isTeamAgent(item),
+      (item) => !isTeamAgent(item) && !isDefaultChatAgent(item),
     );
     if (activeAgent?.bridge && activeAgent.bridge_connection_id) {
       const cid = activeAgent.bridge_connection_id;
@@ -916,7 +927,6 @@ function ChatPageInner() {
   const displayQueuedItems = queuedItems;
 
   const {
-    handleNewChat: startNewChat,
     handleNewChatWithAgent,
     handleSelectSession,
     navigateToAgent,
@@ -942,23 +952,23 @@ function ChatPageInner() {
     prefillInputRef.current = "";
     chatInputRef.current?.setPrefillText("");
     clearQueued();
-    startNewChat();
-  }, [clearQueued, startNewChat]);
+    navigate("/chat", { state: { newChat: true } });
+  }, [clearQueued, navigate]);
+
+  const handleUseGeneralChat = useCallback(() => {
+    navigate("/chat", {
+      state: {
+        newChat: true,
+        prefillInput: chatInputRef.current?.readText() ?? "",
+      },
+    });
+  }, [navigate]);
 
   useEffect(() => {
-    const start = () => {
-      if (!resolvedAgentId) return;
-      welcomeDrafts.current.clear();
-      setWelcomeCategories({});
-      prefillInputRef.current = "";
-      chatInputRef.current?.setPrefillText("");
-      clearQueued();
-      handleNewChatWithAgent(resolvedAgentId);
-      chatInputRef.current?.focusComposer();
-    };
+    const start = () => handleNewChat();
     window.addEventListener(NEW_CHAT_EVENT, start);
     return () => window.removeEventListener(NEW_CHAT_EVENT, start);
-  }, [clearQueued, handleNewChatWithAgent, resolvedAgentId]);
+  }, [handleNewChat]);
 
   useEffect(() => {
     return chatStore.onSlashAction((ev) => {
@@ -1944,6 +1954,10 @@ function ChatPageInner() {
               }
               availableSkills={isTeamChat ? undefined : chatSkills}
               availableAgents={chatAgentOptions}
+              generalChat={generalChat}
+              onUseGeneralChat={
+                activeAgent?.bridge ? undefined : handleUseGeneralChat
+              }
               availableExperts={
                 isTeamChat ? teamExpertOptions : chatAgentOptionsPickable
               }

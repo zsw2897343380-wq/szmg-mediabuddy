@@ -58,6 +58,15 @@ describe("classic chat rail toggle", () => {
     hook.unmount();
   });
 
+  it("starts a general task instead of reusing the currently open specialist", async () => {
+    const user = userEvent.setup();
+    renderSidebar("/chat/my-specialist/thread-1");
+    await user.click(
+      screen.getByRole("button", { name: "chatWelcome.newChat" }),
+    );
+    expect(screen.getByTestId("path").textContent).toBe("/chat");
+  });
+
   it("stays beside Chat and collapses an open history rail", async () => {
     const user = userEvent.setup();
     const onExpand = vi.fn();

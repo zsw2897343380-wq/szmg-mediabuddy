@@ -178,6 +178,8 @@ interface ChatInputActionsRowProps {
   availableSkills?: SkillSpec[];
   onInsertSkillCommand?: (slug: string) => void;
   availableExperts?: ChatAgentOption[];
+  generalChat?: boolean;
+  onUseGeneralChat?: () => void;
   onInsertExpertMention?: (agent: ChatAgentOption) => void;
   availableSubagents?: AgentSubagentSummary[];
   onInsertSubagentMention?: (subagent: AgentSubagentSummary) => void;
@@ -238,6 +240,8 @@ export default function ChatInputActionsRow({
   availableSkills,
   onInsertSkillCommand,
   availableExperts,
+  generalChat,
+  onUseGeneralChat,
   onInsertExpertMention,
   availableSubagents,
   onInsertSubagentMention,
@@ -360,7 +364,7 @@ export default function ChatInputActionsRow({
     allowWriteTools &&
       availableExperts &&
       onInsertExpertMention &&
-      availableExperts.length > 0,
+      (availableExperts.length > 0 || onUseGeneralChat),
   );
   const showSubagentPicker = Boolean(
     allowWriteTools &&
@@ -997,6 +1001,8 @@ export default function ChatInputActionsRow({
           <ExpertPickerPopover
             agents={availableExperts ?? []}
             currentAgentId={agentId}
+            generalChat={generalChat}
+            onUseGeneralChat={onUseGeneralChat}
             selectedAgentIds={mentionedExperts}
             onSelect={handleExpertSelect}
             onNavigateAway={closePlusMenu}
@@ -1041,6 +1047,7 @@ export default function ChatInputActionsRow({
           <Popover
             trigger="click"
             placement="topLeft"
+            align={{ overflow: { shiftY: true } }}
             arrow={false}
             open={overflowPopoverOpen}
             overlayClassName={styles.plusMenuPopover}

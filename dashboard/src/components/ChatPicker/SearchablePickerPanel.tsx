@@ -22,6 +22,7 @@ interface SearchablePickerPanelProps<T> {
   footerMuted?: boolean;
   /** Optional row(s) rendered between the list and the primary footer. */
   beforeFooter?: ReactNode;
+  beforeList?: ReactNode;
 }
 
 export default function SearchablePickerPanel<T>({
@@ -38,6 +39,7 @@ export default function SearchablePickerPanel<T>({
   onFooterClick,
   footerMuted = false,
   beforeFooter,
+  beforeList,
 }: SearchablePickerPanelProps<T>) {
   const { query, setQuery, filtered } = useFilteredList(items, filterFn);
   const panelClass =
@@ -60,6 +62,7 @@ export default function SearchablePickerPanel<T>({
         <Search size={15} className={styles.searchIcon} aria-hidden />
       </div>
 
+      {beforeList}
       <div className={styles.list} data-picker-list="">
         {filtered.length === 0 ? (
           <div className={styles.empty}>{emptyMessage}</div>

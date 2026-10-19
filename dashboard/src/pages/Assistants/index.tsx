@@ -30,6 +30,7 @@ import {
   type OctopThread,
 } from "../../api/modules/octopThreads";
 import { apiErrorMessage } from "../../utils/apiError";
+import { isDefaultChatAgent } from "../../utils/defaultChat";
 import { formatServerDateTime } from "../../utils/formatMessageTime";
 import { userCan } from "../../utils/permissions";
 import ExpertAgentAvatar from "../Chat/components/ExpertAgentAvatar";
@@ -92,8 +93,12 @@ export default function AssistantsPage() {
     () => sortExpertsByPin(personalAssistants(agents, user?.id), pinnedIds),
     [agents, user?.id, pinnedIds],
   );
-  const local = personal.find((agent) => agent.agent_id === "main");
-  const specialists = personal.filter((agent) => agent.agent_id !== "main");
+  const local =
+    personal.find(isDefaultChatAgent) ??
+    personal.find((agent) => agent.agent_id === "main");
+  const specialists = personal.filter(
+    (agent) => agent !== local && !isDefaultChatAgent(agent),
+  );
   const selected =
     personal.find((agent) => agent.agent_id === params.get("agent")) ??
     local ??
@@ -265,7 +270,7 @@ export default function AssistantsPage() {
       ),
       onClick: () => togglePin(agent.agent_id),
     },
-    ...(canManage && agent.agent_id !== "main"
+    ...(canManage && agent.agent_id !== "main" && !isDefaultChatAgent(agent)
       ? [
           {
             key: "delete",

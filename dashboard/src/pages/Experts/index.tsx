@@ -64,6 +64,7 @@ import ExpertMarketTab from "./components/ExpertMarketTab";
 import { OctopEmptyMascot } from "../../components/EmptyState";
 import { pickLocale } from "../../utils/localizedText";
 import { isOwnedExpert, ownedExperts } from "../../utils/sharedExpert";
+import { isDefaultChatAgent } from "../../utils/defaultChat";
 import { apiErrorMessage } from "../../utils/apiError";
 import WorkBuddyExpertCenter from "./components/WorkBuddyExpertCenter";
 import WorkBuddyMyExperts from "./components/WorkBuddyMyExperts";
@@ -165,7 +166,9 @@ export default function ExpertsPage({
         fetchExpertLibrary(),
         fetchPublishedExperts(),
       ]);
-      setLocalAgents(ownedExperts(agentList));
+      setLocalAgents(
+        ownedExperts(agentList).filter((agent) => !isDefaultChatAgent(agent)),
+      );
       setExperts(expertList);
       setPublishedExperts(publishedList);
       await refreshAgents({ silent: true, force: true });
@@ -241,7 +244,10 @@ export default function ExpertsPage({
   }, [t]);
 
   // ── Local agent state (extends AgentContext for optimistic updates) ──
-  const ownedAgents = useMemo(() => ownedExperts(agents), [agents]);
+  const ownedAgents = useMemo(
+    () => ownedExperts(agents).filter((agent) => !isDefaultChatAgent(agent)),
+    [agents],
+  );
   const [localAgents, setLocalAgents] = useState<OctopAgent[]>(ownedAgents);
   const expertAgents = useMemo(
     () => localAgents.filter((item) => item.kind !== "team"),
@@ -274,7 +280,9 @@ export default function ExpertsPage({
     () =>
       agents.filter(
         (item) =>
-          item.kind !== "team" && (isOwnedExpert(item) || item.is_shared),
+          item.kind !== "team" &&
+          !isDefaultChatAgent(item) &&
+          (isOwnedExpert(item) || item.is_shared),
       ),
     [agents],
   );
@@ -285,7 +293,9 @@ export default function ExpertsPage({
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
   useEffect(() => {
-    setLocalAgents(ownedExperts(agents));
+    setLocalAgents(
+      ownedExperts(agents).filter((agent) => !isDefaultChatAgent(agent)),
+    );
   }, [agents]);
 
   const handleStateChange = useCallback((agentId: string, newState: string) => {

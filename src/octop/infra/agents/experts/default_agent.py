@@ -7,9 +7,12 @@ Used by the setup wizard (pinned ``agent_id=main``) and by invite redeem
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from octop.infra.agents.experts.catalog import ExpertCatalog, build_create_spec_from_expert
+from octop.infra.agents.settings.profile import parse_config_json
+from octop.infra.agents.teams import is_team_agent
+from octop.infra.db.repos.agents import AgentRow
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.resource_policy import (
     POLICY_WORKSPACE_ROOT_DIR,
@@ -78,9 +81,84 @@ async def bootstrap_default_agent(
         user_id=user_id,
         agent_id=agent_id,
         locale=loc,
-        config_extra={"backend": default_home_local_backend(root_dir=root_dir)},
+        config_extra={
+            "backend": default_home_local_backend(root_dir=root_dir),
+            "general_chat": True,
+        },
     )
     return await registry.create(spec, defer_bootstrap=True)
+
+
+async def ensure_default_chat_agent(
+    registry: Any,
+    catalog: ExpertCatalog | None,
+    *,
+    user_id: int,
+    locale: str = "zh",
+    root_dir: str | None = None,
+) -> AgentRow:
+    """Resolve a private general runtime independently of installed experts.
+
+    The manager serializes this operation per user. Legacy bootstrap instances
+    retain their profile, workspace, model, and all existing configuration.
+    """
+    user_rows = registry.list_agents(user_id, include_disabled=True)
+    owned = [
+        row
+        for row in user_rows
+        if row.user_id == user_id and row.enabled and not row.is_shared and not is_team_agent(row)
+    ]
+    marked = [
+        row for row in owned if parse_config_json(row.config_json).get("general_chat") is True
+    ]
+    legacy = [row for row in owned if row.template_name == DEFAULT_EXPERT_ID]
+    candidates = marked or legacy
+    if candidates:
+        row = min(
+            candidates,
+            key=lambda candidate: (
+                candidate.agent_id != SETUP_DEFAULT_AGENT_ID,
+                candidate.created_at,
+                candidate.agent_id,
+            ),
+        )
+        config = parse_config_json(row.config_json)
+        if config.get("general_chat") is not True:
+            registry.persist_harness_config(row.agent_id, {**config, "general_chat": True})
+        try:
+            registry.get_agent(row.agent_id)
+        except OctopError as exc:
+            if exc.code not in {ErrorCode.AGENT_FAILED, ErrorCode.AGENT_NOT_RUNNING}:
+                raise
+            await registry.start(row.agent_id)
+    else:
+        if catalog is None:
+            raise OctopError(ErrorCode.INTERNAL_ERROR, "expert catalog not available")
+        expert = catalog.get(DEFAULT_EXPERT_ID)
+        if expert is None:
+            raise OctopError(
+                ErrorCode.INTERNAL_ERROR, f"{DEFAULT_EXPERT_ID} expert template missing"
+            )
+        spec = build_create_spec_from_expert(
+            expert_id=DEFAULT_EXPERT_ID,
+            expert=expert,
+            user_id=user_id,
+            locale=normalize_locale(locale),
+            config_extra={
+                "backend": default_home_local_backend(root_dir=root_dir),
+                "general_chat": True,
+            },
+        )
+        used_names = {row.name for row in user_rows if row.user_id == user_id}
+        base_name = spec.name
+        suffix = 2
+        while spec.name in used_names:
+            spec.name = f"{base_name} ({suffix})"
+            suffix += 1
+        row = await registry.create(spec)
+    # Startup may persist a failed state instead of raising (e.g. no model).
+    registry.get_agent(row.agent_id)
+    return cast(AgentRow, registry.get_row(row.agent_id) or row)
 
 
 async def try_bootstrap_default_agent(

@@ -39,6 +39,52 @@ describe("ExpertPickerPopover hide shared experts", () => {
     localStorage.removeItem(hiddenExpertsStorageKey(1));
   });
 
+  it("can return to general chat without mentioning an expert", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onUseGeneralChat = vi.fn();
+    const onNavigateAway = vi.fn();
+    render(
+      <MemoryRouter>
+        <ExpertPickerPopover
+          agents={agents}
+          selectedAgentIds={[]}
+          onSelect={onSelect}
+          onUseGeneralChat={onUseGeneralChat}
+          onNavigateAway={onNavigateAway}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "chat.generalChat.label" }),
+    );
+    expect(onUseGeneralChat).toHaveBeenCalledOnce();
+    expect(onNavigateAway).toHaveBeenCalledOnce();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("shows general chat as selected even when no specialists exist", () => {
+    render(
+      <MemoryRouter>
+        <ExpertPickerPopover
+          agents={[]}
+          selectedAgentIds={[]}
+          onSelect={vi.fn()}
+          generalChat
+          onUseGeneralChat={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    const general = screen.getByRole("button", {
+      name: "chat.generalChat.label",
+    });
+    expect(general).toHaveAttribute("aria-pressed", "true");
+    expect(general).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "chat.expertPickerManage" }),
+    ).toBeEnabled();
+  });
+
   it("shows the current expert without allowing a self mention", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();

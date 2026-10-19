@@ -13,6 +13,10 @@ _MAX_DECISIONS = 16
 _MAX_DECISION_MESSAGE_CHARS = 8000
 
 
+class DefaultChatAgentResponse(BaseModel):
+    agent_id: str = Field(description="Private general chat runtime owned by the current user.")
+
+
 class HitlSessionPolicyBody(BaseModel):
     """Dashboard chat bypass for tool approval (does not change global HITL)."""
 

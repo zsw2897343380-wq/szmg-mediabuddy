@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, GraduationCap, Info } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Info, MessageCircle } from "lucide-react";
 import SearchablePickerPanel, {
   pickerStyles,
 } from "../../../components/ChatPicker/SearchablePickerPanel";
@@ -17,6 +17,8 @@ export type { ChatAgentOption };
 interface ExpertPickerPopoverProps {
   agents: ChatAgentOption[];
   currentAgentId?: string | null;
+  generalChat?: boolean;
+  onUseGeneralChat?: () => void;
   selectedAgentIds: string[];
   onSelect: (agent: ChatAgentOption) => void;
   onNavigateAway?: () => void;
@@ -26,6 +28,8 @@ interface ExpertPickerPopoverProps {
 export default function ExpertPickerPopover({
   agents,
   currentAgentId,
+  generalChat = false,
+  onUseGeneralChat,
   selectedAgentIds,
   onSelect,
   onNavigateAway,
@@ -83,6 +87,27 @@ export default function ExpertPickerPopover({
           : t("chat.expertPickerEmpty")
       }
       width="compact"
+      beforeList={
+        onUseGeneralChat ? (
+          <button
+            type="button"
+            className={`${styles.expertPickerSelect} ${
+              generalChat ? styles.expertPickerItemActive : ""
+            }`}
+            aria-pressed={generalChat}
+            disabled={generalChat}
+            onClick={() => {
+              onUseGeneralChat();
+              onNavigateAway?.();
+            }}
+          >
+            <MessageCircle size={20} aria-hidden />
+            <span className={pickerStyles.itemName}>
+              {t("chat.generalChat.label")}
+            </span>
+          </button>
+        ) : null
+      }
       getGroupKey={
         showGroups
           ? (agent) =>

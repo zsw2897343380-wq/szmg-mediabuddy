@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from octop.api.common.agent import assert_agent_access
 from octop.api.deps import current_user, get_server
-from octop.api.routers.chat.models import HitlResumeBody, PolishBody
+from octop.api.routers.chat.models import DefaultChatAgentResponse, HitlResumeBody, PolishBody
 from octop.api.routers.chat.sse import format_sse
 from octop.i18n.domains.stream import format_stream_error
 from octop.infra.agents.experts.catalog import (
@@ -22,6 +22,7 @@ from octop.infra.agents.experts.catalog import (
     welcome_payload_from_manifest_data,
     welcome_payload_has_content,
 )
+from octop.infra.agents.experts.default_agent import user_policy_workspace_root
 from octop.infra.agents.settings.profile import welcome_from_row
 from octop.infra.agents.teams import is_team_agent
 from octop.infra.agents.teams.welcome import team_host_welcome_payload
@@ -52,6 +53,30 @@ _POLISH_SYSTEM_PROMPT = (
     "- Output ONLY the rewritten prompt text — no preamble, labels, quotes, "
     "thinking blocks, or XML tags."
 )
+
+
+@router.post(
+    "/chat/default-agent",
+    response_model=DefaultChatAgentResponse,
+    summary="Resolve the current user's general chat runtime",
+    description=(
+        "Returns a private general-purpose runtime for the authenticated user, creating or "
+        "starting it when necessary. Selecting or installing an expert is not required. "
+        "Existing expert profiles are preserved; another user's or shared runtime is never reused."
+    ),
+)
+async def ensure_default_chat(
+    request: Request,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> DefaultChatAgentResponse:
+    assert server.app_runtime is not None
+    row = await server.app_runtime.agent_registry.ensure_default_chat_agent(
+        user.id,
+        locale=user.locale or resolve_request_locale(request),
+        root_dir=user_policy_workspace_root(server, user.id),
+    )
+    return DefaultChatAgentResponse(agent_id=row.agent_id)
 
 
 @router.get("/agents/{agent_id}/chat/welcome", summary="Chat welcome quick cards")

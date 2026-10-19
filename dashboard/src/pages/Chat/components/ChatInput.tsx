@@ -139,6 +139,8 @@ interface ChatInputProps {
    * expert is guaranteed to be running.
    */
   availableExperts?: ChatAgentOption[];
+  generalChat?: boolean;
+  onUseGeneralChat?: () => void;
   availableSubagents?: AgentSubagentSummary[];
   agentId?: string | null;
   threadId?: string | null;
@@ -197,6 +199,8 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       // explicitly pass the filtered list — keep that explicit to avoid
       // accidentally re-surfacing stopped experts in the @-picker.
       availableExperts = availableAgents,
+      generalChat,
+      onUseGeneralChat,
       availableSubagents = [],
       agentId,
       threadId,
@@ -1041,6 +1045,8 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             availableSkills={availableSkills}
             onInsertSkillCommand={insertSkillCommand}
             availableExperts={availableExperts}
+            generalChat={generalChat}
+            onUseGeneralChat={onUseGeneralChat}
             onInsertExpertMention={insertExpertMention}
             availableSubagents={availableSubagents}
             onInsertSubagentMention={insertSubagentMention}

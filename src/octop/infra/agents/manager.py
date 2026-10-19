@@ -501,6 +501,7 @@ class AgentManager:
         # Serialize start/reload per agent so parallel provider reloads cannot
         # double-register the same harness id ("already exists in the registry").
         self._agent_lifecycle_locks: dict[str, asyncio.Lock] = {}
+        self._default_chat_locks: dict[int, asyncio.Lock] = {}
         # Serialize harness execution per thread. Dashboard turns are queued by
         # the channel debounce lock, but POST /chat/hitl/resume (and cron)
         # drive the same checkpoint without it — two concurrent executions on
@@ -1134,6 +1135,22 @@ class AgentManager:
             except Exception:
                 logger.exception("failed to reload team %s after dropping %s", team_id, agent_id)
 
+    async def ensure_default_chat_agent(
+        self, user_id: int, *, locale: str = "zh", root_dir: str | None = None
+    ) -> AgentRow:
+        """Create or start the requesting user's private general chat runtime."""
+        from octop.infra.agents.experts.default_agent import ensure_default_chat_agent
+
+        lock = self._default_chat_locks.setdefault(user_id, asyncio.Lock())
+        async with lock:
+            return await ensure_default_chat_agent(
+                self,
+                self._expert_catalog,
+                user_id=user_id,
+                locale=locale,
+                root_dir=root_dir,
+            )
+
     async def start(self, agent_id: str) -> None:
         """Load agent into harness runtime (no-op config merge)."""
         async with self._lock:
@@ -1400,8 +1417,8 @@ class AgentManager:
                 await worker
                 raise
 
-    def list_agents(self, user_id: int) -> list[AgentRow]:
-        return self._repos.agent_repo.list_by_user(user_id, include_disabled=False)
+    def list_agents(self, user_id: int, *, include_disabled: bool = False) -> list[AgentRow]:
+        return self._repos.agent_repo.list_by_user(user_id, include_disabled=include_disabled)
 
     def list_rows(self) -> list[AgentRow]:
         """Return all enabled agent rows (all users), sorted by creation time."""

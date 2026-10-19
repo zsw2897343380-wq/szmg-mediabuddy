@@ -11,7 +11,6 @@ import {
   MessageSquarePlus,
   X,
 } from "lucide-react";
-import { useAgent } from "../context/AgentContext";
 import { useLayoutMode } from "../context/LayoutModeContext";
 import { useUserRole } from "../hooks/useUserRole";
 import { useCurrentUser, useSetCurrentUser } from "../hooks/useCurrentUser";
@@ -23,7 +22,6 @@ import { EXPAND_CHAT_RAIL_EVENT } from "../pages/Chat/components/ChatSidebarPane
 import {
   CHAT_HISTORY_RAIL_ID,
   OPEN_NAV_RECORDS_EVENT,
-  NEW_CHAT_EVENT,
   isChatPath,
 } from "./chatHistoryRail";
 import type { MinimalNavPane } from "./layoutModeStorage";
@@ -402,7 +400,6 @@ export default function Sidebar({
   isMobile,
 }: SidebarProps) {
   const navigate = useNavigate();
-  const { activeAgentId } = useAgent();
   const location = useLocation();
   const { t } = useTranslation();
   const role = useUserRole();
@@ -487,13 +484,7 @@ export default function Sidebar({
   };
 
   const startNewChat = () => {
-    if (onChatPath) {
-      window.dispatchEvent(new Event(NEW_CHAT_EVENT));
-    } else {
-      navigate(activeAgentId ? `/chat/${activeAgentId}` : "/chat", {
-        state: { newChat: true },
-      });
-    }
+    navigate("/chat", { state: { newChat: true } });
     setMinimalPane("records");
     if (isMobile) onToggle();
   };
