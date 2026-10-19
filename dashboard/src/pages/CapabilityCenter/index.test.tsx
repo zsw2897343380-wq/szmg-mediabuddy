@@ -1,9 +1,16 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Link,
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import RequirePermission from "../../components/RequirePermission";
 import CapabilityCenter from "./index";
+import { CapabilityHeaderActions } from "./HeaderActions";
 
 const state = vi.hoisted(() => ({
   user: { role: "admin", permissions: [] as string[] },
@@ -24,11 +31,16 @@ vi.mock("../Experts", () => ({
   default: function ExpertPanel() {
     const [text, setText] = useState("");
     return (
-      <input
-        aria-label="expert-filter"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+      <>
+        <CapabilityHeaderActions resource="experts">
+          <button>expert-action</button>
+        </CapabilityHeaderActions>
+        <input
+          aria-label="expert-filter"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </>
     );
   },
 }));
@@ -37,7 +49,12 @@ vi.mock("../Agent/Skills/components/SkillsTabs", () => ({
 }));
 vi.mock("../SkillPackages", () => ({
   default: ({ unified }: { unified?: boolean }) => (
-    <input aria-label={unified ? "library-draft" : "package-draft"} />
+    <>
+      {unified && (
+        <Link to="/skill-packages">capabilityCenter.skillPackages</Link>
+      )}
+      <input aria-label={unified ? "library-draft" : "package-draft"} />
+    </>
   ),
 }));
 vi.mock("../Agent/Connectors", () => ({
@@ -93,12 +110,16 @@ describe("combined capability center", () => {
       await screen.findByRole("textbox", { name: "library-draft" }),
     ).toBeVisible();
     expect(screen.queryByText("expert-selector")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "expert-action" }),
+    ).not.toBeInTheDocument();
     openTab("nav.connectors");
     fireEvent.change(
       await screen.findByRole("textbox", { name: "connector-draft" }),
       { target: { value: "unsaved" } },
     );
     openTab("nav.experts");
+    expect(screen.getByRole("button", { name: "expert-action" })).toBeVisible();
     expect(screen.getByRole("textbox", { name: "expert-filter" })).toHaveValue(
       "my expert",
     );

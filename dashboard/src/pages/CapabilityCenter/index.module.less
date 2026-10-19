@@ -5,30 +5,44 @@
   min-height: 0;
   min-width: 0;
   background: var(--fn-bg-primary);
+
+  :global(:is(.ant-btn-primary, .octop-btn-primary):not(:disabled)) {
+    background: var(--fn-text-primary);
+    border-color: var(--fn-text-primary);
+    color: var(--fn-bg-primary);
+  }
+  :global(:is(.ant-switch-checked, .octop-switch-checked)) {
+    background: var(--fn-text-primary);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+  min-height: 64px;
+  padding: 0 24px;
 }
 
 .tabs {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   flex-shrink: 0;
-  padding: 20px 32px 0;
-  border-bottom: 1px solid var(--fn-border-secondary);
 
   a {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 0 17px;
-    border-bottom: 2px solid transparent;
+    gap: 6px;
+    padding: 8px 0;
     color: var(--fn-text-tertiary);
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 500;
     text-decoration: none;
 
     &[aria-current="page"] {
       color: var(--fn-text-primary);
-      border-bottom-color: var(--fn-text-primary);
       font-weight: 600;
     }
 
@@ -43,12 +57,21 @@
   }
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+}
+
 .content {
   display: flex;
   flex: 1;
   min-height: 0;
   min-width: 0;
-  padding: 24px 32px;
+  padding: 0;
 }
 
 .panel {
@@ -64,50 +87,21 @@
   display: none;
 }
 
-.skillsToolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-  margin-bottom: 20px;
-}
-
-.skillViews {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 9px;
-  background: var(--fn-bg-secondary);
-
-  a {
-    padding: 6px 12px;
-    border-radius: 7px;
-    color: var(--fn-text-secondary);
-    font-size: 13px;
-    text-decoration: none;
-
-    &[aria-current="page"] {
-      color: var(--fn-text-primary);
-      background: var(--fn-bg-elevated);
-      box-shadow: 0 1px 3px
-        color-mix(in srgb, var(--fn-text-primary) 8%, transparent);
-    }
-  }
-}
-
 @media (max-width: 767px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
   .tabs {
-    padding: 16px 12px 0;
-    gap: 24px;
+    gap: 20px;
   }
   .tabs a {
     font-size: 16px;
     gap: 6px;
-    padding-bottom: 14px;
+    padding: 4px 0;
   }
-  .content {
-    padding: 16px 12px;
+  .headerActions {
+    flex-basis: 100%;
   }
 }
