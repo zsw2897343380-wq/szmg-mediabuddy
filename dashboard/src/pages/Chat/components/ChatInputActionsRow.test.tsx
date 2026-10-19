@@ -56,6 +56,39 @@ const baseProps = {
 };
 
 describe("ChatInputActionsRow plus menu", () => {
+  it("shows the active expert in the menu and still mentions other experts", async () => {
+    const onInsertExpertMention = vi.fn();
+    const other = { agent_id: "other", name: "Other expert" };
+    render(
+      <MemoryRouter>
+        <ChatInputActionsRow
+          {...baseProps}
+          taskLayout
+          agentId="current"
+          conversationMode="craft"
+          availableExperts={[
+            { agent_id: "current", name: "My created expert" },
+            other,
+          ]}
+          onInsertExpertMention={onInsertExpertMention}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByTestId("composer-plus"));
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: /^(Experts|chat\.expertPicker)$/,
+      }),
+    );
+    expect(
+      await screen.findByRole("button", {
+        name: /My created expert.*(?:Current expert|chat\.expertPickerCurrent)/,
+      }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Other expert" }));
+    expect(onInsertExpertMention).toHaveBeenCalledWith(other);
+    expect(baseProps.onSubmit).not.toHaveBeenCalled();
+  });
   it("selects the home model directly and keeps uploads in the plus menu", async () => {
     const onModelChange = vi.fn();
     const onFileSelect = vi.fn();

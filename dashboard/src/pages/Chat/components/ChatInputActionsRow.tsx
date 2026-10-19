@@ -996,6 +996,7 @@ export default function ChatInputActionsRow({
         return (
           <ExpertPickerPopover
             agents={availableExperts ?? []}
+            currentAgentId={agentId}
             selectedAgentIds={mentionedExperts}
             onSelect={handleExpertSelect}
             onNavigateAway={closePlusMenu}

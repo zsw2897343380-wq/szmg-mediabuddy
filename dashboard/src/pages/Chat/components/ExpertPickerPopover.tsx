@@ -16,6 +16,7 @@ export type { ChatAgentOption };
 
 interface ExpertPickerPopoverProps {
   agents: ChatAgentOption[];
+  currentAgentId?: string | null;
   selectedAgentIds: string[];
   onSelect: (agent: ChatAgentOption) => void;
   onNavigateAway?: () => void;
@@ -24,6 +25,7 @@ interface ExpertPickerPopoverProps {
 
 export default function ExpertPickerPopover({
   agents,
+  currentAgentId,
   selectedAgentIds,
   onSelect,
   onNavigateAway,
@@ -39,9 +41,11 @@ export default function ExpertPickerPopover({
   const visibleAgents = useMemo(
     () =>
       filterVisible(agents, {
-        keepAgentIds: selectedAgentIds,
+        keepAgentIds: currentAgentId
+          ? [...selectedAgentIds, currentAgentId]
+          : selectedAgentIds,
       }),
-    [agents, filterVisible, selectedAgentIds],
+    [agents, filterVisible, selectedAgentIds, currentAgentId],
   );
 
   // Leave the hidden-only view once nothing remains hidden.
@@ -139,8 +143,9 @@ export default function ExpertPickerPopover({
         ) : null
       }
       renderItem={(agent) => {
-        const active = selectedAgentIds.includes(agent.agent_id);
-        const hideable = canHide(agent);
+        const current = agent.agent_id === currentAgentId;
+        const active = current || selectedAgentIds.includes(agent.agent_id);
+        const hideable = !current && canHide(agent);
         return (
           <div
             key={agent.agent_id}
@@ -151,6 +156,7 @@ export default function ExpertPickerPopover({
             <button
               type="button"
               className={styles.expertPickerSelect}
+              disabled={current}
               onClick={() => onSelect(agent)}
             >
               <ExpertAgentAvatar
@@ -162,6 +168,11 @@ export default function ExpertPickerPopover({
               />
               <span className={styles.expertPickerItemText}>
                 <span className={pickerStyles.itemName}>{agent.name}</span>
+                {current && (
+                  <span className={styles.expertSharedBadge}>
+                    {t("chat.expertPickerCurrent")}
+                  </span>
+                )}
                 {agent.is_shared && (
                   <span className={styles.expertSharedBadge}>
                     {t("chat.expertSharedBadge", "共享")}

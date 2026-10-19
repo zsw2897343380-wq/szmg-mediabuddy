@@ -132,9 +132,10 @@ interface ChatInputProps {
   availableSkills?: SkillSpec[];
   availableAgents?: ChatAgentOption[];
   /**
-   * Subset of experts the user can currently pick — only running ones
-   * (stopped / failed experts would dispatch into an unloaded harness and
-   * silently fail). Pass the same list as ``availableAgents`` if every
+   * Experts shown in the toolbar picker — only running ones, since stopped /
+   * failed experts would dispatch into an unloaded harness and silently fail.
+   * The current expert is read-only to avoid self mentions.
+   * Pass the same list as ``availableAgents`` if every
    * expert is guaranteed to be running.
    */
   availableExperts?: ChatAgentOption[];
@@ -1039,9 +1040,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             onKnowledgeBaseIdsChange={onKnowledgeBaseIdsChange}
             availableSkills={availableSkills}
             onInsertSkillCommand={insertSkillCommand}
-            availableExperts={availableExperts.filter(
-              (a) => a.agent_id !== agentId,
-            )}
+            availableExperts={availableExperts}
             onInsertExpertMention={insertExpertMention}
             availableSubagents={availableSubagents}
             onInsertSubagentMention={insertSubagentMention}

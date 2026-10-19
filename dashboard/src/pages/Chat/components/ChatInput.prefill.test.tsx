@@ -70,13 +70,22 @@ vi.mock("./ChatInputActionsRow", () => ({
   default: ({
     onSubmit,
     canSend,
+    availableExperts = [],
   }: {
     onSubmit: () => void;
     canSend: boolean;
+    availableExperts?: { agent_id: string; name: string }[];
   }) => (
-    <button type="button" disabled={!canSend} onClick={onSubmit}>
-      send
-    </button>
+    <>
+      {availableExperts.map((expert) => (
+        <span key={expert.agent_id} data-testid="expert-option">
+          {expert.name}
+        </span>
+      ))}
+      <button type="button" disabled={!canSend} onClick={onSubmit}>
+        send
+      </button>
+    </>
   ),
 }));
 
@@ -138,6 +147,24 @@ beforeEach(() => {
 });
 
 describe("ChatInput prefill clear-on-send", () => {
+  it("passes the current expert through to the toolbar picker", () => {
+    render(
+      <ChatInput
+        agentId="created-expert"
+        availableExperts={[
+          { agent_id: "created-expert", name: "My created expert" },
+          { agent_id: "other", name: "Other expert" },
+        ]}
+        onSend={vi.fn()}
+        onCancel={vi.fn()}
+        onNewChat={vi.fn()}
+        isStreaming={false}
+      />,
+    );
+    expect(
+      screen.getAllByTestId("expert-option").map((item) => item.textContent),
+    ).toEqual(["My created expert", "Other expert"]);
+  });
   it("does not restore stale initialText after send (skill-card prefill path)", async () => {
     // Mirrors welcome skill/quick-card flow:
     // 1) setPrefillText fills the composer imperatively while parent initialText

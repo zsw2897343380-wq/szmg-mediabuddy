@@ -1585,6 +1585,7 @@
     "expertPickerSearch": "Search experts",
     "expertPickerEmpty": "No other experts available",
     "expertPickerManage": "Manage experts",
+    "expertPickerCurrent": "Current expert",
     "expertPin": "Pin expert",
     "expertUnpin": "Unpin expert",
     "expertHide": "Hide shared expert",

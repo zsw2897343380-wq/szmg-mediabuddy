@@ -1585,6 +1585,7 @@
     "expertPickerSearch": "搜索专家",
     "expertPickerEmpty": "暂无其他专家",
     "expertPickerManage": "管理专家",
+    "expertPickerCurrent": "当前专家",
     "expertPin": "置顶专家",
     "expertUnpin": "取消置顶专家",
     "expertHide": "隐藏共享专家",

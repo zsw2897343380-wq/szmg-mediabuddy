@@ -39,6 +39,31 @@ describe("ExpertPickerPopover hide shared experts", () => {
     localStorage.removeItem(hiddenExpertsStorageKey(1));
   });
 
+  it("shows the current expert without allowing a self mention", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <MemoryRouter>
+        <ExpertPickerPopover
+          agents={agents}
+          currentAgentId="own-1"
+          selectedAgentIds={[]}
+          onSelect={onSelect}
+        />
+      </MemoryRouter>,
+    );
+
+    const current = screen.getByRole("button", {
+      name: /我的专家.*(?:Current expert|当前专家|chat\.expertPickerCurrent)/,
+    });
+    expect(current).toBeDisabled();
+    await user.click(current);
+    expect(onSelect).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /共享专家甲/ }));
+    expect(onSelect).toHaveBeenCalledWith(agents[1]);
+  });
+
   it("hides a shared expert and can restore via hidden list", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
