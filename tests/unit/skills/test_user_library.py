@@ -307,8 +307,10 @@ async def test_real_harness_catalog_scans_only_selected_package_and_preserves_wo
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("virtual_mode", [False, True])
+@pytest.mark.parametrize("system_files_path", ["", ".octop"])
+@pytest.mark.parametrize("catalog_failure", [False, True])
 async def test_host_root_install_is_selectable_and_loads_in_real_skills_middleware(
-    manager: AgentManager, virtual_mode: bool
+    manager: AgentManager, virtual_mode: bool, system_files_path: str, catalog_failure: bool
 ) -> None:
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
@@ -328,20 +330,37 @@ async def test_host_root_install_is_selectable_and_loads_in_real_skills_middlewa
         "root_dir": workspace_dir.anchor,
         "virtual_mode": virtual_mode,
     }
-    manager.persist_harness_config("alice-agent", saved)
+    saved["skills_disabled"] = ["builtin-disabled"]
+    saved["system_files_path"] = system_files_path
+    # Seed the internal layout as it would exist after agent creation; profile
+    # updates intentionally cannot switch a legacy agent's system prefix.
+    manager._repos.agent_repo.update_config("alice-agent", config_json=json.dumps(saved))
     library = _library(manager)
     library.update_skill(alice, package_id, "reader", installed=True, enabled=True)
     row = manager.get_row("alice-agent")
     assert row is not None
     config = manager._build_harness_config(row)
     backend = resolve_backend(config.backend, workspace_dir=workspace_dir)
-    workspace = BackendWorkspace(backend, workspace_dir)
+    workspace = BackendWorkspace(backend, workspace_dir, system_files_path=system_files_path)
+    for root, slug in (
+        ("_builtin_skills", "builtin-reader"),
+        ("_builtin_skills", "builtin-disabled"),
+        ("skills", "workspace-helper"),
+    ):
+        await workspace.awrite_text(
+            f"{root}/{slug}/SKILL.md",
+            f"---\nname: {slug}\ndescription: {slug}\n---\nInstructions",
+        )
 
     async def catalog() -> list[dict[str, object]]:
-        return await list_skill_summaries(workspace, skills_dir=config.skills_dir)
+        if catalog_failure:
+            raise ExceptionGroup("catalog", [PermissionError("derived skill mount path")])
+        return await list_skill_summaries(
+            workspace, skills_dir=config.skills_dir, skills_disabled=config.skills_disabled
+        )
 
-    # Registry uses the actual harness catalog, including its workspace fallback
-    # for Windows host-root virtual paths, then merges selected package metadata.
+    # A failed extra root must not discard builtin/workspace rows that were
+    # scanned first, including builtin disable preferences and system prefixes.
     agent = SimpleNamespace(
         config=config, workspace=workspace, list_skill_summaries=AsyncMock(side_effect=catalog)
     )
@@ -349,13 +368,20 @@ async def test_host_root_install_is_selectable_and_loads_in_real_skills_middlewa
     manager._harness_manager.get_agent.return_value = SimpleNamespace(agent=agent)
     rows = await manager.list_skill_summaries("alice-agent")
     assert [(item["slug"], item["kind"], item["enabled"]) for item in rows] == [
-        ("reader", "package", True)
+        ("builtin-disabled", "builtin", False),
+        ("builtin-reader", "builtin", True),
+        ("reader", "package", True),
+        ("workspace-helper", "workspace", True),
     ]
     # This is the source list supplied by HarnessAgent to SkillsMiddleware.
     assert config.skills_dir
     source = workspace.skill_paths(extra=config.skills_dir)[-1]
     skills = await _alist_skills(backend, source)
     assert [skill["name"] for skill in skills] == ["reader"]
+    builtin_source = workspace.skill_paths(extra=config.skills_dir)[0]
+    assert "builtin-reader" in {
+        skill["name"] for skill in await _alist_skills(backend, builtin_source)
+    }
     manifest = await workspace.aread_text(f"{source}/reader/SKILL.md")
     assert manifest and "Instructions" in manifest
     assert await workspace.aread_text(f"{source}/reader/references/help.txt") == "reader"

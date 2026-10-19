@@ -3128,6 +3128,27 @@ class AgentManager:
                 ", ".join(repaired),
             )
 
+        async def workspace_fallback() -> list[dict[str, Any]]:
+            from octop_harness.backends.workspace import BackendWorkspace
+            from octop_harness.skills.catalog import list_skill_summaries
+
+            workspace = getattr(agent, "workspace", None)
+            if isinstance(workspace, BackendWorkspace):
+                # A derived package mount can fail after builtin/workspace rows
+                # were scanned. Recover those roots before merging packages below.
+                with suppress(OSError, UnicodeError):
+                    return list(
+                        await list_skill_summaries(
+                            workspace,
+                            skills_disabled=skills_disabled_set(cfg),
+                            skills_dir=self._normalize_skills_dir_config(cfg.get("skills")) or None,
+                        )
+                    )
+            return list_workspace_skill_summaries(
+                workspace_dir,
+                skills_disabled=skills_disabled_set(cfg),
+            )
+
         try:
             harness_rows = list(await agent.list_skill_summaries())
         except (OSError, PermissionError, UnicodeDecodeError, UnicodeError) as exc:
@@ -3136,10 +3157,7 @@ class AgentManager:
                 agent_id,
                 exc,
             )
-            harness_rows = list_workspace_skill_summaries(
-                workspace_dir,
-                skills_disabled=skills_disabled_set(cfg),
-            )
+            harness_rows = await workspace_fallback()
         except ExceptionGroup as exc:
             # Starlette/anyio may wrap a single UnicodeDecodeError in a group.
             if not any(
@@ -3152,10 +3170,7 @@ class AgentManager:
                 agent_id,
                 exc,
             )
-            harness_rows = list_workspace_skill_summaries(
-                workspace_dir,
-                skills_disabled=skills_disabled_set(cfg),
-            )
+            harness_rows = await workspace_fallback()
         # Surface unrepairable manifests that harness silently skipped.
         present = {
             str(row.get("slug") or "").strip()
