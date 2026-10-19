@@ -65,6 +65,7 @@ import WelcomeScreen, {
   WelcomeSuggestions,
   WelcomeComposerHeader,
   type WelcomeScene,
+  type WelcomeCategory,
 } from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
 import ModelConfigEmpty from "./components/ModelConfigEmpty";
@@ -175,6 +176,9 @@ function ChatPageInner() {
   const chatInputRef = useRef<ChatInputHandle | null>(null);
   const [welcomeScene, setWelcomeScene] = useState<WelcomeScene>("office");
   const welcomeDrafts = useRef(new Map<string, string>());
+  const [welcomeCategories, setWelcomeCategories] = useState<
+    Record<string, WelcomeCategory | null>
+  >({});
 
   // Clear the router state after consuming prefillInput so it doesn't persist
   // on subsequent visits or page refreshes.
@@ -934,6 +938,7 @@ function ChatPageInner() {
 
   const handleNewChat = useCallback(() => {
     welcomeDrafts.current.clear();
+    setWelcomeCategories({});
     prefillInputRef.current = "";
     chatInputRef.current?.setPrefillText("");
     clearQueued();
@@ -944,6 +949,7 @@ function ChatPageInner() {
     const start = () => {
       if (!resolvedAgentId) return;
       welcomeDrafts.current.clear();
+      setWelcomeCategories({});
       prefillInputRef.current = "";
       chatInputRef.current?.setPrefillText("");
       clearQueued();
@@ -1873,6 +1879,20 @@ function ChatPageInner() {
             {showWelcome && agentChatReady && !noAgents && (
               <WelcomeComposerHeader
                 scene={welcomeScene}
+                selectedCategory={
+                  welcomeCategories[`${resolvedAgentId}:${welcomeScene}`] ??
+                  null
+                }
+                onCategoryChange={(category) => {
+                  setWelcomeCategories((previous) => ({
+                    ...previous,
+                    [`${resolvedAgentId}:${welcomeScene}`]: category,
+                  }));
+                  if (!category) {
+                    prefillInputRef.current = "";
+                    chatInputRef.current?.setPrefillText("");
+                  }
+                }}
                 onPromptClick={handlePromptClick}
               />
             )}
@@ -1937,8 +1957,15 @@ function ChatPageInner() {
             />
             {showWelcome && agentChatReady && !noAgents && (
               <WelcomeSuggestions
-                key={`${resolvedAgentId}-${welcomeScene}`}
+                key={`${resolvedAgentId}-${welcomeScene}-${
+                  welcomeCategories[`${resolvedAgentId}:${welcomeScene}`] ??
+                  "all"
+                }`}
                 scene={welcomeScene}
+                selectedCategory={
+                  welcomeCategories[`${resolvedAgentId}:${welcomeScene}`] ??
+                  null
+                }
                 quickCards={expertQuickCards}
                 onPromptClick={handlePromptClick}
               />

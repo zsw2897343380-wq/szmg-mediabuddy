@@ -4068,7 +4068,7 @@
       },
       "slides": {
         "label": "Make slides",
-        "prompt": "Help me create a presentation, starting with its theme and slide structure."
+        "prompt": "Create a 10-slide personal or team year-end presentation covering annual goals, key projects, achievements, lessons learned, and next year's plan. Use placeholders for missing information. Use a restrained business style with a white background, deep blue (#173A63), and warm orange (#F08A4B). Express one main conclusion per slide using large numbers, project cards, milestones, and a quarterly roadmap. Highlight outcomes, contributions, and growth."
       },
       "research": {
         "label": "Research",
@@ -4113,6 +4113,106 @@
       "illustration": {
         "label": "Illustration",
         "prompt": "Help me create an illustration, starting with its content, style, and purpose."
+      }
+    },
+    "previousCategories": "Previous task categories",
+    "nextCategories": "Next task categories",
+    "taskSuggestions": {
+      "chat": {
+        "1": "What can you do after connecting to WeCom?",
+        "2": "Use my WeCom chat history to write today's work report",
+        "3": "Turn unread WeCom emails into a task list",
+        "4": "Summarize the key points from my unread WeCom messages"
+      },
+      "document": {
+        "1": "Draft a project requirements document",
+        "2": "Turn meeting notes into minutes and action items",
+        "3": "Create a clear weekly work report template",
+        "4": "Turn this long document into a shareable summary"
+      },
+      "finance": {
+        "1": "Analyze the key metrics and changes in a financial report",
+        "2": "Create a revenue, cost, and cash flow analysis template",
+        "3": "Compare the financial performance of two companies",
+        "4": "Identify risks and facts to verify in this financial material"
+      },
+      "data": {
+        "1": "Analyze sales trends in a spreadsheet and create charts",
+        "2": "Find outliers and missing values in my data",
+        "3": "Create a clear data analysis report template",
+        "4": "Turn this data into an interactive dashboard"
+      },
+      "slides": {
+        "1": "Make a 10-slide annual summary presentation template",
+        "2": "Make a presentation about AI trends over the past year",
+        "3": "Make a POP MART brand analysis presentation",
+        "4": "Make a presentation introducing Journey to the West"
+      },
+      "research": {
+        "1": "Research an industry's current state, trends, and opportunities",
+        "2": "Compare the features and user experience of similar products",
+        "3": "Verify sources and prepare a research report on this topic",
+        "4": "Organize research into a comparison of viewpoints with sources"
+      },
+      "plan": {
+        "1": "Plan a product launch event",
+        "2": "Create a project execution plan with milestones",
+        "3": "Create a social media content plan",
+        "4": "Define project goals, budget, risks, and acceptance criteria"
+      },
+      "website": {
+        "1": "Build a product introduction website",
+        "2": "Design and build a clear personal portfolio website",
+        "3": "Build an admin page with filtering and search",
+        "4": "Turn this idea into an interactive web prototype"
+      },
+      "debug": {
+        "1": "Find and fix the cause of this error log",
+        "2": "Investigate why this page loads slowly",
+        "3": "Reproduce this bug and verify a minimal fix",
+        "4": "Trace why this API request fails"
+      },
+      "tests": {
+        "1": "Add automated tests for a core business flow",
+        "2": "Design boundary case tests for this API",
+        "3": "Add a regression test that reproduces this bug",
+        "4": "Find important gaps in test coverage"
+      },
+      "refactor": {
+        "1": "Simplify this complex logic while preserving its behavior",
+        "2": "Remove duplication while keeping clear module boundaries",
+        "3": "Simplify this component's state and unnecessary updates",
+        "4": "List risks and verification steps for this refactor"
+      },
+      "automation": {
+        "1": "Write a script to organize files in batches",
+        "2": "Turn this repetitive workflow into an executable script",
+        "3": "Create an automation that regularly summarizes data",
+        "4": "Check this script's inputs, outputs, and failure handling"
+      },
+      "prototype": {
+        "1": "Design an interactive prototype for a task management app",
+        "2": "Turn these requirements into an interactive page prototype",
+        "3": "Design an admin interface including empty and error states",
+        "4": "Improve this user flow and create a clickable prototype"
+      },
+      "poster": {
+        "1": "Design a poster for a product launch",
+        "2": "Create a poster highlighting event details and registration",
+        "3": "Lay out this copy as a clear visual poster",
+        "4": "Explore three visual directions for the same theme"
+      },
+      "presentation": {
+        "1": "Design consistent visual guidelines for this presentation",
+        "2": "Improve the title, data, and closing slide layouts",
+        "3": "Turn complex charts into clear presentation slides",
+        "4": "Create a set of business presentation slide templates"
+      },
+      "illustration": {
+        "1": "Design a set of illustrations for app empty states",
+        "2": "Create a cover illustration around this theme",
+        "3": "Design consistent scene illustrations for one character",
+        "4": "Create a set of consistent feature icon concepts"
       }
     }
   },

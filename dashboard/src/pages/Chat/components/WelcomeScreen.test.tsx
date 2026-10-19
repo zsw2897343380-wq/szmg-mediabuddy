@@ -75,4 +75,86 @@ describe("task welcome interactions", () => {
     );
     expect(screen.getByRole("button", { name: /^Task 4/ })).toBeVisible();
   });
+
+  it("marks the selected task template and clears it when clicked again", () => {
+    const onCategoryChange = vi.fn();
+    const onPromptClick = vi.fn();
+    const { rerender } = render(
+      <WelcomeComposerHeader
+        scene="office"
+        selectedCategory="slides"
+        onCategoryChange={onCategoryChange}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    const selected = screen.getByRole("button", {
+      name: "chatWelcome.categories.slides.label",
+    });
+    expect(selected).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(selected);
+    expect(onCategoryChange).toHaveBeenLastCalledWith(null);
+    expect(onPromptClick).toHaveBeenLastCalledWith("", { prefill: true });
+    rerender(
+      <WelcomeComposerHeader
+        scene="office"
+        selectedCategory={null}
+        onCategoryChange={onCategoryChange}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    fireEvent.click(selected);
+    expect(onCategoryChange).toHaveBeenLastCalledWith("slides");
+    expect(onPromptClick).toHaveBeenLastCalledWith(
+      "chatWelcome.categories.slides.prompt",
+      { prefill: true },
+    );
+  });
+
+  it("replaces general suggestions with four prompts for the selected template", () => {
+    const onPromptClick = vi.fn();
+    const { rerender } = render(
+      <WelcomeSuggestions
+        scene="office"
+        selectedCategory="slides"
+        quickCards={[
+          {
+            title: "General",
+            description: "",
+            prompt: "General",
+            color: "#888",
+          },
+        ]}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^General/ })).toBeNull();
+    expect(screen.getAllByRole("button")).toHaveLength(4);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /^chatWelcome\.taskSuggestions\.slides\.2/,
+      }),
+    );
+    expect(onPromptClick).toHaveBeenCalledWith(
+      "chatWelcome.taskSuggestions.slides.2",
+      { prefill: true },
+    );
+    rerender(
+      <WelcomeSuggestions
+        scene="office"
+        selectedCategory="document"
+        quickCards={[]}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", {
+        name: /^chatWelcome\.taskSuggestions\.slides\.2/,
+      }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", {
+        name: /^chatWelcome\.taskSuggestions\.document\.1/,
+      }),
+    ).toBeVisible();
+  });
 });
