@@ -20,6 +20,10 @@ export interface SkillPackage {
 export interface UserSkillLibrary {
   installed_package_ids: string[];
   disabled_package_ids: string[];
+  skill_states?: Record<
+    string,
+    Record<string, { installed: boolean; enabled: boolean }>
+  >;
 }
 
 export interface CopyPackageSkillsBody {

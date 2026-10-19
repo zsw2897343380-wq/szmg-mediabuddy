@@ -74,6 +74,10 @@ class PathLayout:
         """Global skill package content: ``~/.octop/skill-packages/``."""
         return self.root / "skill-packages"
 
+    def user_skill_library_cache(self, user_id: int) -> Path:
+        """Read-only skill selections outside agent workspace content."""
+        return self.root / "skill-library-cache" / str(user_id)
+
     @property
     def knowledge_dir(self) -> Path:
         """Global knowledge base files: ``~/.octop/knowledge/``."""

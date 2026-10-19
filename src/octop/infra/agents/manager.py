@@ -69,6 +69,12 @@ from octop.infra.backend.resolver import (
     resolve_agent_backend_spec,
     windows_neutralize_host_root,
 )
+from octop.infra.backend.skill_mounts import (
+    PACKAGE_SKILL_MOUNT,
+    USER_SKILL_MOUNT,
+    ReadOnlySkillMounts,
+    with_readonly_skill_mounts,
+)
 from octop.infra.connectors.builder import (
     build_mcp_server_configs_for_user,
     gateway_mcp_server_names,
@@ -78,8 +84,9 @@ from octop.infra.connectors.service import ConnectorService
 from octop.infra.db.repos.audit import ACTOR_SYSTEM
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.skills.presentation import apply_skill_presentation, localize_skill_summary
+from octop.infra.skills.selected_mounts import selected_skill_root
 from octop.infra.skills.skill_package_store import SkillPackageStore
-from octop.infra.skills.user_library import UserSkillLibrary
+from octop.infra.skills.user_library import UserSkillLibrary, UserSkillLibraryState
 from octop.infra.skills.workspace_catalog import (
     list_workspace_skill_summaries,
     repair_workspace_skill_manifests,
@@ -507,6 +514,8 @@ class AgentManager:
         self._reclaim_holds: dict[str, asyncio.Event] = {}
         self._reclaim_task: asyncio.Task[None] | None = None
         self._reclaim_wake: asyncio.Event | None = None
+        self._runtime_bundle_tasks: set[asyncio.Task[Any]] = set()
+        self._closing = False
         self._reload_dirty: set[str] = set()
         self._reload_worker_running: dict[str, bool] = {}
         self._bootstrap_graph_refresh_pending: set[str] = set()
@@ -602,6 +611,7 @@ class AgentManager:
         return self._teams
 
     async def boot(self) -> None:
+        self._closing = False
         self._tool_guard_rules.ensure_seeded()
         providers = self._providers.build_harness_configs()
         self._harness_manager = HarnessAgentManager(
@@ -660,6 +670,15 @@ class AgentManager:
                 )
 
     async def shutdown(self) -> None:
+        self._closing = True
+        self._reload_dirty.clear()
+        current = asyncio.current_task()
+        pending = [task for task in self._runtime_bundle_tasks if task is not current]
+        for task in pending:
+            task.cancel()
+        if pending:
+            # Before taking _lock: an owner may need it while unwinding.
+            await asyncio.gather(*pending, return_exceptions=True)
         self._reclaim_pending.clear()
         reclaim_task = self._reclaim_task
         self._reclaim_task = None
@@ -1221,7 +1240,7 @@ class AgentManager:
                 row = self.get_row(agent_id)
                 if row is None:
                     raise ValueError(tr("memory_storage.restore_changed", locale))
-                cfg, metadata, tags, user_display = self._agent_runtime_bundle(row)
+                cfg, metadata, tags, user_display = await self._await_runtime_bundle(row)
                 removed = True
                 await self._harness_manager.aremove_agent(agent_id)
                 if runtime.memory is not None or (
@@ -2660,47 +2679,131 @@ class AgentManager:
         self.persist_harness_config(agent_id, cfg)
         self.sync_effective_tools_disabled(agent_id)
 
-    def effective_skill_package_ids(self, agent_id: str) -> list[str]:
-        """Merge legacy agent mounts with its owner's enabled personal library."""
-        package_ids = skill_package_ids_list(self.get_config(agent_id))
+    def _personal_skill_library_state(self, agent_id: str) -> UserSkillLibraryState | None:
         row = self._repos.agent_repo.get(agent_id)
-        # Shared agents must never inherit whichever user happens to be chatting.
         if row is None or row.user_id is None or row.kind == "team":
-            return package_ids
-        library = UserSkillLibrary(
-            settings=self._repos.settings_repo, packages=self._repos.skill_package_repo
-        )
-        state = library.load(row.user_id)
-        # A personal pause wins over legacy explicit mounts of the same package.
-        package_ids = [item for item in package_ids if item not in state.disabled_package_ids]
+            return None
         if not self._backend_supports_host_skill_packages(
-            self._backend_spec_for_row(row),
-            workspace_dir=self.resolve_workspace_dir(agent_id),
+            self._backend_spec_for_row(row), workspace_dir=self.resolve_workspace_dir(agent_id)
         ):
+            return None
+        return UserSkillLibrary(
+            settings=self._repos.settings_repo, packages=self._repos.skill_package_repo
+        ).load(row.user_id)
+
+    def effective_skill_package_ids(self, agent_id: str) -> list[str]:
+        """Merge legacy mounts with the owner's package and individual installs."""
+        package_ids = skill_package_ids_list(self.get_config(agent_id))
+        state = self._personal_skill_library_state(agent_id)
+        if state is None:
             return package_ids
-        return list(dict.fromkeys(package_ids + state.enabled_package_ids))
+        package_ids = [item for item in package_ids if item not in state.disabled_package_ids]
+        individual = [
+            package_id
+            for package_id, skills in state.skill_states.items()
+            if any(pref.installed and pref.enabled for pref in skills.values())
+        ]
+        return list(dict.fromkeys(package_ids + state.enabled_package_ids + individual))
+
+    def _selected_package_skills(self, agent_id: str) -> dict[str, list[dict[str, Any]]]:
+        """Resolve the actual skills, preserving existing package precedence."""
+        store = SkillPackageStore(
+            repo=self._repos.skill_package_repo, root=self._paths.skill_packages_dir
+        )
+        state = self._personal_skill_library_state(agent_id)
+        legacy = skill_package_ids_list(self.get_config(agent_id))
+        return {
+            package_id: [
+                summary
+                for summary in store.list_skill_summaries(package_id)
+                if state is None
+                or state.allows(package_id, str(summary["slug"]), legacy=package_id in legacy)
+            ]
+            for package_id in self.effective_skill_package_ids(agent_id)
+            if self._repos.skill_package_repo.get(package_id) is not None
+        }
+
+    def selected_skill_package_slugs(self, agent_id: str) -> set[str]:
+        """Package-only write protection uses actual selected skills, not their siblings."""
+        return {
+            str(skill["slug"])
+            for skills in self._selected_package_skills(agent_id).values()
+            for skill in skills
+        }
+
+    def _uses_skill_mounts(self, agent_id: str) -> bool:
+        row = self._repos.agent_repo.get(agent_id)
+        return row is not None and self._backend_supports_host_skill_packages(
+            self._backend_spec_for_row(row), workspace_dir=self.resolve_workspace_dir(agent_id)
+        )
+
+    def _runtime_skill_backend(self, agent_id: str, backend: Any, *, system_files_path: str) -> Any:
+        """Add readonly runtime mounts without changing the stored backend profile."""
+        if not self._uses_skill_mounts(agent_id) or not self.effective_skill_package_ids(agent_id):
+            return backend
+        row = self._repos.agent_repo.get(agent_id)
+        return with_readonly_skill_mounts(
+            backend,
+            workspace_dir=self.resolve_workspace_dir(agent_id),
+            package_root=self._paths.skill_packages_dir,
+            user_cache_root=self._paths.user_skill_library_cache(row.user_id)
+            if row is not None and row.user_id is not None
+            else None,
+            system_files_path=system_files_path,
+        )
 
     async def refresh_user_skill_library(self, user_id: int) -> None:
-        """Apply a user's changed installation state to their running agents."""
+        """Refresh selections; add the fixed readonly routes once for existing agents."""
+        needs_reload: list[str] = []
 
         def refresh_owned() -> None:
             for row in self._repos.agent_repo.list_all(include_disabled=False):
-                if row.user_id == user_id and row.kind != "team":
+                if row.user_id != user_id or row.kind == "team":
+                    continue
+                try:
+                    agent = self.get_agent(row.agent_id)
+                except OctopError:
+                    continue
+                backend = getattr(getattr(agent, "config", None), "backend", None)
+                if (
+                    self._uses_skill_mounts(row.agent_id)
+                    and self.effective_skill_package_ids(row.agent_id)
+                    and isinstance(backend, dict)
+                    and not isinstance(backend, ReadOnlySkillMounts)
+                ):
+                    needs_reload.append(row.agent_id)
+                else:
                     self.sync_skill_package_dirs(row.agent_id)
 
         await asyncio.get_running_loop().run_in_executor(None, refresh_owned)
+        for agent_id in needs_reload:
+            await self._reload_agent(agent_id)
 
     def _resolve_skill_package_dirs(self, agent_id: str) -> list[str]:
-        """Resolve persisted package ids to existing absolute package skill directories."""
+        """Mount full legacy packages or immutable roots of individually selected skills."""
         store = SkillPackageStore(
-            repo=self._repos.skill_package_repo,
-            root=self._paths.skill_packages_dir,
+            repo=self._repos.skill_package_repo, root=self._paths.skill_packages_dir
         )
+        state = self._personal_skill_library_state(agent_id)
+        row = self._repos.agent_repo.get(agent_id)
         roots: list[str] = []
-        for package_id in self.effective_skill_package_ids(agent_id):
-            if self._repos.skill_package_repo.get(package_id) is None:
-                continue
-            roots.append(str(store.package_skills_dir(package_id).resolve()))
+        for package_id, skills in self._selected_package_skills(agent_id).items():
+            source = store.package_skills_dir(package_id)
+            if state is not None and package_id in state.skill_states:
+                if not skills or row is None or row.user_id is None:
+                    continue
+                source = selected_skill_root(
+                    source,
+                    [str(skill["slug"]) for skill in skills],
+                    cache_root=self._paths.user_skill_library_cache(row.user_id) / package_id,
+                )
+            if source.is_relative_to(self._paths.skill_packages_dir):
+                relative = source.relative_to(self._paths.skill_packages_dir)
+                roots.append(f"{PACKAGE_SKILL_MOUNT}{relative.as_posix()}")
+            else:
+                assert row is not None and row.user_id is not None
+                relative = source.relative_to(self._paths.user_skill_library_cache(row.user_id))
+                roots.append(f"{USER_SKILL_MOUNT}{relative.as_posix()}")
         return roots
 
     @staticmethod
@@ -2780,8 +2883,8 @@ class AgentManager:
     async def persist_skill_package_ids(self, agent_id: str, package_ids: list[str]) -> None:
         """Persist package ids after validation and hot-sync a running agent.
 
-        Unlike :meth:`update_config_json`, this does not schedule a harness rebuild.
-        Mounting packages only needs ``skills_dir`` updated so list/enable keep working.
+        Existing readonly mounts only need ``skills_dir`` updated. The first
+        package install rebuilds an existing runtime once to add those mounts.
         """
         row = self._repos.agent_repo.get(agent_id)
         if row is None:
@@ -2803,7 +2906,25 @@ class AgentManager:
             skill_package_ids=dump_id_list(normalized_ids),
             config_json=dumps_config(cfg),
         )
-        self.sync_skill_package_dirs(agent_id)
+
+        def needs_mounts() -> bool:
+            try:
+                agent = self.get_agent(agent_id)
+            except OctopError:
+                return False
+            backend = getattr(getattr(agent, "config", None), "backend", None)
+            return (
+                self._uses_skill_mounts(agent_id)
+                and bool(normalized_ids)
+                and isinstance(backend, dict)
+            )
+
+        if await asyncio.get_running_loop().run_in_executor(None, needs_mounts):
+            await self._reload_agent(agent_id)
+        else:
+            await asyncio.get_running_loop().run_in_executor(
+                None, self.sync_skill_package_dirs, agent_id
+            )
 
     def sync_skill_package_dirs(self, agent_id: str) -> None:
         """Hot-update ``skills_dir`` on the running harness agent (no rebuild)."""
@@ -2941,7 +3062,9 @@ class AgentManager:
             )
             if package_id not in package_ids:
                 continue
-            self.sync_skill_package_dirs(row.agent_id)
+            await asyncio.get_running_loop().run_in_executor(
+                None, self.sync_skill_package_dirs, row.agent_id
+            )
 
     async def strip_skill_package_id(self, package_id: str) -> None:
         """Remove a deleted package id from every agent and hot-sync running agents."""
@@ -2964,7 +3087,9 @@ class AgentManager:
                     skill_package_ids=dump_id_list(remaining),
                     config_json=dumps_config(cfg),
                 )
-            self.sync_skill_package_dirs(row.agent_id)
+            await asyncio.get_running_loop().run_in_executor(
+                None, self.sync_skill_package_dirs, row.agent_id
+            )
 
     def resolve_context_max_tokens(self, agent_id: str, *, fallback: int = 128_000) -> int:
         """Return the configured context cap for *agent_id* (``max_input_length``)."""
@@ -3073,15 +3198,12 @@ class AgentManager:
             return harness_rows
 
         disabled = skills_disabled_set(cfg)
-        store = SkillPackageStore(
-            repo=self._repos.skill_package_repo,
-            root=self._paths.skill_packages_dir,
+        selected = await asyncio.get_running_loop().run_in_executor(
+            None, self._selected_package_skills, agent_id
         )
         package_by_slug: dict[str, dict[str, Any]] = {}
-        for package_id in package_ids:
-            if self._repos.skill_package_repo.get(package_id) is None:
-                continue
-            for summary in store.list_skill_summaries(package_id):
+        for package_id, summaries in selected.items():
+            for summary in summaries:
                 slug = str(summary.get("slug") or "").strip()
                 if not slug:
                     continue
@@ -3253,7 +3375,7 @@ class AgentManager:
             try:
                 from octop.infra.agents.teams import is_team_agent  # noqa: PLC0415
 
-                cfg, metadata, tags, user_display = self._agent_runtime_bundle(row)
+                cfg, metadata, tags, user_display = await self._await_runtime_bundle(row)
                 # Team hosts already have AGENTS/SOUL/MEMORY from seed_team_template.
                 # Never let harness copy builtin skills just to strip them later.
                 seed_workspace = init_workspace and not is_team_agent(row)
@@ -3568,7 +3690,7 @@ class AgentManager:
             if self._harness_manager.shared_factory is None:
                 return
             try:
-                cfg, metadata, tags, user_display = self._agent_runtime_bundle(row)
+                cfg, metadata, tags, user_display = await self._await_runtime_bundle(row)
                 entry = await self._harness_manager.arebuild_agent(
                     agent_id,
                     cfg,
@@ -3595,6 +3717,8 @@ class AgentManager:
 
     def _schedule_reload(self, agent_id: str) -> None:
         """Queue a background harness reload; coalesces rapid successive updates."""
+        if self._closing:
+            return
         self._reload_dirty.add(agent_id)
         if self._reload_worker_running.get(agent_id):
             return
@@ -3619,6 +3743,36 @@ class AgentManager:
     # ------------------------------------------------------------------
     # Internal — harness config assembly & stream request prep
     # ------------------------------------------------------------------
+
+    async def _await_runtime_bundle(
+        self, row: AgentRow
+    ) -> tuple[HarnessAgentConfig, dict[str, Any], list[str], str]:
+        """Finish host I/O and repo reads before cancellation can release shutdown."""
+        if self._closing:
+            raise asyncio.CancelledError
+        owner = asyncio.current_task()
+        assert owner is not None
+        self._runtime_bundle_tasks.add(owner)
+        future = asyncio.get_running_loop().run_in_executor(None, self._agent_runtime_bundle, row)
+        try:
+            return await asyncio.shield(future)
+        except asyncio.CancelledError:
+            # Cancelling an asyncio executor future cannot stop its running thread.
+            # Keep the real future alive, including if shutdown cancels us again.
+            while not future.done():
+                try:
+                    await asyncio.shield(future)
+                except asyncio.CancelledError:
+                    continue
+                except Exception:
+                    break
+            try:
+                future.result()
+            except Exception:
+                logger.exception("Runtime configuration failed while its owner was cancelled")
+            raise
+        finally:
+            self._runtime_bundle_tasks.discard(owner)
 
     def _agent_runtime_bundle(
         self, row: AgentRow
@@ -4059,6 +4213,9 @@ class AgentManager:
         if "decision" in _HARNESS_AGENT_CONFIG_FIELDS:
             harness_fields["decision"] = self._decision.harness_config()
 
+        harness_backend = self._runtime_skill_backend(
+            row.agent_id, harness_backend, system_files_path=system_files_path_from_config(cfg)
+        )
         harness_cfg = HarnessAgentConfig(
             name=_memory_namespace(row.agent_id),
             workspace_dir=harness_workspace,

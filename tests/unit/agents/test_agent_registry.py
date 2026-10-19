@@ -160,14 +160,24 @@ async def test_boot_start_timeout_marks_failed_and_continues(
     services.repos.agent_repo.create(agent_id="slow1", user_id=None, name="slow")
     services.repos.agent_repo.create(agent_id="ok1", user_id=None, name="ok")
     registry = AgentManager(repos=services.repos, paths=services.paths)
-    original = registry._start_agent
+    hung_cancelled = asyncio.Event()
 
     async def maybe_hang(row: Any) -> Any:
         if row.agent_id == "slow1":
-            await asyncio.Event().wait()
-        return await original(row)
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                hung_cancelled.set()
+                raise
+        assert row.agent_id == "ok1"
+        assert hung_cancelled.is_set()
+        # This unit contract concerns boot's timeout/continuation policy; real
+        # configuration, workspace I/O and startup are covered by other tests.
+        services.repos.agent_repo.set_state(row.agent_id, "running")
+        return MagicMock()
 
-    monkeypatch.setattr(registry, "_start_agent", maybe_hang)
+    start = AsyncMock(side_effect=maybe_hang)
+    monkeypatch.setattr(registry, "_start_agent", start)
     monkeypatch.setattr("octop.infra.agents.manager._AGENT_BOOT_START_TIMEOUT", 0.05)
 
     await asyncio.wait_for(registry.boot(), timeout=2)
@@ -179,6 +189,8 @@ async def test_boot_start_timeout_marks_failed_and_continues(
     assert slow.last_error == AGENT_START_TIMEOUT
     assert ok is not None
     assert ok.last_state == "running"
+    assert hung_cancelled.is_set()
+    assert [invocation.args[0].agent_id for invocation in start.await_args_list] == ["slow1", "ok1"]
 
 
 @pytest.mark.asyncio

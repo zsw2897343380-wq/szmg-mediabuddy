@@ -114,6 +114,7 @@ async def _run_guard(
     *,
     user: SimpleNamespace,
     origin_created_by: str = "7",
+    package_slugs: set[str] | None = None,
 ) -> OctopError | None:
     from octop.api.routers.skills import _guard_package_only_skill_write
 
@@ -131,7 +132,9 @@ async def _run_guard(
         paths=SimpleNamespace(skill_packages_dir=tmp_path_unused),
     )
     try:
-        await _guard_package_only_skill_write(workspace, {}, server, "alpha", user)
+        await _guard_package_only_skill_write(
+            workspace, {}, server, "alpha", user, package_slugs=package_slugs
+        )
     except OctopError as exc:
         return exc
     return None
@@ -170,3 +173,40 @@ async def test_guard_unknown_origin_stays_locked_except_admin() -> None:
     assert exc is not None
     assert exc.code == ErrorCode.SKILL_PACKAGE_LOCKED
     assert await _run_guard(manifest, user=_user(1, admin=True)) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("package_slugs", [set(), {"another-skill"}, {"alpha"}])
+async def test_selected_skill_guard_keeps_locked_workspace_copy_policy(
+    package_slugs: set[str],
+) -> None:
+    exc = await _run_guard(LOCKED_MANIFEST, user=_user(2), package_slugs=package_slugs)
+    assert exc is not None
+    assert exc.code == ErrorCode.SKILL_PACKAGE_LOCKED
+
+
+@pytest.mark.asyncio
+async def test_direct_guard_call_keeps_legacy_package_fallback(monkeypatch) -> None:
+    from octop.api.routers import skills
+
+    store = SimpleNamespace(list_skill_summaries=lambda package_id: [{"slug": "alpha"}])
+    monkeypatch.setattr(skills, "SkillPackageStore", lambda **kwargs: store)
+    server = SimpleNamespace(
+        services=SimpleNamespace(skill_package_repo=None),
+        paths=SimpleNamespace(skill_packages_dir=None),
+    )
+    workspace = _MemWorkspace()
+    with pytest.raises(OctopError) as exc:
+        await skills._guard_package_only_skill_write(
+            workspace, {"skill_package_ids": ["legacy-package"]}, server, "alpha", _user(2)
+        )
+    assert exc.value.code == ErrorCode.FORBIDDEN
+    # An explicit actual-empty selection takes precedence over the legacy package default.
+    await skills._guard_package_only_skill_write(
+        workspace,
+        {"skill_package_ids": ["legacy-package"]},
+        server,
+        "alpha",
+        _user(2),
+        package_slugs=set(),
+    )

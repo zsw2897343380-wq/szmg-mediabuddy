@@ -1,0 +1,97 @@
+.modal {
+  :global(:is(.ant-modal-content, .octop-modal-content)) {
+    border: 1px solid var(--fn-border-secondary);
+    border-radius: 16px;
+    padding: 20px 24px 24px;
+    background: var(--fn-bg-container);
+  }
+  :global(:is(.ant-modal-header, .octop-modal-header)) {
+    background: transparent;
+    margin-bottom: 16px;
+  }
+  :global(:is(.ant-modal-title, .octop-modal-title)) {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  :global(:is(.ant-modal-close, .octop-modal-close)) {
+    top: 16px;
+    right: 20px;
+    width: 28px;
+    height: 28px;
+  }
+}
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1.5px dashed var(--fn-border-secondary);
+  border-radius: 10px;
+  padding: 32px 24px;
+  margin-bottom: 16px;
+  background: var(--fn-bg-secondary);
+  color: var(--fn-text-secondary);
+  font: inherit;
+  cursor: pointer;
+  span {
+    color: var(--fn-text-primary);
+    font-size: 14px;
+  }
+  &:hover {
+    border-color: var(--fn-text-secondary);
+  }
+  &:disabled {
+    cursor: wait;
+  }
+}
+.dragging {
+  border-color: var(--fn-color-brand);
+  border-style: solid;
+}
+.requirements {
+  padding: 0 2px;
+  font-size: 13px;
+  color: var(--fn-text-secondary);
+  strong {
+    font-weight: 500;
+    color: var(--fn-text-primary);
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 18px;
+    margin: 8px 0 0;
+  }
+  :global(:is(.ant-checkbox-wrapper, .octop-checkbox-wrapper)) {
+    margin-top: 16px;
+    color: var(--fn-text-secondary);
+    font-size: 12px;
+  }
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 10px;
+  button {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--fn-color-brand);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+}
+.url {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.error {
+  margin-bottom: 12px;
+}

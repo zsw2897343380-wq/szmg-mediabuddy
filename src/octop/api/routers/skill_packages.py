@@ -8,7 +8,7 @@ from dataclasses import asdict
 from functools import partial
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -103,6 +103,11 @@ class ImportPackageSkillBody(BaseModel):
     overwrite: bool = False
 
 
+class UserSkillPreferenceResponse(BaseModel):
+    installed: bool = Field(description="Whether this individual skill is installed.")
+    enabled: bool = Field(description="Whether this installed skill is available to local agents.")
+
+
 class UserSkillLibraryResponse(BaseModel):
     installed_package_ids: list[str] = Field(
         default_factory=list, description="Packages installed for the signed-in user."
@@ -110,14 +115,16 @@ class UserSkillLibraryResponse(BaseModel):
     disabled_package_ids: list[str] = Field(
         default_factory=list, description="Installed packages paused for this user."
     )
+    skill_states: dict[str, dict[str, UserSkillPreferenceResponse]] = Field(
+        default_factory=dict,
+        description="Per-package, per-skill preferences overriding package defaults.",
+    )
 
 
 class UserSkillLibraryUpdateBody(BaseModel):
-    installed: bool = Field(
-        description="Install or uninstall this package in your personal library."
-    )
+    installed: bool = Field(description="Install or uninstall this item in your personal library.")
     enabled: bool = Field(
-        default=True, description="Make an installed package available to your local agents."
+        default=True, description="Make this installed item available to your local agents."
     )
 
 
@@ -355,6 +362,38 @@ async def update_user_skill_library(
     return UserSkillLibraryResponse(**asdict(state))
 
 
+@router.put(
+    "/library/{package_id}/skills/{slug}",
+    summary="Install, pause, or remove one skill in your personal library",
+    description=(
+        "Overrides package defaults for this skill only. Other skills in the same package are "
+        "unchanged. Owned local agents refresh immediately without changing expert profiles."
+    ),
+    response_model=UserSkillLibraryResponse,
+)
+async def update_user_skill_preference(
+    package_id: str,
+    slug: str,
+    body: UserSkillLibraryUpdateBody,
+    server: OctopServer = Depends(get_server),
+    user: User = Depends(require_permission("skill_packages")),
+) -> UserSkillLibraryResponse:
+    def update() -> UserSkillLibraryResponse:
+        store = _store(server)
+        if store.repo.get(package_id) is None:
+            raise OctopError.localized(ErrorCode.SKILL_PACKAGE_NOT_FOUND)
+        _package_skill_or_404(store, package_id, slug)
+        state = _user_library(server).update_skill(
+            user.id, package_id, slug, installed=body.installed, enabled=body.enabled
+        )
+        return UserSkillLibraryResponse(**asdict(state))
+
+    response = await asyncio.get_running_loop().run_in_executor(None, update)
+    if server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_user_skill_library(user.id)
+    return response
+
+
 @router.get("/hub/search", summary="Search SkillHub for installing into packages")
 async def package_hub_search(
     q: str = "",
@@ -566,7 +605,7 @@ async def get_package_skill(
 
 
 def _read_package_skill_files(
-    store: SkillPackageStore, package_id: str
+    store: SkillPackageStore, package_id: str, skill_slug: str | None = None
 ) -> list[tuple[str, list[tuple[str, bytes]]]]:
     packed: list[tuple[str, list[tuple[str, bytes]]]] = []
     root = store.package_skills_dir(package_id)
@@ -574,6 +613,8 @@ def _read_package_skill_files(
         if summary.get("corrupt"):
             continue
         slug = str(summary.get("slug") or "")
+        if skill_slug is not None and slug != skill_slug:
+            continue
         packed.append((slug, read_skill_directory(root / slug)))
     if not packed:
         raise SkillPackageError("skill package has no skills")
@@ -584,7 +625,7 @@ def _read_package_skill_files(
     "/{package_id}/export",
     summary="Download a skill package as a ZIP",
     description=(
-        "Pack every skill in the package into one ZIP. Each skill is a top-level "
+        "Pack the requested skill or every skill in the package into one ZIP. Each skill is a top-level "
         "folder containing SKILL.md, matching the dashboard ZIP importer."
     ),
     response_class=Response,
@@ -593,6 +634,9 @@ def _read_package_skill_files(
 async def export_skill_package(
     package_id: str,
     request: Request,
+    skill_slug: str | None = Query(
+        default=None, description="Export this individual skill instead of the complete package."
+    ),
     server: OctopServer = Depends(get_server),
     _user: User = Depends(require_permission("skill_packages")),
 ) -> Response:
@@ -600,11 +644,17 @@ async def export_skill_package(
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     store.assert_can_download(row, _user)
     try:
-        packed = await asyncio.to_thread(_read_package_skill_files, store, package_id)
-        payload = await asyncio.to_thread(build_skills_zip, packed)
+        if skill_slug is not None:
+            await asyncio.get_running_loop().run_in_executor(
+                None, _package_skill_or_404, store, package_id, skill_slug
+            )
+        packed = await asyncio.get_running_loop().run_in_executor(
+            None, _read_package_skill_files, store, package_id, skill_slug
+        )
+        payload = await asyncio.get_running_loop().run_in_executor(None, build_skills_zip, packed)
     except SkillPackageError as exc:
         raise OctopError(ErrorCode.SLASH_BAD_ARGS, str(exc)) from exc
-    filename = f"{(row.name or package_id).strip() or package_id}.zip"
+    filename = f"{skill_slug if skill_slug is not None else (row.name or package_id).strip() or package_id}.zip"
     return Response(
         content=payload,
         media_type="application/zip",

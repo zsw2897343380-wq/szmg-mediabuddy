@@ -87,6 +87,7 @@ import { PackageSkillCard } from "./PackageSkillCard";
 import PackageSkillsTable from "./PackageSkillsTable";
 import { SkillsetFromHubDrawer } from "./SkillsetFromHubDrawer";
 import styles from "./index.module.less";
+import UnifiedSkillLibrary from "./UnifiedSkillLibrary";
 
 type PackageFormValues = {
   name: string;
@@ -170,6 +171,17 @@ export default function SkillPackagesPage({
 }: {
   embedded?: boolean;
   unified?: boolean;
+}) {
+  if (unified) return <UnifiedSkillLibrary embedded={embedded} />;
+  return <PackageManagerPage embedded={embedded} unified={false} />;
+}
+
+function PackageManagerPage({
+  embedded,
+  unified,
+}: {
+  embedded: boolean;
+  unified: boolean;
 }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();

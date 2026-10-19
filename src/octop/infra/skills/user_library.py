@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING
 
 from octop.infra.errors import ErrorCode, OctopError
@@ -14,9 +14,25 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class UserSkillPreference:
+    installed: bool
+    enabled: bool = True
+
+
+@dataclass
 class UserSkillLibraryState:
     installed_package_ids: list[str] = field(default_factory=list)
     disabled_package_ids: list[str] = field(default_factory=list)
+
+    skill_states: dict[str, dict[str, UserSkillPreference]] = field(default_factory=dict)
+
+    def allows(self, package_id: str, slug: str, *, legacy: bool = False) -> bool:
+        override = self.skill_states.get(package_id, {}).get(slug)
+        if override is not None:
+            return override.installed and override.enabled
+        if package_id in self.disabled_package_ids:
+            return False
+        return legacy or package_id in self.installed_package_ids
 
     @property
     def enabled_package_ids(self) -> list[str]:
@@ -46,7 +62,23 @@ class UserSkillLibrary:
         installed = self._ids(data.get("installed_package_ids"))
         installed = [item for item in installed if self._packages.get(item) is not None]
         disabled = self._ids(data.get("disabled_package_ids"))
-        return UserSkillLibraryState(installed, [item for item in disabled if item in installed])
+        overrides: dict[str, dict[str, UserSkillPreference]] = {}
+        raw_states = data.get("skill_states")
+        if isinstance(raw_states, dict):
+            for package_id, skills in raw_states.items():
+                if self._packages.get(package_id) is None or not isinstance(skills, dict):
+                    continue
+                overrides[package_id] = {
+                    slug: UserSkillPreference(
+                        installed=bool(pref.get("installed")),
+                        enabled=bool(pref.get("enabled", True)),
+                    )
+                    for slug, pref in skills.items()
+                    if isinstance(slug, str) and isinstance(pref, dict)
+                }
+        return UserSkillLibraryState(
+            installed, [item for item in disabled if item in installed], overrides
+        )
 
     def update(
         self,
@@ -70,16 +102,31 @@ class UserSkillLibrary:
         ]
         if installed and not enabled:
             state.disabled_package_ids.append(package_id)
-        self._settings.set(
-            self._key(user_id),
-            json.dumps(
-                {
-                    "installed_package_ids": state.installed_package_ids,
-                    "disabled_package_ids": state.disabled_package_ids,
-                }
-            ),
-        )
+        # An explicit package operation intentionally resets its per-skill overrides.
+        state.skill_states.pop(package_id, None)
+        self._save(user_id, state)
         return state
+
+    def update_skill(
+        self,
+        user_id: int,
+        package_id: str,
+        slug: str,
+        *,
+        installed: bool,
+        enabled: bool,
+    ) -> UserSkillLibraryState:
+        if self._packages.get(package_id) is None:
+            raise OctopError.localized(ErrorCode.SKILL_PACKAGE_NOT_FOUND)
+        state = self.load(user_id)
+        state.skill_states.setdefault(package_id, {})[slug] = UserSkillPreference(
+            installed, enabled
+        )
+        self._save(user_id, state)
+        return state
+
+    def _save(self, user_id: int, state: UserSkillLibraryState) -> None:
+        self._settings.set(self._key(user_id), json.dumps(asdict(state)))
 
     @staticmethod
     def _key(user_id: int) -> str:

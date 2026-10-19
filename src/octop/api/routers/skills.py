@@ -94,7 +94,7 @@ class _AgentCtx:
     runtime: Any
     workspace: Any
     config: dict[str, Any]
-    package_ids: list[str] | None = None
+    package_slugs: set[str] | None = None
 
 
 async def _ctx(
@@ -115,8 +115,8 @@ async def _ctx(
         runtime=row,
         workspace=agent.workspace,
         config=cfg,
-        package_ids=await asyncio.get_running_loop().run_in_executor(
-            None, registry.effective_skill_package_ids, agent_id
+        package_slugs=await asyncio.get_running_loop().run_in_executor(
+            None, registry.selected_skill_package_slugs, agent_id
         ),
     )
 
@@ -221,6 +221,7 @@ async def _guard_package_only_skill_write(
     user: Any = None,
     *,
     package_ids: list[str] | None = None,
+    package_slugs: set[str] | None = None,
 ) -> None:
     """Reject writes that would alter a skill supplied only by a mounted package.
 
@@ -252,6 +253,14 @@ async def _guard_package_only_skill_write(
                         f"skill {slug!r} was copied from a locked skill package",
                     )
             return
+
+    if package_slugs is not None:
+        if slug in package_slugs:
+            raise OctopError(
+                ErrorCode.FORBIDDEN,
+                f"skill {slug!r} is supplied by a mounted package",
+            )
+        return
 
     assert server.services is not None
     store = SkillPackageStore(
@@ -688,7 +697,7 @@ async def push_workspace_skill_to_package(
         )
     store.assert_can_mutate(row, user)
     await _guard_package_only_skill_write(
-        ctx.workspace, ctx.config, server, name, user, package_ids=ctx.package_ids
+        ctx.workspace, ctx.config, server, name, user, package_slugs=ctx.package_slugs
     )
     try:
         slug = await copy_workspace_skill_to_package(
@@ -909,7 +918,7 @@ async def create_skill(
     except SkillPackageError:
         raise OctopError(ErrorCode.NOT_FOUND, "invalid skill name") from None
     await _guard_package_only_skill_write(
-        ctx.workspace, ctx.config, server, name, user, package_ids=ctx.package_ids
+        ctx.workspace, ctx.config, server, name, user, package_slugs=ctx.package_slugs
     )
     # Conflict check must use SKILL.md — ZIP payloads often list siblings first,
     # and soft-delete only marks the manifest (leaving sibling files behind).
@@ -965,7 +974,7 @@ async def update_skill(
         raise OctopError(ErrorCode.NOT_FOUND, "invalid skill name") from None
 
     await _guard_package_only_skill_write(
-        ctx.workspace, ctx.config, server, slug, user, package_ids=ctx.package_ids
+        ctx.workspace, ctx.config, server, slug, user, package_slugs=ctx.package_slugs
     )
     existing = await _aread_text(ctx.workspace, f"skills/{slug}/SKILL.md")
     if existing is None:
@@ -1112,7 +1121,7 @@ async def import_skill_from_url(
             version=body.version,
         )
         await _guard_package_only_skill_write(
-            ctx.workspace, ctx.config, server, package.slug, user, package_ids=ctx.package_ids
+            ctx.workspace, ctx.config, server, package.slug, user, package_slugs=ctx.package_slugs
         )
         await commit_skill_install(
             target,
@@ -1179,7 +1188,7 @@ async def delete_skill(
     except SkillPackageError:
         raise OctopError(ErrorCode.NOT_FOUND, "invalid skill name") from None
     await _guard_package_only_skill_write(
-        ctx.workspace, ctx.config, server, slug, user, package_ids=ctx.package_ids
+        ctx.workspace, ctx.config, server, slug, user, package_slugs=ctx.package_slugs
     )
     resolved = await _resolve_skill(ctx.workspace, slug)
     if resolved is None:
@@ -1597,7 +1606,7 @@ async def hub_install_skill(
             raise HTTPException(status_code=502, detail=str(package_exc)) from package_exc
 
     await _guard_package_only_skill_write(
-        ctx.workspace, ctx.config, server, skill_name, user, package_ids=ctx.package_ids
+        ctx.workspace, ctx.config, server, skill_name, user, package_slugs=ctx.package_slugs
     )
     try:
         await install_skill_from_skillhub(

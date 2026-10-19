@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from tests.support.auth import create_user
@@ -22,7 +24,20 @@ async def _shared_agent(env) -> tuple[object, dict[str, str], dict[str, str], st
         json={"name": "shared-bot"},
     )
     assert response.status_code == 201, response.text
-    return client, owner_auth, peer_auth, response.json()["agent_id"]
+    agent_id = response.json()["agent_id"]
+    # Expert creation returns before its deferred harness bootstrap completes.
+    # Permission assertions below require a ready runtime, not just a DB row.
+    for _ in range(50):
+        status = await client.get(f"/api/agents/{agent_id}", headers=owner_auth)
+        assert status.status_code == 200, status.text
+        state = status.json()["state"]
+        if state == "running":
+            break
+        assert state != "failed", status.text
+        await asyncio.sleep(0.1)
+    else:
+        pytest.fail(f"Shared agent bootstrap did not reach running; last state: {state}")
+    return client, owner_auth, peer_auth, agent_id
 
 
 async def test_shared_agent_appears_for_other_user(env) -> None:

@@ -9,6 +9,7 @@ import pytest
 
 from octop.config import OctopConfig
 from octop.infra.agents.manager import AgentManager, skill_package_ids_list
+from octop.infra.backend.skill_mounts import PACKAGE_SKILL_MOUNT
 from octop.infra.db.migrate import run_migrations
 from octop.infra.db.pool import SqlitePool
 from octop.infra.db.services import build_shared_services
@@ -60,7 +61,7 @@ async def test_persist_skill_package_ids_hot_syncs_without_reload(
     await manager.persist_skill_package_ids(agent_id, [package_id])
 
     assert manager.get_config(agent_id)["skill_package_ids"] == [package_id]
-    expected = str((manager.paths.skill_packages_dir / package_id / "skills").resolve())
+    expected = f"{PACKAGE_SKILL_MOUNT}{package_id}/skills"
     assert fake_agent.config.skills_dir == [expected]
     fake_agent.reload_subagents.assert_called_once_with()
     assert scheduled == []
@@ -229,7 +230,7 @@ async def test_persist_skill_package_ids_accepts_workspace_scoped_backend(
     await manager.persist_skill_package_ids(agent_id, [package_id])
 
     assert manager.get_config(agent_id)["skill_package_ids"] == [package_id]
-    expected = str((manager.paths.skill_packages_dir / package_id / "skills").resolve())
+    expected = f"{PACKAGE_SKILL_MOUNT}{package_id}/skills"
     assert fake_agent.config.skills_dir == [expected]
 
 
@@ -265,7 +266,7 @@ def test_build_harness_config_includes_existing_skill_package_dirs(manager: Agen
 
     cfg = manager._build_harness_config(row)
 
-    expected = str((manager.paths.skill_packages_dir / package_id / "skills").resolve())
+    expected = f"{PACKAGE_SKILL_MOUNT}{package_id}/skills"
     assert expected in list(cfg.skills_dir or [])
     persisted = manager.get_row(agent_id)
     assert persisted is not None

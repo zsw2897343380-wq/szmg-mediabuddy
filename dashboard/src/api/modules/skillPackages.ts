@@ -36,6 +36,19 @@ export const skillPackagesApi = {
       },
     ),
 
+  updateSkillLibrary: (
+    packageId: string,
+    slug: string,
+    installed: boolean,
+    enabled = true,
+  ) =>
+    request<UserSkillLibrary>(
+      `/skill-packages/library/${encodeURIComponent(
+        packageId,
+      )}/skills/${encodeURIComponent(slug)}`,
+      { method: "PUT", body: JSON.stringify({ installed, enabled }) },
+    ),
+
   list: () => request<SkillPackage[]>("/skill-packages"),
 
   listWritable: () =>
@@ -79,8 +92,12 @@ export const skillPackagesApi = {
   get: (packageId: string) =>
     request<SkillPackageDetail>(`/skill-packages/${packageId}`),
 
-  exportPackage: (packageId: string) =>
-    requestBlob(`/skill-packages/${encodeURIComponent(packageId)}/export`),
+  exportPackage: (packageId: string, slug?: string) =>
+    requestBlob(
+      `/skill-packages/${encodeURIComponent(packageId)}/export${
+        slug ? `?skill_slug=${encodeURIComponent(slug)}` : ""
+      }`,
+    ),
 
   create: (body: CreateSkillPackageBody) =>
     request<SkillPackageDetail>("/skill-packages", {

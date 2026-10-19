@@ -970,6 +970,79 @@ async def test_shutdown_drains_sqlite_worker_before_returning(manager: AgentMana
         await asyncio.to_thread(conn._thread.join, 5)
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("worker_raises", [False, True])
+async def test_shutdown_drains_cancelled_runtime_bundle_before_closing_harness(
+    manager: AgentManager,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    worker_raises: bool,
+) -> None:
+    """A cancelled config thread must stop reading SQLite before shutdown returns."""
+    entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+    fake_harness = MagicMock()
+    fake_harness.aclose = AsyncMock()
+    manager._harness_manager = fake_harness
+
+    def blocked_bundle(_row: AgentRow) -> tuple[Any, dict[str, Any], list[str], str]:
+        entered.set()
+        assert release.wait(10)
+        # This real repo read would race SQLite close if cancellation detached us.
+        manager._repos.agent_repo.list_all()
+        finished.set()
+        if worker_raises:
+            raise ValueError("bundle failed during cancellation")
+        return MagicMock(), {}, [], "User"
+
+    monkeypatch.setattr(manager, "_agent_runtime_bundle", blocked_bundle)
+    owner = asyncio.create_task(manager._await_runtime_bundle(_row(agent_id="CONFIG-CLOSE")))
+    closing = None
+    try:
+        assert await asyncio.to_thread(entered.wait, 5)
+        closing = asyncio.create_task(manager.shutdown())
+        await asyncio.sleep(0.01)
+        assert not closing.done()
+        assert not owner.done()
+        fake_harness.aclose.assert_not_awaited()
+        # Repeated cancellation must not abandon the shielded worker either.
+        owner.cancel()
+        await asyncio.sleep(0.01)
+        assert not owner.done()
+        assert not closing.done()
+        release.set()
+        await asyncio.wait_for(closing, timeout=5)
+        with pytest.raises(asyncio.CancelledError):
+            await owner
+        assert finished.is_set()
+        fake_harness.aclose.assert_awaited_once()
+        assert not manager._runtime_bundle_tasks
+        manager._repos.db.close()
+        if worker_raises:
+            assert "Runtime configuration failed while its owner was cancelled" in caplog.text
+        # Shutdown's gate prevents another thread from touching the closed DB.
+        with pytest.raises(asyncio.CancelledError):
+            await manager._await_runtime_bundle(_row(agent_id="AFTER-CLOSE"))
+    finally:
+        release.set()
+        await asyncio.gather(
+            owner, *([closing] if closing is not None else []), return_exceptions=True
+        )
+
+
+@pytest.mark.asyncio
+async def test_runtime_bundle_propagates_normal_worker_errors(
+    manager: AgentManager,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def failed_bundle(_row: AgentRow) -> tuple[Any, dict[str, Any], list[str], str]:
+        raise ValueError("normal configuration failure")
+
+    monkeypatch.setattr(manager, "_agent_runtime_bundle", failed_bundle)
+    with pytest.raises(ValueError, match="normal configuration failure"):
+        await manager._await_runtime_bundle(_row(agent_id="CONFIG-FAIL"))
+    assert not manager._runtime_bundle_tasks
+
+
 def test_build_harness_config_enables_bootstrap_for_expert_template(manager: AgentManager) -> None:
     from dataclasses import replace
 

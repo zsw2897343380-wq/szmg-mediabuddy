@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { request } = vi.hoisted(() => ({ request: vi.fn() }));
+const { request, requestBlob } = vi.hoisted(() => ({
+  request: vi.fn(),
+  requestBlob: vi.fn(),
+}));
 
-vi.mock("../request", () => ({ request }));
+vi.mock("../request", () => ({ request, requestBlob }));
 
 import { skillPackagesApi } from "./skillPackages";
 import { SKILLS_UPDATED } from "../../utils/skillsEvents";
@@ -31,6 +34,45 @@ describe("skillPackagesApi", () => {
     ).rejects.toThrow("failure");
     expect(listener).toHaveBeenCalledTimes(1);
     window.removeEventListener(SKILLS_UPDATED, listener);
+  });
+
+  it("changes one skill without installing its package and refreshes chat pickers", async () => {
+    request.mockResolvedValueOnce({
+      installed_package_ids: [],
+      disabled_package_ids: [],
+      skill_states: {
+        "package one": { "skill/name": { installed: true, enabled: false } },
+      },
+    });
+    const listener = vi.fn();
+    window.addEventListener(SKILLS_UPDATED, listener);
+    const result = await skillPackagesApi.updateSkillLibrary(
+      "package one",
+      "skill/name",
+      true,
+      false,
+    );
+    expect(request).toHaveBeenLastCalledWith(
+      "/skill-packages/library/package%20one/skills/skill%2Fname",
+      {
+        method: "PUT",
+        body: JSON.stringify({ installed: true, enabled: false }),
+      },
+    );
+    expect(result.installed_package_ids).toEqual([]);
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener(SKILLS_UPDATED, listener);
+  });
+
+  it("exports one skill separately while retaining package export compatibility", () => {
+    skillPackagesApi.exportPackage("package one", "reader skill");
+    expect(requestBlob).toHaveBeenLastCalledWith(
+      "/skill-packages/package%20one/export?skill_slug=reader%20skill",
+    );
+    skillPackagesApi.exportPackage("package one");
+    expect(requestBlob).toHaveBeenLastCalledWith(
+      "/skill-packages/package%20one/export",
+    );
   });
 
   it("uses the agent package mount endpoints", () => {
