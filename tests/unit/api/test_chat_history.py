@@ -179,7 +179,8 @@ def test_thread_row_has_messages_uses_title_or_last_active() -> None:
 
 
 @pytest.mark.asyncio
-async def test_list_threads_derives_has_messages_from_db() -> None:
+@pytest.mark.parametrize("order", ["sidebar", "activity"])
+async def test_list_threads_derives_has_messages_from_db(order: str) -> None:
     rows = [
         ThreadRow(
             id=1,
@@ -222,7 +223,10 @@ async def test_list_threads_derives_has_messages_from_db() -> None:
 
     user = MagicMock(id=1, is_admin=False)
 
-    out = await history_mod.list_threads("agt_1", limit=10, user=user, server=server)
+    out = await history_mod.list_threads("agt_1", limit=10, order=order, user=user, server=server)
+    thread_registry.list_threads.assert_called_once_with(
+        agent_id="agt_1", user_id=1, limit=10, order=order
+    )
 
     assert len(out) == 2
     assert out[0]["has_messages"] is False

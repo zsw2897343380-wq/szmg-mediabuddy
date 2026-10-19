@@ -63,6 +63,7 @@ const TRANSIENT = new Set(["starting", "stopping"]);
 
 export interface AgentCardProps {
   agent: OctopAgent;
+  compact?: boolean;
   iconName?: string | null;
   iconUrl?: string | null;
   accentColor?: string | null;
@@ -77,6 +78,7 @@ export interface AgentCardProps {
 
 export const AgentCard = memo(function AgentCard({
   agent,
+  compact = false,
   iconName,
   iconUrl,
   accentColor,
@@ -291,7 +293,9 @@ export const AgentCard = memo(function AgentCard({
   return (
     <>
       <div
-        className={styles.agentCard2}
+        className={`${styles.agentCard2}${
+          compact ? ` ${styles.workbuddyAgentCard}` : ""
+        }`}
         style={{ "--agent-accent": accent } as React.CSSProperties}
       >
         {/* Accent top bar */}

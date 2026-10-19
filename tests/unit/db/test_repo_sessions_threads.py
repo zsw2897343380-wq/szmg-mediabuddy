@@ -291,6 +291,63 @@ def test_threads_empty_new_sorts_above_older_active(repos):
     assert [r.thread_id for r in rows] == ["thr_empty_new", "thr_older_active"]
 
 
+def test_activity_order_ignores_over_one_hundred_old_pins_and_empty_threads(repos):
+    sessions, threads = repos
+    registry = ThreadRegistry(session_repo=sessions, thread_repo=threads)
+    for index in range(101):
+        tid = f"pinned_{index}"
+        threads.insert(
+            thread_id=tid,
+            agent_id="a1",
+            user_id=1,
+            channel_type="dashboard",
+            session_key="old-pins",
+            last_active=index + 1,
+        )
+        threads.set_pinned(tid, True)
+    threads.insert(
+        thread_id="new-unpinned",
+        agent_id="a1",
+        user_id=1,
+        channel_type="dashboard",
+        session_key="new",
+        last_active=1000,
+    )
+    threads.insert(
+        thread_id="empty",
+        agent_id="a1",
+        user_id=1,
+        channel_type="dashboard",
+        session_key="empty",
+        last_active=0,
+    )
+    threads.set_pinned("empty", True)
+
+    sidebar = registry.list_threads(agent_id="a1", user_id=1, limit=100)
+    assert "new-unpinned" not in {row.thread_id for row in sidebar}
+    recent = registry.list_threads(agent_id="a1", user_id=1, limit=1, order="activity")
+    assert [row.thread_id for row in recent] == ["new-unpinned"]
+
+
+def test_activity_order_keeps_user_scope(repos):
+    sessions, threads = repos
+    other = UserRepo(threads._db).create(username="other", password_hash="h", role="user")
+    for user_id, tid, last_active in [(1, "mine", 10), (other, "other", 500)]:
+        threads.insert(
+            thread_id=tid,
+            agent_id="a1",
+            user_id=user_id,
+            channel_type="dashboard",
+            session_key=f"user-{user_id}",
+            last_active=last_active,
+        )
+    registry = ThreadRegistry(session_repo=sessions, thread_repo=threads)
+    assert [
+        row.thread_id
+        for row in registry.list_threads(agent_id="a1", user_id=1, limit=1, order="activity")
+    ] == ["mine"]
+
+
 def test_threads_hitl_policy_roundtrip(repos):
     _sessions, threads = repos
     sk = ThreadRegistry.make_key(agent_id="a1", channel_type="dashboard", channel_subject_id="1")

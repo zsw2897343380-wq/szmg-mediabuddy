@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import Literal
 
 from octop.infra.db.pool import DatabasePool
 from octop.infra.db.repos._base import DbRow, bool_int, map_rows, now_ts
@@ -223,9 +224,21 @@ class ThreadRepo:
         return map_rows(rows, ThreadRow)
 
     def list_by_agent_user(
-        self, *, agent_id: str, user_id: int, limit: int = 50
+        self,
+        *,
+        agent_id: str,
+        user_id: int,
+        limit: int = 50,
+        order: Literal["sidebar", "activity"] = "sidebar",
     ) -> list[ThreadRow]:
         with self._db.connect() as conn:
+            if order == "activity":
+                rows = conn.execute(
+                    "SELECT * FROM threads WHERE agent_id = ? AND user_id = ? "
+                    "AND last_active > 0 ORDER BY last_active DESC, thread_id DESC LIMIT ?",
+                    (agent_id, user_id, limit),
+                ).fetchall()
+                return map_rows(rows, ThreadRow)
             rows = conn.execute(
                 "SELECT * FROM threads WHERE agent_id = ? AND user_id = ? "
                 "ORDER BY pinned DESC, "

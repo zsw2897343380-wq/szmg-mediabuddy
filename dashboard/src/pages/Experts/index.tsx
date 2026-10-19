@@ -17,13 +17,14 @@
  *   DELETE /agents/{id}                   → delete (via AgentCard)
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Input, Spin, Tabs, Segmented, Tooltip } from "antd";
 import { message } from "@/utils/antdMessage";
 
 import {
+  ArrowLeft,
   BookOpen,
   GraduationCap,
   LayoutGrid,
@@ -64,6 +65,8 @@ import { OctopEmptyMascot } from "../../components/EmptyState";
 import { pickLocale } from "../../utils/localizedText";
 import { isOwnedExpert, ownedExperts } from "../../utils/sharedExpert";
 import { apiErrorMessage } from "../../utils/apiError";
+import WorkBuddyExpertCenter from "./components/WorkBuddyExpertCenter";
+import WorkBuddyMyExperts from "./components/WorkBuddyMyExperts";
 import styles from "./index.module.less";
 
 type TabKey = "my" | "teams" | "library" | "market";
@@ -117,7 +120,9 @@ export default function ExpertsPage({
   const { t, i18n } = useTranslation();
   const lang: "zh" | "en" = i18n.language?.startsWith("zh") ? "zh" : "en";
   const isMobile = useIsMobile();
-  const { agents, refresh: refreshAgents } = useAgent();
+  const { agents, refresh: refreshAgents, setActiveAgent } = useAgent();
+  const navigate = useNavigate();
+  const summonPrompt = useRef<string | null>(null);
   const currentUser = useCurrentUser();
 
   const canManagePublished = useCallback(
@@ -129,6 +134,10 @@ export default function ExpertsPage({
 
   // ── Tab state ──────────────────────────────────────────────────
   const [searchParams] = useSearchParams();
+  const [showCenter, setShowCenter] = useState(() => !searchParams.get("tab"));
+  const [advancedManagement, setAdvancedManagement] = useState(
+    () => !!searchParams.get("tab"),
+  );
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     const tab = searchParams.get("tab");
     if (
@@ -352,11 +361,22 @@ export default function ExpertsPage({
     (agentId: string, _agentName?: string) => {
       setCreateSource(null);
       void refreshAgents({ silent: true });
+      if (summonPrompt.current !== null) {
+        const prefillInput = summonPrompt.current;
+        summonPrompt.current = null;
+        setActiveAgent(agentId);
+        navigate(`/chat/${agentId}`, {
+          state: { newChat: true, prefillInput },
+        });
+        return;
+      }
+      setShowCenter(false);
+      setAdvancedManagement(false);
       setActiveTab("my");
       setNewAgentId(agentId);
       setTimeout(() => setNewAgentId(null), 1000);
     },
-    [refreshAgents],
+    [navigate, refreshAgents, setActiveAgent],
   );
 
   const [defaultCreating, setDefaultCreating] = useState(false);
@@ -374,7 +394,7 @@ export default function ExpertsPage({
   }, [t]);
 
   const openExpertLibrary = useCallback(() => {
-    setActiveTab("library");
+    setShowCenter(true);
   }, []);
 
   // ── "Installed" badge lookup (template_name column; legacy config.expert_id) ──
@@ -845,45 +865,100 @@ export default function ExpertsPage({
       title={t("pageShell.experts.title")}
       subtitle={t("pageShell.experts.subtitle")}
     >
-      <Tabs
-        activeKey={activeTab}
-        onChange={(k) => setActiveTab(k as TabKey)}
-        items={[
-          {
-            key: "my",
-            label: (
-              <TabLabel icon={GraduationCap}>{t("experts.myExperts")}</TabLabel>
-            ),
-            children: myExpertsContent,
-          },
-          {
-            key: "teams",
-            label: (
-              <TabLabel icon={Users}>
-                {t("experts.myTeams")}
-                <span className={styles.tabBetaBadge}>
-                  {t("experts.teams.betaBadge")}
-                </span>
-              </TabLabel>
-            ),
-            children: teamsContent,
-          },
-          {
-            key: "library",
-            label: (
-              <TabLabel icon={BookOpen}>{t("experts.expertLibrary")}</TabLabel>
-            ),
-            children: libraryContent,
-          },
-          {
-            key: "market",
-            label: (
-              <TabLabel icon={Store}>{t("experts.expertMarket")}</TabLabel>
-            ),
-            children: marketContent,
-          },
-        ]}
-      />
+      {showCenter ? (
+        <WorkBuddyExpertCenter
+          experts={experts}
+          publishedExperts={publishedExperts}
+          agents={ownedAgents}
+          loading={expertLoading || publishedExpertLoading}
+          lang={lang}
+          onManage={() => {
+            setActiveTab("my");
+            setAdvancedManagement(false);
+            setShowCenter(false);
+          }}
+          onCreate={(source, prompt) => {
+            summonPrompt.current = prompt ?? "";
+            setCreateSource(source);
+          }}
+          teamsContent={teamsContent}
+        />
+      ) : !advancedManagement ? (
+        <WorkBuddyMyExperts
+          agents={localAgents}
+          publishedByAgentId={publishedByAgentId}
+          creating={defaultCreating}
+          onBack={() => setShowCenter(true)}
+          onCreate={() => void openDefaultCreate()}
+          onCreateTeam={() => setTeamDrawer({ mode: "create" })}
+          onManage={(tab) => {
+            setActiveTab(tab);
+            setAdvancedManagement(true);
+          }}
+          onEdit={(id) =>
+            setEditAgent(
+              localAgents.find((agent) => agent.agent_id === id) ?? null,
+            )
+          }
+          onDeleted={handleDeleted}
+          onStateChange={handleStateChange}
+          onPublishedChange={() => void refreshPublishedExperts()}
+        />
+      ) : (
+        <div className={styles.centerManagement}>
+          <button
+            type="button"
+            className={styles.centerBack}
+            onClick={() => setAdvancedManagement(false)}
+          >
+            <ArrowLeft size={18} />
+            {t("experts.myExperts")}
+          </button>
+          <Tabs
+            activeKey={activeTab}
+            onChange={(k) => setActiveTab(k as TabKey)}
+            items={[
+              {
+                key: "my",
+                label: (
+                  <TabLabel icon={GraduationCap}>
+                    {t("experts.myExperts")}
+                  </TabLabel>
+                ),
+                children: myExpertsContent,
+              },
+              {
+                key: "teams",
+                label: (
+                  <TabLabel icon={Users}>
+                    {t("experts.myTeams")}
+                    <span className={styles.tabBetaBadge}>
+                      {t("experts.teams.betaBadge")}
+                    </span>
+                  </TabLabel>
+                ),
+                children: teamsContent,
+              },
+              {
+                key: "library",
+                label: (
+                  <TabLabel icon={BookOpen}>
+                    {t("experts.expertLibrary")}
+                  </TabLabel>
+                ),
+                children: libraryContent,
+              },
+              {
+                key: "market",
+                label: (
+                  <TabLabel icon={Store}>{t("experts.expertMarket")}</TabLabel>
+                ),
+                children: marketContent,
+              },
+            ]}
+          />
+        </div>
+      )}
 
       <EditAgentDrawer
         open={!!editAgent}
@@ -896,7 +971,10 @@ export default function ExpertsPage({
         open={!!createSource}
         source={createSource}
         lang={lang}
-        onClose={() => setCreateSource(null)}
+        onClose={() => {
+          summonPrompt.current = null;
+          setCreateSource(null);
+        }}
         onCreated={handleCreated}
       />
 
@@ -908,6 +986,8 @@ export default function ExpertsPage({
         onClose={() => setTeamDrawer(null)}
         onSaved={(saved: TeamRecord) => {
           setTeamDrawer(null);
+          setShowCenter(false);
+          setAdvancedManagement(true);
           setActiveTab("teams");
           setLocalAgents((prev) =>
             prev.map((item) =>

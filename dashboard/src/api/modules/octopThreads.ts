@@ -161,9 +161,11 @@ export interface HistoryMigrationStatus {
 export const CHAT_HISTORY_PAGE_SIZE = 25;
 
 export const octopThreadsApi = {
-  list: (agentId: string, limit = 50) =>
+  list: (agentId: string, limit = 50, order?: "activity") =>
     request<OctopThread[]>(
-      `/agents/${encodeURIComponent(agentId)}/threads?limit=${limit}`,
+      `/agents/${encodeURIComponent(agentId)}/threads?limit=${limit}${
+        order ? `&order=${order}` : ""
+      }`,
     ),
 
   create: (agentId: string) =>

@@ -2487,3 +2487,574 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+.workbuddyCenter {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--fn-bg-secondary);
+}
+.centerTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 0;
+  > :global(:is(.ant-input-affix-wrapper, .octop-input-affix-wrapper)) {
+    width: 260px;
+    border-radius: 8px;
+  }
+  > :global(:is(.ant-btn, .octop-btn)) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+  }
+}
+.centerScroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 0 24px 28px;
+}
+.featuredScenes {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 2px 0 8px;
+}
+.featuredScene {
+  position: relative;
+  flex: 0 0 264px;
+  height: 200px;
+  border-radius: 16px;
+  border: 1px solid var(--fn-border-subtle);
+  overflow: hidden;
+  background: var(--fn-bg-primary);
+}
+.featuredSceneCover {
+  position: relative;
+  height: 84px;
+  padding: 38px 24px 0;
+  overflow: hidden;
+  background: linear-gradient(
+    115deg,
+    hsl(var(--scene-hue) 45% 94%),
+    hsl(var(--scene-hue) 68% 88%)
+  );
+  color: #20252b;
+  span {
+    position: relative;
+    z-index: 1;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  > svg {
+    position: absolute;
+    right: 15px;
+    top: 18px;
+    opacity: 0.13;
+    transform: rotate(-12deg);
+  }
+}
+.featuredSceneExperts {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  button {
+    background: none;
+    border: 0;
+    text-align: left;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    max-width: 100%;
+    font-size: 13px;
+    color: var(--fn-text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &:hover {
+      background: var(--fn-bg-tertiary);
+      color: var(--fn-text-primary);
+    }
+    svg {
+      flex-shrink: 0;
+    }
+  }
+}
+.centerListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.centerListTabs {
+  display: flex;
+  gap: 20px;
+  button {
+    border: 0;
+    background: none;
+    color: var(--fn-text-secondary);
+    padding: 5px 0 9px;
+    font-size: 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    &[aria-selected="true"] {
+      color: var(--fn-text-primary);
+      font-weight: 600;
+      border-bottom-color: var(--fn-text-primary);
+    }
+  }
+}
+.centerSort {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--fn-border-subtle);
+  background: var(--fn-bg-tertiary);
+  button {
+    border: 0;
+    background: none;
+    color: var(--fn-text-secondary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    &[aria-pressed="true"] {
+      background: var(--fn-bg-primary);
+      color: var(--fn-text-primary);
+      box-shadow: 0 1px 2px #00000008;
+    }
+  }
+}
+.centerCategories {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  button {
+    border: 0;
+    background: none;
+    padding: 5px 12px;
+    white-space: nowrap;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--fn-text-secondary);
+    cursor: pointer;
+    &[aria-pressed="true"],
+    &:hover {
+      background: var(--fn-bg-tertiary);
+      color: var(--fn-text-primary);
+    }
+  }
+}
+.discoveryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+.discoveryCard {
+  box-sizing: border-box;
+  position: relative;
+  height: 156px;
+  min-width: 0;
+  border: 1px solid var(--fn-border-subtle);
+  border-radius: 16px;
+  background: var(--fn-bg-primary);
+  padding: 24px 24px 20px;
+  box-shadow: 0 4px 12px #00000008;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: background 0.15s;
+  &:hover,
+  &:focus-within {
+    background: var(--fn-bg-tertiary);
+    .discoverySummon {
+      opacity: 1;
+    }
+  }
+}
+.discoveryCardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 0;
+  background: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--fn-text-primary);
+  min-width: 0;
+}
+.discoveryCardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.discoveryAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--fn-bg-tertiary);
+  flex-shrink: 0;
+}
+.discoveryCardIdentity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.discoveryName {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.discoveryTags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  > span {
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 4px;
+    color: var(--fn-text-tertiary);
+    background: var(--fn-bg-tertiary);
+  }
+}
+.discoveryDescription {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--fn-text-secondary);
+  width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.discoveryMetadata {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--fn-text-tertiary);
+}
+.discoverySummon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border: 0;
+  border-radius: 8px;
+  padding: 5px 12px;
+  background: var(--fn-text-primary);
+  color: var(--fn-bg-primary);
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.discoveryCard:has(.discoverySummon:hover) .discoveryName,
+.discoveryCard:focus-within .discoveryName,
+.discoveryCard:hover .discoveryName {
+  max-width: calc(100% - 50px);
+}
+.centerManagement {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 24px;
+  > :global(:is(.ant-tabs, .octop-tabs)) {
+    flex: 1;
+    min-height: 0;
+  }
+}
+.centerBack {
+  display: inline-flex;
+  width: fit-content;
+  gap: 10px;
+  align-items: center;
+  border: 0;
+  background: none;
+  padding: 14px 0;
+  color: var(--fn-text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.expertDetailModal {
+  :global(:is(.ant-modal-content, .octop-modal-content)) {
+    border-radius: 20px;
+    padding: 28px;
+  }
+  :global(:is(.ant-modal-body, .octop-modal-body)) {
+    max-height: 64vh;
+    overflow-y: auto;
+  }
+}
+.expertDetailHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 16px 0;
+  h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  p {
+    margin: 0;
+    color: var(--fn-text-secondary);
+    line-height: 1.7;
+  }
+}
+.expertDetailAvatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  background: var(--fn-bg-tertiary);
+}
+.expertDetailSection {
+  margin-top: 24px;
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  p,
+  li {
+    color: var(--fn-text-secondary);
+    font-size: 13px;
+  }
+}
+.expertDetailPrompts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  > button {
+    padding: 12px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--fn-bg-secondary);
+    color: var(--fn-text-secondary);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background: var(--fn-bg-tertiary);
+    }
+  }
+}
+@media (max-width: 760px) {
+  .centerTopbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    > :global(:is(.ant-input-affix-wrapper, .octop-input-affix-wrapper)) {
+      width: min(260px, 100%);
+    }
+  }
+  .centerScroll {
+    padding: 0 12px 24px;
+  }
+  .discoveryGrid {
+    grid-template-columns: 1fr;
+  }
+  .centerListHeader {
+    gap: 8px;
+  }
+  .centerSort button {
+    padding: 4px 8px;
+  }
+  .centerManagement {
+    padding: 0 12px;
+  }
+  .expertDetailPrompts {
+    grid-template-columns: 1fr;
+  }
+  .discoverySummon {
+    opacity: 1;
+  }
+}
+
+.myExpertPage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--fn-bg-secondary);
+}
+.myExpertHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  :global(:is(.ant-input-affix-wrapper, .octop-input-affix-wrapper)) {
+    width: 180px;
+    border-radius: 8px;
+  }
+  :global(:is(.ant-btn, .octop-btn)) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+  }
+}
+.myExpertScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 24px 28px;
+  > .centerListTabs {
+    margin-bottom: 20px;
+  }
+}
+.myExpertTitle {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 8px 0 20px;
+}
+.myExpertRecentHint {
+  margin: -8px 0 20px;
+  font-size: 12px;
+  color: var(--fn-text-tertiary);
+}
+.myExpertGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+.myExpertCreateCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-direction: column;
+  min-height: 156px;
+  border: 1px dashed var(--fn-border-primary);
+  border-radius: 16px;
+  background: var(--fn-bg-primary);
+  color: var(--fn-text-secondary);
+  cursor: pointer;
+  &:hover {
+    background: var(--fn-bg-tertiary);
+    color: var(--fn-text-primary);
+  }
+}
+.workbuddyAgentCard {
+  min-width: 0;
+  min-height: 156px;
+  padding: 20px 24px;
+  gap: 10px;
+  border-radius: 16px;
+  border-color: var(--fn-border-subtle);
+  box-shadow: 0 4px 12px #00000008;
+  box-sizing: border-box;
+  &:hover {
+    transform: none;
+    box-shadow: 0 4px 12px #00000008;
+    background: var(--fn-bg-tertiary);
+  }
+  .agentCard2Accent {
+    display: none;
+  }
+  .agentCard2Header {
+    padding: 0;
+    gap: 12px;
+  }
+  .agentCard2Icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .agentCard2Name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .agentCardIdRow {
+    display: none;
+  }
+  .agentCard2Meta {
+    margin-top: 4px;
+  }
+  .agentCard2Desc {
+    padding: 0;
+    margin: 0;
+    min-height: 20px;
+    flex: 0;
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+  }
+  .agentCard2Footer {
+    padding: 0;
+    border: 0;
+    margin-top: auto;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  &:hover .agentCard2Footer,
+  &:focus-within .agentCard2Footer {
+    opacity: 1;
+  }
+  .agentCard2ChatBtn {
+    color: var(--fn-text-primary) !important;
+    border-color: var(--fn-border-primary) !important;
+  }
+}
+.expertDetailModal {
+  :global(:is(.ant-btn-primary, .octop-btn-primary)) {
+    background: var(--fn-text-primary);
+    color: var(--fn-bg-primary);
+    border-color: var(--fn-text-primary);
+    &:hover {
+      background: var(--fn-text-secondary) !important;
+      border-color: var(--fn-text-secondary) !important;
+    }
+  }
+}
+@media (max-width: 760px) {
+  .myExpertHeaderActions {
+    flex-wrap: wrap;
+    :global(:is(.ant-input-affix-wrapper, .octop-input-affix-wrapper)) {
+      width: 150px;
+    }
+  }
+  .myExpertScroll {
+    padding: 8px 12px 24px;
+  }
+  .myExpertGrid {
+    grid-template-columns: 1fr;
+  }
+  .workbuddyAgentCard {
+    padding: 18px 20px;
+    .agentCard2Footer {
+      opacity: 1;
+    }
+  }
+}
