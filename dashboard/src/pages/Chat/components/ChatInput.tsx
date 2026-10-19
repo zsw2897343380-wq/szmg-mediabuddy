@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { App } from "antd";
 import { FolderOpen, ChevronDown } from "lucide-react";
 import HitlPolicyPicker from "./HitlPolicyPicker";
+import ContextWindowRing from "./ContextWindowRing";
 
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import {
@@ -857,7 +858,9 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         id="octop-chat-file-drop"
         data-file-drop-target=""
         data-octop-chat-drop="1"
-        className={`${styles.chatInput} ${showDrop ? styles.dropActive : ""}`}
+        className={`${styles.chatInput} ${styles.taskComposer} ${
+          showDrop ? styles.dropActive : ""
+        }`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -992,7 +995,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           )}
 
           <ChatInputActionsRow
-            welcome={welcome}
+            taskLayout
             isMobile={isMobile}
             isStreaming={isStreaming || holdSend}
             isTeam={isTeam}
@@ -1069,7 +1072,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             onChange={handleFileChange}
           />
         </div>
-        {welcome && (
+        {(onOpenWorkspace || onHitlPolicyChange || !welcome) && (
           <div className={styles.composerTray}>
             {onOpenWorkspace && (
               <button
@@ -1088,6 +1091,20 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 policy={hitlPolicy ?? { mode: "ask" }}
                 onChange={onHitlPolicyChange}
               />
+            )}
+            {!welcome && (
+              <div className={styles.composerContext}>
+                <ContextWindowRing
+                  usedTokens={contextUsedTokens}
+                  usageEstimated={contextUsedTokens == null}
+                  maxTokens={contextMaxTokens}
+                  agentId={agentId}
+                  threadId={threadId}
+                  selectedConnectors={selectedConnectors}
+                  isMobile={isMobile}
+                  decisionSaved={decisionSaved}
+                />
+              </div>
             )}
           </div>
         )}

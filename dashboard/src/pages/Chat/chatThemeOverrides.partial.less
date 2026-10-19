@@ -1086,3 +1086,90 @@
     background: var(--fn-bg-hover);
   }
 }
+
+.taskNav {
+  gap: 0;
+}
+.taskNavToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin: 0 12px 4px;
+  color: var(--fn-text-tertiary);
+  font-size: 12px;
+  > div {
+    display: flex;
+    gap: 4px;
+  }
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--fn-sidebar-item-hover);
+    color: var(--fn-text-primary);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--fn-color-brand);
+  }
+}
+.taskNavList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.taskNav .sessionRow {
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  gap: 6px;
+  .sessionRowTitle {
+    font-size: 13px;
+    font-weight: 400;
+  }
+  .sessionRowLead:empty {
+    display: none;
+  }
+  .sessionRowMore {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+  &:hover,
+  &:focus-within {
+    .sessionRowMore {
+      width: 22px;
+      opacity: 1;
+    }
+    .taskRowDate {
+      display: none;
+    }
+  }
+}
+.taskRowDate {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--fn-text-tertiary);
+}
+.taskNavMore {
+  align-self: flex-start;
+  margin: 8px 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fn-text-tertiary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

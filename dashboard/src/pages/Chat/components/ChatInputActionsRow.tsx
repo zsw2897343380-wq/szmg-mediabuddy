@@ -124,7 +124,7 @@ function PlusMenuCount({
 }
 
 interface ChatInputActionsRowProps {
-  welcome?: boolean;
+  taskLayout?: boolean;
   isMobile: boolean;
   isStreaming: boolean;
   /** Team host room — stop control uses clearer wording. */
@@ -194,7 +194,7 @@ interface ChatInputActionsRowProps {
 }
 
 export default function ChatInputActionsRow({
-  welcome = false,
+  taskLayout = false,
   isMobile,
   isStreaming,
   isTeam = false,
@@ -727,7 +727,7 @@ export default function ChatInputActionsRow({
           }
           onSelect={(command) => {
             setShortcutOpen(false);
-            if (welcome) closePlusMenu();
+            if (taskLayout) closePlusMenu();
             onSlashShortcutSelect(command);
           }}
           onHover={() => undefined}
@@ -740,8 +740,33 @@ export default function ChatInputActionsRow({
 
   const renderPlusMenu = () => (
     <div className={styles.mobileOverflowMenu}>
-      {welcome && (
+      {taskLayout && (
         <>
+          <button
+            type="button"
+            className={styles.mobileOverflowItem}
+            onClick={() => {
+              closePlusMenu();
+              onNewChat();
+            }}
+          >
+            <MessageSquarePlus size={16} />
+            {t("chatWelcome.newChat")}
+          </button>
+          <button
+            type="button"
+            className={styles.mobileOverflowItem}
+            disabled={
+              !text.trim() || polishing || isStreaming || disabled || !agentId
+            }
+            onClick={() => {
+              closePlusMenu();
+              onPolish();
+            }}
+          >
+            <Wand2 size={16} />
+            {t("chat.polish.tooltip")}
+          </button>
           <button
             type="button"
             className={styles.mobileOverflowItem}
@@ -1075,7 +1100,7 @@ export default function ChatInputActionsRow({
             </Tooltip>
           </Popover>
         )}
-        {!welcome && onHitlPolicyChange && (
+        {!taskLayout && onHitlPolicyChange && (
           <HitlPolicyPicker
             policy={hitlPolicy ?? { mode: "ask" }}
             onChange={onHitlPolicyChange}
@@ -1097,7 +1122,7 @@ export default function ChatInputActionsRow({
               className={styles.secondaryBtn}
               type="button"
               aria-label={t("shortcut.title", "快捷指令")}
-              hidden={welcome}
+              hidden={taskLayout}
             >
               <Zap size={16} />
             </button>
@@ -1149,7 +1174,7 @@ export default function ChatInputActionsRow({
               disabled={uploading}
               aria-label={t("upload.tooltip", "Upload")}
               aria-haspopup="menu"
-              hidden={welcome}
+              hidden={taskLayout}
             >
               <Paperclip size={16} />
             </button>
@@ -1174,7 +1199,7 @@ export default function ChatInputActionsRow({
         </p>
       ) : null}
       <div className={styles.inputActions}>
-        {welcome && showModelPicker && (
+        {taskLayout && showModelPicker && (
           <Popover
             trigger="click"
             placement="topRight"
@@ -1198,7 +1223,7 @@ export default function ChatInputActionsRow({
             </button>
           </Popover>
         )}
-        {!welcome && (
+        {!taskLayout && (
           <>
             <ContextWindowRing
               usedTokens={contextUsedTokens}
@@ -1417,7 +1442,7 @@ export default function ChatInputActionsRow({
             title={t("chat.send", "Send")}
             type="button"
           >
-            {welcome ? <ArrowUp size={18} /> : <Send size={18} />}
+            {taskLayout ? <ArrowUp size={18} /> : <Send size={18} />}
           </button>
         )}
       </div>

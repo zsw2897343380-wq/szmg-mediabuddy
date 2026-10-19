@@ -73,7 +73,7 @@ describe("MinimalAgentSessionNav nav scopes", () => {
     vi.spyOn(octopThreadsApi, "list").mockResolvedValue([]);
   });
 
-  it("filters the same expert, team, and cloud tabs", async () => {
+  it("keeps expert, team, and cloud tabs in the optional folder view", async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
@@ -93,6 +93,8 @@ describe("MinimalAgentSessionNav nav scopes", () => {
       </MemoryRouter>,
     );
 
+    await user.click(screen.getByRole("button", { name: "chat.taskListView" }));
+    await user.click(screen.getByText("chat.expertFolderView"));
     expect(screen.getByText("本地专家")).toBeInTheDocument();
     expect(screen.getByText("云端专家")).toBeInTheDocument();
     expect(screen.queryByText("本地团队")).not.toBeInTheDocument();

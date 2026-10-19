@@ -11,6 +11,7 @@ import {
   Pin,
   PinOff,
   Search,
+  ListFilter,
   Trash2,
 } from "lucide-react";
 import type { OctopAgent } from "../../../context/AgentContext";
@@ -49,6 +50,8 @@ import SessionWorkStatusIcon from "./SessionWorkStatusIcon";
 import TeamChatBadge from "./TeamChatBadge";
 import ExpertNameLabel from "./ExpertNameLabel";
 import ExpertNavActions from "./ExpertNavActions";
+import { useServerTimezone } from "../../../hooks/useServerTimezone";
+import { formatServerYmd } from "../../../utils/formatMessageTime";
 import styles from "../index.module.less";
 
 /** Default preview size per expert in minimal nav (matches session page size). */
@@ -123,6 +126,8 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
   onFork,
   forkDisabled,
   forkDisabledHint,
+  dateLabel,
+  agentName,
 }: {
   session: Session;
   isActive: boolean;
@@ -134,6 +139,8 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
   onFork: (id: string) => void;
   forkDisabled?: boolean;
   forkDisabledHint?: string;
+  dateLabel?: string;
+  agentName?: string;
 }) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -221,9 +228,18 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
         if (!isEditing) onSelect(session.id);
       }}
       role="button"
+      title={agentName ? `${session.name} · ${agentName}` : session.name}
+      aria-current={isActive ? "page" : undefined}
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && !isEditing) onSelect(session.id);
+        if (
+          e.target === e.currentTarget &&
+          (e.key === "Enter" || e.key === " ") &&
+          !isEditing
+        ) {
+          e.preventDefault();
+          onSelect(session.id);
+        }
       }}
     >
       {isEditing ? (
@@ -249,6 +265,14 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
             <SessionWorkStatusIcon status={workStatus} />
           </span>
           <span className={styles.sessionRowTitle}>{session.name}</span>
+          {dateLabel && (
+            <time
+              className={styles.taskRowDate}
+              dateTime={session.updatedAt ?? undefined}
+            >
+              {dateLabel}
+            </time>
+          )}
           {session.pinned ? (
             <span
               className={styles.sessionRowPinIndicator}
@@ -310,6 +334,10 @@ export default function MinimalAgentSessionNav({
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [taskView, setTaskView] = useState(true);
+  const [expandedTasks, setExpandedTasks] = useState(false);
+  const timezone = useServerTimezone();
   const [navScope, setNavScope] = useState<ChatNavScope>(() =>
     initialChatNavScope(
       agents.find((agent) => agent.agent_id === activeAgentId),
@@ -318,13 +346,16 @@ export default function MinimalAgentSessionNav({
   const { pinnedIds, isPinned, togglePin } = usePinnedExperts();
   const sortedAgents = useMemo(
     () =>
-      sortExpertsByPin(agents, pinnedIds).filter((agent) =>
-        matchesChatNavScope(agent, navScope),
+      sortExpertsByPin(agents, pinnedIds).filter(
+        (agent) => taskView || matchesChatNavScope(agent, navScope),
       ),
-    [agents, pinnedIds, navScope],
+    [agents, pinnedIds, navScope, taskView],
   );
   const searching = searchQuery.trim().length > 0;
-  const catalog = useExpertSessionCatalog(sortedAgents, searching);
+  const catalog = useExpertSessionCatalog(
+    sortedAgents,
+    searching || expandedTasks,
+  );
   const visibleAgents = useMemo(() => {
     if (!searching) return sortedAgents;
     return sortedAgents.filter((agent) => {
@@ -533,6 +564,48 @@ export default function MinimalAgentSessionNav({
     [activeAgentId, onPinActive, patchLocal],
   );
 
+  const taskRows = useMemo(
+    () =>
+      sortedAgents
+        .flatMap((agent) => {
+          const preview = byAgent[agent.agent_id] ?? [];
+          const archived = catalog.byAgent[agent.agent_id] ?? [];
+          const live = agent.agent_id === activeAgentId ? activeSessions : [];
+          const source =
+            searching || expandedTasks
+              ? archived.length > preview.length
+                ? archived
+                : preview
+              : preview;
+          const sessions = live.length >= source.length ? live : source;
+          return sessions
+            .filter(
+              (session) =>
+                !searching ||
+                matchesNavQuery(`${session.name} ${agent.name}`, searchQuery),
+            )
+            .map((session) => ({ agent, session }));
+        })
+        .sort(
+          (a, b) =>
+            Number(Boolean(b.session.pinned)) -
+              Number(Boolean(a.session.pinned)) ||
+            (b.session.updatedAt ? Date.parse(b.session.updatedAt) : 0) -
+              (a.session.updatedAt ? Date.parse(a.session.updatedAt) : 0) ||
+            b.session.id.localeCompare(a.session.id),
+        ),
+    [
+      sortedAgents,
+      byAgent,
+      catalog.byAgent,
+      activeAgentId,
+      activeSessions,
+      searching,
+      expandedTasks,
+      searchQuery,
+    ],
+  );
+
   if (agents.length === 0) {
     return (
       <div className={styles.sessionEmptyAgents}>
@@ -551,170 +624,278 @@ export default function MinimalAgentSessionNav({
   }
 
   return (
-    <div className={`${styles.sessionList} ${styles.minimalAgentNav}`}>
-      <div className={styles.sessionSearchWrap}>
-        <Search
-          size={14}
-          className={styles.sessionSearchIcon}
-          strokeWidth={2}
-        />
-        <input
-          type="search"
-          className={styles.sessionSearchInput}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={t("chat.searchSessions", "搜索会话")}
-          aria-label={t("chat.searchSessions", "搜索会话")}
-        />
+    <div
+      className={`${styles.sessionList} ${styles.minimalAgentNav} ${
+        taskView ? styles.taskNav : ""
+      }`}
+    >
+      <div className={styles.taskNavToolbar}>
+        <span>{t("nav.paneRecords")}</span>
+        <div>
+          <button
+            type="button"
+            aria-label={t("chat.searchSessions")}
+            aria-expanded={searchOpen}
+            onClick={() => {
+              setSearchOpen(!searchOpen);
+              if (searchOpen) setSearchQuery("");
+            }}
+          >
+            <Search size={14} />
+          </button>
+          <Dropdown
+            trigger={["click"]}
+            menu={{
+              selectedKeys: [taskView ? "tasks" : "experts"],
+              items: [
+                { key: "tasks", label: t("chat.taskListView") },
+                { key: "experts", label: t("chat.expertFolderView") },
+              ],
+              onClick: ({ key }) => setTaskView(key === "tasks"),
+            }}
+          >
+            <button type="button" aria-label={t("chat.taskListView")}>
+              <ListFilter size={14} />
+            </button>
+          </Dropdown>
+        </div>
       </div>
-      <ChatNavScopeTabs value={navScope} onChange={setNavScope} />
-      {visibleAgents.length === 0 ? (
-        searching ? (
-          <div className={styles.minimalAgentEmpty}>
-            {catalog.loading
-              ? t("common.loading")
-              : t("chat.noSearchResults", "没有匹配的会话")}
-          </div>
-        ) : (
-          <ChatNavScopeEmpty scope={navScope} />
-        )
-      ) : null}
-      {visibleAgents.map((agent) => {
-        const preview = byAgent[agent.agent_id] ?? [];
-        const catalogList = catalog.byAgent[agent.agent_id] ?? [];
-        const live =
-          agent.agent_id === activeAgentId && activeSessions.length > 0
-            ? activeSessions
-            : null;
-        const source = searching
-          ? live && live.length >= catalogList.length
-            ? live
-            : catalogList.length > 0
-            ? catalogList
-            : preview
-          : preview;
-        const list = searching
-          ? source.filter((session) =>
-              matchesNavQuery(session.name, searchQuery),
-            )
-          : source;
-        const ready = isAgentChatReady(agent.state);
-        const expanded = searching
-          ? list.length > 0
-          : !collapsedFolders.has(agent.agent_id);
-
-        return (
-          <section key={agent.agent_id} className={styles.minimalAgentSection}>
-            <div className={styles.minimalAgentHeader}>
-              <span className={styles.minimalAgentIconSlot}>
-                <span
-                  className={styles.minimalAgentAvatar}
-                  style={{
-                    color: agent.color || "var(--fn-text-tertiary)",
-                    background: `${agent.color || "#6366f1"}14`,
-                  }}
-                  aria-hidden
-                >
-                  <ExpertIcon
-                    iconUrl={agent.icon_url}
-                    iconName={agent.icon_name}
-                    size={agent.icon_url?.trim() ? 22 : 14}
-                  />
-                </span>
-                <button
-                  type="button"
-                  className={styles.minimalAgentChevronBtn}
-                  aria-expanded={expanded}
-                  aria-label={
-                    expanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")
-                  }
-                  onClick={() => toggleFolder(agent.agent_id)}
-                >
-                  <ChevronRight
-                    size={14}
-                    strokeWidth={2}
-                    className={`${styles.minimalAgentChevron} ${
-                      expanded ? styles.minimalAgentChevronOpen : ""
-                    }`}
-                    aria-hidden
-                  />
-                </button>
-              </span>
-              <button
-                type="button"
-                className={styles.minimalAgentFolderBtn}
-                onClick={() => openFolderAndSelect(agent.agent_id)}
-              >
-                <span className={styles.agentNameCluster}>
-                  <ExpertNameLabel
-                    name={agent.name}
-                    className={styles.minimalAgentName}
-                  />
-                  <TeamChatBadge agent={agent} />
-                  <SharedExpertHint agent={agent} />
-                  <RemoteExpertHint agent={agent} />
-                </span>
-                <AgentUnreadBadge count={agent.unread_count ?? 0} />
-              </button>
-              <ExpertNavActions
-                variant="minimal"
-                pinned={isPinned(agent.agent_id)}
-                onTogglePin={() => togglePin(agent.agent_id)}
-                onNewChat={() => onNewChat(agent.agent_id)}
+      {(searchOpen || !taskView) && (
+        <div className={styles.sessionSearchWrap}>
+          <Search
+            size={14}
+            className={styles.sessionSearchIcon}
+            strokeWidth={2}
+          />
+          <input
+            type="search"
+            className={styles.sessionSearchInput}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("chat.searchSessions", "搜索会话")}
+            aria-label={t("chat.searchSessions", "搜索会话")}
+          />
+        </div>
+      )}
+      {!taskView && (
+        <ChatNavScopeTabs value={navScope} onChange={setNavScope} />
+      )}
+      {taskView ? (
+        <div className={styles.taskNavList}>
+          {(expandedTasks || searching ? taskRows : taskRows.slice(0, 6)).map(
+            ({ agent, session }) => (
+              <PreviewSessionRow
+                key={`${agent.agent_id}:${session.id}`}
+                session={session}
+                agentName={agent.name}
+                dateLabel={
+                  session.updatedAt
+                    ? formatServerYmd(session.updatedAt, timezone).slice(5)
+                    : undefined
+                }
+                isActive={
+                  agent.agent_id === activeAgentId && session.id === activeId
+                }
+                workStatus={resolveSessionWorkStatus(session, liveWorkingIds)}
+                onSelect={(id) => onSelect(id, agent.agent_id)}
+                onDelete={(id, compact) =>
+                  handleDelete(agent.agent_id, id, compact)
+                }
+                onRename={(id, name) => handleRename(agent.agent_id, id, name)}
+                onPin={(id, pinned) => handlePin(agent.agent_id, id, pinned)}
+                onFork={(id) => onFork(id, agent.agent_id)}
+                forkDisabled={
+                  session.id === activeId && agent.agent_id === activeAgentId
+                    ? activeForkDisabled
+                    : undefined
+                }
+                forkDisabledHint={
+                  session.id === activeId && agent.agent_id === activeAgentId
+                    ? activeForkDisabledHint
+                    : undefined
+                }
               />
+            ),
+          )}
+          {taskRows.length === 0 && (
+            <div className={styles.minimalAgentEmpty}>
+              {loading || catalog.loading
+                ? t("common.loading")
+                : searching
+                ? t("chat.noSearchResults")
+                : t("chat.noSessionsYet")}
             </div>
-
-            {expanded ? (
-              <div className={styles.minimalAgentSessions}>
-                {!ready ? (
-                  <div className={styles.minimalAgentEmpty}>
-                    {t("chat.agentNotRunningHint")}
-                  </div>
-                ) : loading && list.length === 0 ? (
-                  <div className={styles.minimalAgentEmpty}>
-                    {t("common.loading")}
-                  </div>
-                ) : list.length === 0 ? (
-                  <div className={styles.minimalAgentEmpty}>
-                    {t("chat.noSessionsYet", "直接发消息即可开始对话")}
-                  </div>
-                ) : (
-                  list.map((session) => (
-                    <PreviewSessionRow
-                      key={session.id}
-                      session={session}
-                      isActive={session.id === activeId}
-                      workStatus={resolveSessionWorkStatus(
-                        session,
-                        liveWorkingIds,
-                      )}
-                      onSelect={(id) => onSelect(id, agent.agent_id)}
-                      onDelete={(id, compact) =>
-                        void handleDelete(agent.agent_id, id, compact)
-                      }
-                      onRename={(id, name) =>
-                        handleRename(agent.agent_id, id, name)
-                      }
-                      onPin={(id, pinned) =>
-                        handlePin(agent.agent_id, id, pinned)
-                      }
-                      onFork={(id) => onFork(id, agent.agent_id)}
-                      forkDisabled={
-                        session.id === activeId ? activeForkDisabled : undefined
-                      }
-                      forkDisabledHint={
-                        session.id === activeId
-                          ? activeForkDisabledHint
-                          : undefined
-                      }
-                    />
-                  ))
-                )}
+          )}
+          {!searching && taskRows.length > 6 && (
+            <button
+              className={styles.taskNavMore}
+              type="button"
+              onClick={() => setExpandedTasks(!expandedTasks)}
+            >
+              {t(
+                expandedTasks ? "chatWelcome.showLess" : "chatWelcome.showMore",
+              )}
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {visibleAgents.length === 0 ? (
+            searching ? (
+              <div className={styles.minimalAgentEmpty}>
+                {catalog.loading
+                  ? t("common.loading")
+                  : t("chat.noSearchResults", "没有匹配的会话")}
               </div>
-            ) : null}
-          </section>
-        );
-      })}
+            ) : (
+              <ChatNavScopeEmpty scope={navScope} />
+            )
+          ) : null}
+          {visibleAgents.map((agent) => {
+            const preview = byAgent[agent.agent_id] ?? [];
+            const catalogList = catalog.byAgent[agent.agent_id] ?? [];
+            const live =
+              agent.agent_id === activeAgentId && activeSessions.length > 0
+                ? activeSessions
+                : null;
+            const source = searching
+              ? live && live.length >= catalogList.length
+                ? live
+                : catalogList.length > 0
+                ? catalogList
+                : preview
+              : preview;
+            const list = searching
+              ? source.filter((session) =>
+                  matchesNavQuery(session.name, searchQuery),
+                )
+              : source;
+            const ready = isAgentChatReady(agent.state);
+            const expanded = searching
+              ? list.length > 0
+              : !collapsedFolders.has(agent.agent_id);
+
+            return (
+              <section
+                key={agent.agent_id}
+                className={styles.minimalAgentSection}
+              >
+                <div className={styles.minimalAgentHeader}>
+                  <span className={styles.minimalAgentIconSlot}>
+                    <span
+                      className={styles.minimalAgentAvatar}
+                      style={{
+                        color: agent.color || "var(--fn-text-tertiary)",
+                        background: `${agent.color || "#6366f1"}14`,
+                      }}
+                      aria-hidden
+                    >
+                      <ExpertIcon
+                        iconUrl={agent.icon_url}
+                        iconName={agent.icon_name}
+                        size={agent.icon_url?.trim() ? 22 : 14}
+                      />
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.minimalAgentChevronBtn}
+                      aria-expanded={expanded}
+                      aria-label={
+                        expanded
+                          ? t("nav.collapseSidebar")
+                          : t("nav.expandSidebar")
+                      }
+                      onClick={() => toggleFolder(agent.agent_id)}
+                    >
+                      <ChevronRight
+                        size={14}
+                        strokeWidth={2}
+                        className={`${styles.minimalAgentChevron} ${
+                          expanded ? styles.minimalAgentChevronOpen : ""
+                        }`}
+                        aria-hidden
+                      />
+                    </button>
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.minimalAgentFolderBtn}
+                    onClick={() => openFolderAndSelect(agent.agent_id)}
+                  >
+                    <span className={styles.agentNameCluster}>
+                      <ExpertNameLabel
+                        name={agent.name}
+                        className={styles.minimalAgentName}
+                      />
+                      <TeamChatBadge agent={agent} />
+                      <SharedExpertHint agent={agent} />
+                      <RemoteExpertHint agent={agent} />
+                    </span>
+                    <AgentUnreadBadge count={agent.unread_count ?? 0} />
+                  </button>
+                  <ExpertNavActions
+                    variant="minimal"
+                    pinned={isPinned(agent.agent_id)}
+                    onTogglePin={() => togglePin(agent.agent_id)}
+                    onNewChat={() => onNewChat(agent.agent_id)}
+                  />
+                </div>
+
+                {expanded ? (
+                  <div className={styles.minimalAgentSessions}>
+                    {!ready ? (
+                      <div className={styles.minimalAgentEmpty}>
+                        {t("chat.agentNotRunningHint")}
+                      </div>
+                    ) : loading && list.length === 0 ? (
+                      <div className={styles.minimalAgentEmpty}>
+                        {t("common.loading")}
+                      </div>
+                    ) : list.length === 0 ? (
+                      <div className={styles.minimalAgentEmpty}>
+                        {t("chat.noSessionsYet", "直接发消息即可开始对话")}
+                      </div>
+                    ) : (
+                      list.map((session) => (
+                        <PreviewSessionRow
+                          key={session.id}
+                          session={session}
+                          isActive={session.id === activeId}
+                          workStatus={resolveSessionWorkStatus(
+                            session,
+                            liveWorkingIds,
+                          )}
+                          onSelect={(id) => onSelect(id, agent.agent_id)}
+                          onDelete={(id, compact) =>
+                            void handleDelete(agent.agent_id, id, compact)
+                          }
+                          onRename={(id, name) =>
+                            handleRename(agent.agent_id, id, name)
+                          }
+                          onPin={(id, pinned) =>
+                            handlePin(agent.agent_id, id, pinned)
+                          }
+                          onFork={(id) => onFork(id, agent.agent_id)}
+                          forkDisabled={
+                            session.id === activeId
+                              ? activeForkDisabled
+                              : undefined
+                          }
+                          forkDisabledHint={
+                            session.id === activeId
+                              ? activeForkDisabledHint
+                              : undefined
+                          }
+                        />
+                      ))
+                    )}
+                  </div>
+                ) : null}
+              </section>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

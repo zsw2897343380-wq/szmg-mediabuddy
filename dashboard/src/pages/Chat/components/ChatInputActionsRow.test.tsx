@@ -63,7 +63,7 @@ describe("ChatInputActionsRow plus menu", () => {
       <MemoryRouter>
         <ChatInputActionsRow
           {...baseProps}
-          welcome
+          taskLayout
           onModelChange={onModelChange}
           onFileSelect={onFileSelect}
         />

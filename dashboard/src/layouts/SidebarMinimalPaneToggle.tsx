@@ -52,11 +52,11 @@ export default function SidebarMinimalPaneToggle({
         <LayoutGrid size={16} strokeWidth={1.8} />
         {minimalPane === "records" ? t("nav.more") : t("nav.paneRecords")}
       </button>
-      <div className={styles.minimalPaneHeader}>
-        <span className={styles.navGroupLabel}>
-          {minimalPane === "records" ? t("nav.paneRecords") : settingsLabel}
-        </span>
-      </div>
+      {minimalPane === "settings" && (
+        <div className={styles.minimalPaneHeader}>
+          <span className={styles.navGroupLabel}>{settingsLabel}</span>
+        </div>
+      )}
     </div>
   );
 }
