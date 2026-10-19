@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 # =============================================================================
-# Octop — 多阶段 Docker 构建
+# MediaBuddy — 多阶段 Docker 构建
 #
 # 阶段 1: 构建 React/TypeScript 前端
 # 阶段 2: Python 运行时 + 预构建前端
 #
 # 用法（在仓库根目录执行，构建上下文为根目录）:
-#   docker build -f docker/Dockerfile -t octop:latest .
-#   docker run -d -p 8088:8080 -v octop-data:/data/.octop -e HOME=/data octop:latest
+#   docker build -f docker/Dockerfile -t mediabuddy:latest .
+#   docker run -d -p 8088:8080 -v octop-data:/data/.octop -e HOME=/data mediabuddy:latest
 #
 # 国内加速（可选，需 BuildKit，docker/docker_build.sh 默认已开启）:
 #   PIP_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple \
@@ -24,7 +24,7 @@
 #     --build-arg NPM_REGISTRY=https://mirrors.cloud.tencent.com/npm/ \
 #     --build-arg APT_MIRROR=mirrors.cloud.tencent.com \
 #     --build-arg NODE_MAX_OLD_SPACE_SIZE=1024 \
-#     -t octop:latest .
+#     -t mediabuddy:latest .
 #
 # 或使用 Compose:
 #   docker compose -f docker/docker-compose.yml up -d
@@ -63,10 +63,10 @@ RUN NODE_ENV=production NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim AS runtime
 
-LABEL maintainer="OrcaKit Team"
-LABEL org.opencontainers.image.title="Octop"
+LABEL maintainer="MediaBuddy Team"
+LABEL org.opencontainers.image.title="MediaBuddy"
 LABEL org.opencontainers.image.description="Smarter self-hosted AI assistant — multi-user, multi-agent."
-LABEL org.opencontainers.image.source="https://github.com/TencentCloud/orca"
+LABEL org.opencontainers.image.source="https://github.com/zsw2897343380-wq/szmg-mediabuddy"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

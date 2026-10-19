@@ -1,8 +1,8 @@
-# Octop Installer for Windows (PowerShell)
+# MediaBuddy Installer for Windows (PowerShell)
 # Usage: irm <url>/install.ps1 | iex
 #    or: .\install.ps1 [-Version X.Y.Z] [-FromSource] [-SourceDir DIR] [-Extras "browser"]
 #
-# Installs Octop into ~/.octop with a uv-managed Python environment.
+# Installs MediaBuddy into ~/.octop with a uv-managed Python environment.
 
 & {
 param(
@@ -22,13 +22,13 @@ $OctopBin      = Join-Path $OctopHome "bin"
 $PythonVersion = "3.12"
 $OctopRepo     = if ($env:OCTOP_REPO) { $env:OCTOP_REPO } else { "https://github.com/TencentCloud/Octop.git" }
 
-function Write-Info { param([string]$Message) Write-Host "[octop] " -ForegroundColor Green  -NoNewline; Write-Host $Message }
-function Write-Warn { param([string]$Message) Write-Host "[octop] " -ForegroundColor Yellow -NoNewline; Write-Host $Message }
-function Stop-WithError { param([string]$Message) Write-Host "[octop] ERROR: $Message" -ForegroundColor Red; exit 1 }
+function Write-Info { param([string]$Message) Write-Host "[MediaBuddy] " -ForegroundColor Green  -NoNewline; Write-Host $Message }
+function Write-Warn { param([string]$Message) Write-Host "[MediaBuddy] " -ForegroundColor Yellow -NoNewline; Write-Host $Message }
+function Stop-WithError { param([string]$Message) Write-Host "[MediaBuddy] ERROR: $Message" -ForegroundColor Red; exit 1 }
 
 if ($Help) {
     @"
-Octop Installer for Windows
+MediaBuddy Installer for Windows
 
 Usage: .\install.ps1 [OPTIONS]
 
@@ -51,7 +51,7 @@ Environment:
     exit 0
 }
 
-Write-Host "[octop] Installing Octop into $OctopHome" -ForegroundColor Green
+Write-Host "[MediaBuddy] Installing MediaBuddy into $OctopHome" -ForegroundColor Green
 
 $policy = Get-ExecutionPolicy
 if ($policy -eq "Restricted") {
@@ -247,7 +247,7 @@ Pin-McpCompat
 Test-Install
 
 if (-not (Test-Path $VenvOctop)) { Stop-WithError "Installation failed: octop CLI not found in venv" }
-Write-Info "Octop installed successfully"
+Write-Info "MediaBuddy installed successfully"
 
 if (-not $script:ConsoleAvailable) {
     $check = & $VenvPython -c "import importlib.resources, octop; p=importlib.resources.files('octop')/'dashboard'/'index.html'; print('yes' if p.is_file() else 'no')" 2>&1
@@ -312,7 +312,7 @@ $ErrorActionPreference = "Stop"
 $OctopHome = if ($env:OCTOP_HOME) { $env:OCTOP_HOME } else { Join-Path $HOME ".octop" }
 $RealBin = Join-Path $OctopHome "venv\Scripts\octop.exe"
 if (-not (Test-Path $RealBin)) {
-    Write-Error "Octop environment not found at $OctopHome\venv"
+    Write-Error "MediaBuddy environment not found at $OctopHome\venv"
     exit 1
 }
 & $RealBin @args
@@ -325,7 +325,7 @@ set "OCTOP_HOME=%OCTOP_HOME%"
 if "%OCTOP_HOME%"=="" set "OCTOP_HOME=%USERPROFILE%\.octop"
 set "REAL_BIN=%OCTOP_HOME%\venv\Scripts\octop.exe"
 if not exist "%REAL_BIN%" (
-    echo Error: Octop environment not found at %OCTOP_HOME%\venv >&2
+    echo Error: MediaBuddy environment not found at %OCTOP_HOME%\venv >&2
     exit /b 1
 )
 "%REAL_BIN%" %*
@@ -356,7 +356,7 @@ if ($env:Path -notlike "*$targetPath*") {
 }
 
 Write-Host ""
-Write-Host "Octop installed successfully!" -ForegroundColor Green
+Write-Host "MediaBuddy installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Install location:  $OctopHome"
 Write-Host "  Python:            $pyVersion"
