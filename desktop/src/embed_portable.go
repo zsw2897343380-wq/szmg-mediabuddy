@@ -2,7 +2,7 @@
 
 package main
 
-// Development builds look for Octop-<plat>.zip or Octop-portable-<plat>-*.zip
+// Development builds look for MediaBuddy-<plat>.zip or MediaBuddy-portable-<plat>-*.zip
 // beside the executable. macOS production copies the zip into Resources as
-// Octop-<plat>.zip.
+// MediaBuddy-<plat>.zip.
 var embeddedPortable []byte

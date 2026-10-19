@@ -29,10 +29,10 @@ make -f desktop/portable/Makefile green
 
 ## 产物布局
 
-公开文件名：`Octop-portable-<plat>-<version>.zip`。zip 内目录仍是：
+公开文件名：`MediaBuddy-portable-<plat>-<version>.zip`。zip 内目录仍是：
 
 ```
-Octop-<plat>/
+MediaBuddy-<plat>/
   runtime/       # python-build-standalone
   packages/      # Octop + 依赖（site-packages，可搬迁）
   launch.py      # 启动引导（site.addsitedir / Windows pywin32）
@@ -114,5 +114,5 @@ Actions 使用 GitHub 上游 PBS（`PBS_BASE_URL`），本机构建默认 npmmir
 
 ## Electron 壳
 
-壳只消费 `Octop-portable-<plat>-<version>.zip`（zip 内仍是 `Octop-<plat>/`），不要把绿包编进 asar。步骤见
+壳只消费 `MediaBuddy-portable-<plat>-<version>.zip`（zip 内仍是 `MediaBuddy-<plat>/`），不要把绿包编进 asar。步骤见
 [`AGENT_ELECTRON_INTEGRATION.md`](AGENT_ELECTRON_INTEGRATION.md)。

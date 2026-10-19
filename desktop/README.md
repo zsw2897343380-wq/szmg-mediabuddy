@@ -1,4 +1,4 @@
-# Octop desktop (Wails v3 + green portable)
+# MediaBuddy desktop (Wails v3 + green portable)
 
 All desktop-client code lives here. This is **not** `src/octop/infra/desktop`
 (remote desktop streaming).
@@ -38,7 +38,7 @@ the final native package:
 
 ```bash
 desktop/package-release.sh
-# Reuse an existing desktop/portable/release/Octop-portable-<plat>-<version>.zip:
+# Reuse an existing desktop/portable/release/MediaBuddy-portable-<plat>-<version>.zip:
 desktop/package-release.sh darwin-arm64 --reuse-portable
 ```
 
@@ -59,7 +59,7 @@ cd desktop/src
 go mod tidy
 wails3 build            # development binary under desktop/src/bin/
 wails3 task package ARCH=arm64 VERSION=<version> \
-  PORTABLE_ZIP=../portable/release/Octop-portable-darwin-arm64-<version>.zip
+  PORTABLE_ZIP=../portable/release/MediaBuddy-portable-darwin-arm64-<version>.zip
 ```
 
 Dev against an already-running Octop (skips the bundled green zip):
@@ -73,7 +73,7 @@ Without `OCTOP_DESKTOP_URL`, first launch uses `~/.octop/portable/` if valid,
 otherwise extracts the matching zip shipped with the desktop package (embedded
 in the Windows and Linux binaries, under `Contents/Resources` on macOS). The
 Wails shell never downloads Octop. For local runtime debugging, set
-`OCTOP_DESKTOP_PORTABLE_ZIP=/absolute/path/Octop-portable-<plat>-<version>.zip`.
+`OCTOP_DESKTOP_PORTABLE_ZIP=/absolute/path/MediaBuddy-portable-<plat>-<version>.zip`.
 Release builds use the GitHub Actions repository variable `OCTOP_DESKTOP_URL` as
 their default service URL. Set it under **Settings → Secrets and variables →
 Actions → Variables**; a process-level `OCTOP_DESKTOP_URL` overrides the bundled
@@ -90,7 +90,7 @@ GitHub Release names follow `Octop-<kind>-<os>-<arch>-<version>.<ext>`:
   `Octop.app` into Applications), `.exe` (Windows NSIS installer — copies
   into `Program Files\Octop` and creates Start Menu + desktop shortcuts),
   `.tar.gz` (Linux)
-- Green runtime zip: `Octop-portable-<plat>-<version>.zip`
+- Green runtime zip: `MediaBuddy-portable-<plat>-<version>.zip`
 - PyPI wheels stay `octop-<version>-py3-none-any.whl` (PEP 427)
 
 The Linux tar.gz contains only the GUI binary; it has no separate portable zip or

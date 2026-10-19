@@ -245,24 +245,26 @@ func bundledPortableZip() (string, error) {
 	}
 	dir := filepath.Dir(exe)
 	plat := greenPlat()
-	legacy := fmt.Sprintf("Octop-%s.zip", plat)
+	bundledName := fmt.Sprintf("MediaBuddy-%s.zip", plat)
 	searchDirs := []string{
 		dir,
 		filepath.Join(dir, "..", "Resources"),
 	}
 	for _, search := range searchDirs {
 		search = filepath.Clean(search)
-		legacyPath := filepath.Join(search, legacy)
-		if _, err := os.Stat(legacyPath); err == nil {
-			return legacyPath, nil
-		}
-		matches, _ := filepath.Glob(filepath.Join(search, "Octop-portable-"+plat+"-*.zip"))
-		if len(matches) > 0 {
-			sort.Strings(matches)
-			return matches[len(matches)-1], nil
+		for _, prefix := range []string{"MediaBuddy", "Octop"} {
+			archive := filepath.Join(search, fmt.Sprintf("%s-%s.zip", prefix, plat))
+			if _, err := os.Stat(archive); err == nil {
+				return archive, nil
+			}
+			matches, _ := filepath.Glob(filepath.Join(search, prefix+"-portable-"+plat+"-*.zip"))
+			if len(matches) > 0 {
+				sort.Strings(matches)
+				return matches[len(matches)-1], nil
+			}
 		}
 	}
-	return "", fmt.Errorf("bundled portable package %s not found beside application", legacy)
+	return "", fmt.Errorf("bundled portable package %s not found beside application", bundledName)
 }
 
 func unzipGreen(zipPath, dest string) error {
@@ -287,7 +289,7 @@ func unzipGreenFiles(files []*zip.File, dest string) error {
 	if err := os.MkdirAll(dest, 0o755); err != nil {
 		return err
 	}
-	// Zip root is Octop-<plat>/… — strip that prefix.
+	// Zip root is MediaBuddy-<plat>/… — strip that prefix.
 	for _, f := range files {
 		name := f.Name
 		parts := strings.SplitN(name, "/", 2)

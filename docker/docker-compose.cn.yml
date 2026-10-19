@@ -1,8 +1,7 @@
 # =============================================================================
-# Octop — Docker Compose（国内镜像）
+# MediaBuddy — Docker Compose（国内镜像）
 #
-# 不在本地构建。官方 GHCR（ghcr.io/tencentcloud/octop）拉取失败时用本文件，
-# 镜像来自南京大学 GHCR 源：ghcr.nju.edu.cn/tencentcloud/octop:latest
+# 先用 docker/docker_build.sh 构建 MediaBuddy 镜像，保留本分支界面；镜像加速由构建参数配置。
 #
 # 用法（在仓库根目录执行）:
 #   docker compose -f docker/docker-compose.cn.yml up -d
@@ -15,8 +14,8 @@
 
 services:
   octop:
-    image: ghcr.nju.edu.cn/tencentcloud/octop:latest
-    container_name: octop
+    image: mediabuddy:latest
+    container_name: MediaBuddy
     restart: unless-stopped
     ulimits:
       nofile:

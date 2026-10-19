@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Octop 容器入口脚本
+# MediaBuddy 容器入口脚本
 #
 # 环境变量:
 #   HOME                      — 必须为 /data，使 ~/.octop 映射到数据卷
@@ -104,7 +104,7 @@ octop_write_setup_hint() {
     local pw
     pw="$(tr -d '\n\r' < "$WIZARD_FILE")"
     cat > "$CREDENTIAL_FILE" << EOF
-Octop Setup Required
+MediaBuddy Setup Required
 ====================
 URL:      http://<host>:${PORT}
 
@@ -122,7 +122,7 @@ EOF
 octop_write_admin_credential() {
     local password="$1"
     cat > "$CREDENTIAL_FILE" << EOF
-Octop Login Credential
+MediaBuddy Login Credential
 ======================
 URL:      http://<host>:${PORT}
 Username: ${ADMIN_USERNAME}
@@ -160,7 +160,7 @@ octop_entrypoint_main() {
     local init_log reason
 
     if [ ! -f "$DB_FILE" ] && [ ! -f "$INIT_MARKER" ]; then
-        echo "[entrypoint] 首次启动，正在初始化 Octop..."
+        echo "[entrypoint] 首次启动，正在初始化 MediaBuddy..."
         mkdir -p "$OCTOP_HOME"
 
         if [ -n "$default_password" ] && octop_validate_password "$default_password" 2>/dev/null; then
@@ -201,7 +201,7 @@ octop_entrypoint_main() {
     fi
 
     if [ $# -eq 0 ]; then
-        echo "[entrypoint] 正在启动 Octop，端口 $PORT..."
+        echo "[entrypoint] 正在启动 MediaBuddy，端口 $PORT..."
         exec octop run --host 0.0.0.0 --port "$PORT"
     fi
 

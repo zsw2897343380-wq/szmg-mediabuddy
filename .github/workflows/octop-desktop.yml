@@ -186,7 +186,7 @@ jobs:
       - name: Smoke import (native host only)
         run: |
           set -euo pipefail
-          staging="desktop/portable/release/Octop-${{ matrix.plat }}"
+          staging="desktop/portable/release/MediaBuddy-${{ matrix.plat }}"
           if [[ -x "${staging}/runtime/bin/python3" ]]; then
             py="${staging}/runtime/bin/python3"
           elif [[ -f "${staging}/runtime/python.exe" ]]; then
@@ -294,14 +294,39 @@ jobs:
           wails3 task package
           ARCH=${{ matrix.arch }}
           VERSION=${{ env.OCTOP_VERSION }}
-          PORTABLE_ZIP=../portable/release/Octop-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
+          PORTABLE_ZIP=../portable/release/MediaBuddy-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
+
+      - name: Verify MediaBuddy archive names
+        run: |
+          staging="desktop/portable/release/MediaBuddy-${GREEN_HOST_PLAT}"
+          if [[ -x "${staging}/runtime/bin/python3" ]]; then
+            py="${staging}/runtime/bin/python3"
+          else
+            py="${staging}/runtime/python.exe"
+          fi
+          "$py" - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          plat = os.environ["GREEN_HOST_PLAT"]
+          version = os.environ["OCTOP_VERSION"]
+          archive = Path(f"desktop/portable/release/MediaBuddy-portable-{plat}-{version}.zip")
+          expected_root = f"MediaBuddy-{plat}"
+          with ZipFile(archive) as bundle:
+              roots = {name.split("/", 1)[0] for name in bundle.namelist()}
+              assert roots == {expected_root}, roots
+              readme = bundle.read(f"{expected_root}/README.txt").decode("utf-8")
+              assert "MediaBuddy" in readme and "Octop" not in readme
+          print(f"Verified branded archive: {archive.name}")
+          PY
 
       # archive: false — upload the prebuilt zip as-is. Default archive=true would
       # wrap it again, so Actions UI / "Download artifact" becomes zip-in-zip.
       # With archive:false, artifact name is the filename (name: is ignored).
       - uses: actions/upload-artifact@v7
         with:
-          path: desktop/portable/release/Octop-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
+          path: desktop/portable/release/MediaBuddy-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
           archive: false
           if-no-files-found: error
           retention-days: 14
@@ -395,7 +420,7 @@ jobs:
     uses: ./.github/workflows/upload-release-cos.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
-      patterns: "MediaBuddy-desktop-*,Octop-portable-*"
+      patterns: "MediaBuddy-desktop-*,MediaBuddy-portable-*"
     secrets:
       RELEASE_COS_SECRET_ID: ${{ secrets.RELEASE_COS_SECRET_ID }}
       RELEASE_COS_SECRET_KEY: ${{ secrets.RELEASE_COS_SECRET_KEY }}

@@ -25,15 +25,14 @@ ALL_PLATS=(
   windows-arm64
 )
 
-# Public desktop package names use MediaBuddy; portable runtime archives keep
-# the Octop prefix because the desktop shell looks for those embedded resources.
+# Public desktop packages and portable runtime archives use MediaBuddy.
 octop_version() {
   sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' \
     "${REPO_ROOT}/pyproject.toml" | head -1
 }
 
 portable_zip_basename() {
-  echo "Octop-portable-${1}-$(octop_version).zip"
+  echo "MediaBuddy-portable-${1}-$(octop_version).zip"
 }
 
 desktop_pkg_basename() {

@@ -59,7 +59,7 @@ jobs:
       - name: Smoke import (native host only)
         run: |
           set -euo pipefail
-          staging="desktop/portable/release/Octop-windows-amd64"
+          staging="desktop/portable/release/MediaBuddy-windows-amd64"
           py="${staging}/runtime/python.exe"
           req_file="desktop/portable/requirements-windows-amd64.txt"
           if [[ ! -f "$py" ]]; then
@@ -159,7 +159,7 @@ jobs:
           wails3 task package
           ARCH=amd64
           VERSION=${{ env.OCTOP_VERSION }}
-          PORTABLE_ZIP=../portable/release/Octop-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
+          PORTABLE_ZIP=../portable/release/MediaBuddy-portable-windows-amd64-${{ env.OCTOP_VERSION }}.zip
       - uses: actions/upload-artifact@v7
         with:
           path: desktop/src/bin/MediaBuddy-desktop-windows-amd64-${{ env.OCTOP_VERSION }}.*
@@ -219,7 +219,7 @@ jobs:
       - name: Smoke import and verify native libraries
         run: |
           set -euo pipefail
-          staging="desktop/portable/release/Octop-${{ matrix.plat }}"
+          staging="desktop/portable/release/MediaBuddy-${{ matrix.plat }}"
           py="$staging/runtime/bin/python3"
           req_file="desktop/portable/requirements-${{ matrix.plat }}.txt"
           if [[ ! -x "$py" || ! -f "$req_file" ]]; then
@@ -273,7 +273,7 @@ jobs:
           wails3 task package
           ARCH=${{ matrix.arch }}
           VERSION=${{ env.OCTOP_VERSION }}
-          PORTABLE_ZIP=../portable/release/Octop-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
+          PORTABLE_ZIP=../portable/release/MediaBuddy-portable-${{ matrix.plat }}-${{ env.OCTOP_VERSION }}.zip
       - name: Upload DMG
         uses: actions/upload-artifact@v7
         with:

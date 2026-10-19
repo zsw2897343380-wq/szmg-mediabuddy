@@ -229,7 +229,7 @@ func (a *App) boot() {
 		a.showDashboard(existing)
 		return
 	}
-	log.Printf("[boot] starting local Octop service on %s:%d", host, preferred)
+	log.Printf("[boot] starting local MediaBuddy service on %s:%d", host, preferred)
 	port, err := chooseFreePort(host, preferred)
 	if err != nil {
 		var busy noFreePortError
@@ -249,21 +249,21 @@ func (a *App) boot() {
 	a.cmd = cmd
 	a.mu.Unlock()
 	if err != nil {
-		log.Printf("[boot] local Octop start failed after %s: %v", time.Since(startStarted), err)
+		log.Printf("[boot] local MediaBuddy start failed after %s: %v", time.Since(startStarted), err)
 		a.setStatus(err.Error())
 		return
 	}
-	log.Printf("[boot] local Octop process started after %s", time.Since(startStarted))
+	log.Printf("[boot] local MediaBuddy process started after %s", time.Since(startStarted))
 	base := dashboardURL(host, port)
 	a.setStatus(desktopText(locale, copyStatusStartingService))
 	healthStarted := time.Now()
-	log.Printf("[boot] waiting for local Octop health")
+	log.Printf("[boot] waiting for local MediaBuddy health")
 	if err := waitHealth(locale, base, 2*time.Minute); err != nil {
-		log.Printf("[boot] local Octop health failed after %s: %v", time.Since(healthStarted), err)
+		log.Printf("[boot] local MediaBuddy health failed after %s: %v", time.Since(healthStarted), err)
 		a.setStatus(err.Error())
 		return
 	}
-	log.Printf("[boot] local Octop healthy after %s", time.Since(healthStarted))
+	log.Printf("[boot] local MediaBuddy healthy after %s", time.Since(healthStarted))
 	if err := writeDesktopPort(port); err != nil {
 		log.Printf("desktop port: %v", err)
 	} else {
