@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import sys
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -348,6 +349,43 @@ def test_set_enabled_refuses_corrupt_config_and_preserves_bytes(tmp_path: Path) 
     assert config_path.read_text(encoding="utf-8") == corrupt
 
 
+def test_install_plugin_importing_legacy_harness_agent(tmp_path: Path) -> None:
+    """Plugins published before the octop_harness rename still import harness_agent."""
+    src = tmp_path / "legacy-plugin"
+    src.mkdir()
+    (src / "plugin.yaml").write_text(
+        "id: legacy-plugin\nversion: 0.1.0\nname: Legacy\nkind: tool\nentry: main.py\n",
+        encoding="utf-8",
+    )
+    (src / "main.py").write_text(
+        "from harness_agent.plugins import PluginContext\n"
+        "from harness_agent.plugins.context import PluginContext as Ctx\n"
+        "\n"
+        "def ping() -> str:\n"
+        "    return 'pong'\n"
+        "\n"
+        "def setup(ctx: PluginContext) -> None:\n"
+        "    if Ctx is not PluginContext:\n"
+        "        raise RuntimeError('legacy PluginContext is not the installed class')\n"
+        "    ctx.tool('ping', ping, description='ping')\n",
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "config.json"
+    config_path.write_text("{}", encoding="utf-8")
+    mgr = PluginManager(plugins_dir=tmp_path / "plugins", config_path=config_path)
+    loaded = mgr.install_path(src, force=True)
+    assert loaded.manifest.id == "legacy-plugin"
+    assert [tool.name for tool in loaded.tools] == ["ping"]
+
+    import octop_harness
+    from harness_agent.plugins import PluginContext
+    from octop_harness.plugins import PluginContext as RealContext
+
+    assert PluginContext is RealContext
+    assert octop_harness.__name__ == "octop_harness"
+    assert sys.modules["harness_agent"] is octop_harness
+
+
 def test_set_enabled_preserves_unrelated_keys(tmp_path: Path) -> None:
     config_path = tmp_path / "config.json"
     config_path.write_text(
@@ -366,3 +404,26 @@ def test_set_enabled_preserves_unrelated_keys(tmp_path: Path) -> None:
     assert data["bind_host"] == "0.0.0.0"
     assert data["database"] == {"driver": "postgresql", "host": "db.internal"}
     assert data["plugins"]["echo-tool"]["enabled"] is False
+
+
+def test_channel_reload_preserves_class_until_source_changes(tmp_path: Path) -> None:
+    from octop_harness.plugins.context import PluginContext
+
+    if not hasattr(PluginContext, "channel"):
+        pytest.skip("released harness lacks channel registration; exercised with companion source")
+    config = tmp_path / "config.json"
+    config.write_text("{}")
+    directory = tmp_path / "plugins" / "test-channel"
+    directory.mkdir(parents=True)
+    (directory / "plugin.yaml").write_text(
+        "id: test-channel\nversion: 1\nkind: channel\nentry: main.py\n"
+    )
+    source = directory / "main.py"
+    source.write_text('class Channel: pass\ndef setup(ctx): ctx.channel("acme", Channel)\n')
+    manager = PluginManager(plugins_dir=directory.parent, config_path=config)
+    first = manager.load_installed(install_deps=False)[0].channels[0].channel_cls
+    second = manager.load_installed(install_deps=False)[0].channels[0].channel_cls
+    assert first is second
+    source.write_text(source.read_text() + "\n# updated implementation\n")
+    third = manager.load_installed(install_deps=False)[0].channels[0].channel_cls
+    assert third is not first

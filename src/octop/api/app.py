@@ -129,8 +129,23 @@ def build_app(server: OctopServer) -> FastAPI:
             expose_headers=[ACCESS_TOKEN_RESPONSE_HEADER],
         )
 
+    from octop.api.middleware.bridge_proxy import install as install_bridge_proxy
+
+    # Bridge proxy must sit inside JWT auth so ``request.state.octop_user`` is set
+    # (Starlette runs the last-added middleware first).
+    install_bridge_proxy(app, server)
     install_jwt_auth(app, server)
     install_setup_lockdown(app, server)
+
+    if server.app_runtime is not None and server.app_runtime.bridge_manager is not None:
+        from octop.api.bridge_peer import prepare_peer_dashboard_turn
+        from octop.api.routers.browser.stream import run_browser_stream_session
+
+        server.app_runtime.bridge_manager.bind_asgi_app(
+            app,
+            peer_turn_runner=prepare_peer_dashboard_turn,
+            peer_browser_runner=run_browser_stream_session,
+        )
 
     from octop.infra.setup.tls.challenge import challenge_store
 
@@ -145,12 +160,15 @@ def build_app(server: OctopServer) -> FastAPI:
         acp,
         admin,
         agent_files,
+        agent_mcp,
         agent_tools,
         agents,
         auth,
+        auth_ldap,
         auth_oauth,
         auth_oidc,
         backup,
+        bridge,
         browser,
         channels,
         chat,
@@ -168,6 +186,7 @@ def build_app(server: OctopServer) -> FastAPI:
         media_generation,
         memory,
         memory_portable,
+        memory_storage,
         mobile,
         ollama_models,
         onnx_models,
@@ -192,6 +211,7 @@ def build_app(server: OctopServer) -> FastAPI:
         voice,
         workspace,
     )
+    from octop.api.routers.decision import router as decision_router
     from octop.api.routers.filesystem import router as filesystem_router
     from octop.api.routers.observability import router as observability_router
     from octop.api.routers.providers import admin_router as admin_providers_router
@@ -208,6 +228,7 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(auth.router, "/api/auth", ["auth"]),
             _RouterMount(auth_oidc.router, "/api/auth", ["auth"]),
             _RouterMount(auth_oauth.router, "/api/auth", ["auth"]),
+            _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),
             _RouterMount(invites.public_router, "/api/auth/invite", ["auth"]),
             _RouterMount(preferences.router, "/api", ["auth"]),
             _RouterMount(i18n.router, "/api", ["i18n"]),
@@ -218,14 +239,17 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(agents.router, "/api/agents", ["agents"]),
             _RouterMount(agent_tools.router, "/api", ["agents"]),
             _RouterMount(acp.router, "/api", ["agents"]),
+            _RouterMount(agent_mcp.router, "/api", ["agent-mcp"]),
             _RouterMount(chat.router, "/api", ["chat"]),
             _RouterMount(slash.router, "/api", ["slash"]),
             _RouterMount(connectors.router, "/api", ["connectors"]),
+            _RouterMount(bridge.router, "/api", ["bridge"]),
             _RouterMount(knowledge_bases.router, "/api", ["knowledge"]),
             _RouterMount(internal_mcp.router, "/api", ["internal-mcp"]),
             _RouterMount(channels.router, "/api", ["channels"]),
             _RouterMount(cron.router, "/api", ["cron"]),
             _RouterMount(settings.router, "/api", ["settings"]),
+            _RouterMount(decision_router, "/api", ["settings"]),
             _RouterMount(envs.router, "/api", ["envs"]),
             _RouterMount(search.router, "/api", ["search"]),
             _RouterMount(providers.router, "/api/providers", ["providers"]),
@@ -254,6 +278,7 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(agent_files.router, "/api", ["agent_files"]),
             _RouterMount(memory.router, "/api", ["memory"]),
             _RouterMount(memory_portable.router, "/api", ["memory"]),
+            _RouterMount(memory_storage.router, "/api", ["memory"]),
             _RouterMount(proactive_care.router, "/api", ["proactive-care"]),
             _RouterMount(usage.router, "/api", ["usage"]),
             _RouterMount(usage.admin_router, "/api/admin", ["admin"]),

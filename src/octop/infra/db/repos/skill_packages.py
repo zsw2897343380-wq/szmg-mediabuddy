@@ -18,6 +18,8 @@ class SkillPackageRow:
     skill_count: int
     icon_name: str
     icon_url: str
+    copy_policy: str
+    allow_download: bool
     created_at: str
     updated_at: str
 
@@ -34,6 +36,8 @@ class SkillPackageRow:
             skill_count=r["skill_count"],
             icon_name=str(r["icon_name"]) if "icon_name" in keys else "",
             icon_url=str(r["icon_url"]) if "icon_url" in keys else "",
+            copy_policy=str(r["copy_policy"]) if "copy_policy" in keys else "snapshot",
+            allow_download=bool(int(r["allow_download"])) if "allow_download" in keys else True,
             created_at=r["created_at"],
             updated_at=r["updated_at"],
         )
@@ -96,6 +100,8 @@ class SkillPackageRepo:
         description: str | None = None,
         icon_name: str | None = None,
         icon_url: str | None = None,
+        copy_policy: str | None = None,
+        allow_download: int | None = None,
     ) -> None:
         fields, params = partial_updates(
             [
@@ -103,6 +109,8 @@ class SkillPackageRepo:
                 ("description", description),
                 ("icon_name", icon_name),
                 ("icon_url", icon_url),
+                ("copy_policy", copy_policy),
+                ("allow_download", allow_download),
             ]
         )
         if not fields:

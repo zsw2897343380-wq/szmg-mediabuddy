@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -41,8 +42,12 @@ type App struct {
 	trayClickMu    sync.Mutex
 	lastTrayClick  time.Time
 	trayClickTimer *time.Timer
-	mainWindowReady chan struct{}
+
+	mainWindowReady     chan struct{}
 	mainWindowReadyOnce sync.Once
+
+	drops          dropServer
+	ownsListenPort bool
 }
 
 func (a *App) ServiceName() string { return "desktop" }
@@ -58,9 +63,14 @@ func (a *App) ServiceShutdown() error {
 	a.mu.Lock()
 	cmd := a.cmd
 	a.cmd = nil
+	ownsPort := a.ownsListenPort
+	a.ownsListenPort = false
 	a.mu.Unlock()
 	stopOctop(cmd)
 	log.Printf("[lifecycle] service shutdown complete")
+	if ownsPort {
+		clearDesktopPort()
+	}
 	return nil
 }
 
@@ -194,7 +204,6 @@ func (a *App) boot() {
 		log.Printf("[boot] complete after %s", time.Since(started))
 		return
 	}
-	s := a.store.get()
 	log.Printf("[boot] checking bundled runtime")
 	a.setStatus(desktopText(locale, copyStatusCheckingRuntime))
 	runtimeStarted := time.Now()
@@ -205,11 +214,38 @@ func (a *App) boot() {
 	}
 	log.Printf("[boot] bundled runtime ready after %s", time.Since(runtimeStarted))
 	root := portableDir()
-	log.Printf("[boot] starting local Octop service on port %d", s.Port)
 	startStarted := time.Now()
 	a.mu.Lock()
 	stopOctop(a.cmd)
-	cmd, err := startOctop(root, s.Port)
+	a.cmd = nil
+	a.mu.Unlock()
+	host, preferred := resolveListen()
+	if existing := findRunningDashboard(host, preferred); existing != "" {
+		a.setStatus(desktopText(locale, copyStatusUsingExisting))
+		if err := waitHealth(locale, existing, 30*time.Second); err != nil {
+			a.setStatus(err.Error())
+			return
+		}
+		a.showDashboard(existing)
+		return
+	}
+	log.Printf("[boot] starting local Octop service on %s:%d", host, preferred)
+	port, err := chooseFreePort(host, preferred)
+	if err != nil {
+		var busy noFreePortError
+		var bind cannotBindError
+		switch {
+		case errors.As(err, &busy):
+			a.setStatus(desktopText(locale, copyErrorNoFreePort, busy.From, busy.To))
+		case errors.As(err, &bind):
+			a.setStatus(desktopText(locale, copyErrorCannotBind, bind.Host, bind.Port, bind.Err.Error()))
+		default:
+			a.setStatus(err.Error())
+		}
+		return
+	}
+	a.mu.Lock()
+	cmd, err := startOctop(root, port)
 	a.cmd = cmd
 	a.mu.Unlock()
 	if err != nil {
@@ -218,7 +254,7 @@ func (a *App) boot() {
 		return
 	}
 	log.Printf("[boot] local Octop process started after %s", time.Since(startStarted))
-	base := dashboardURL(s.Port)
+	base := dashboardURL(host, port)
 	a.setStatus(desktopText(locale, copyStatusStartingService))
 	healthStarted := time.Now()
 	log.Printf("[boot] waiting for local Octop health")
@@ -228,6 +264,13 @@ func (a *App) boot() {
 		return
 	}
 	log.Printf("[boot] local Octop healthy after %s", time.Since(healthStarted))
+	if err := writeDesktopPort(port); err != nil {
+		log.Printf("desktop port: %v", err)
+	} else {
+		a.mu.Lock()
+		a.ownsListenPort = true
+		a.mu.Unlock()
+	}
 	a.showDashboard(base)
 	log.Printf("[boot] complete after %s", time.Since(started))
 }
@@ -317,6 +360,7 @@ func (a *App) installDragOverlay() {
 		return
 	}
 	a.window.ExecJS(dragOverlayJS())
+	a.window.ExecJS(fileDropJS())
 }
 
 func (a *App) scheduleDragOverlay() {
@@ -394,6 +438,7 @@ func main() {
 	log.Printf("[startup] Wails application created")
 	api.app = app
 	attachOpenURLEventListener(app, api.OpenExternal)
+	attachFileDropEventListener(app, api)
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
 		applyAppIcon(app)
 	})
@@ -406,6 +451,7 @@ func main() {
 		URL:                  "/",
 		Frameless:            true,
 		AllowSimpleEventEmit: true,
+		EnableFileDrop:       true,
 		BackgroundColour:     application.NewRGB(247, 248, 250),
 	})
 	log.Printf("[startup] main window created")

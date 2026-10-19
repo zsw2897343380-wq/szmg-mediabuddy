@@ -84,6 +84,25 @@ describe("team member live stream", () => {
     ).not.toBe(true);
   });
 
+  it("does not splice unstamped reasoning into a stamped host bubble", () => {
+    ingestHarnessChunk(SESSION, {
+      type: "token",
+      content: "已安排系统医生，稍等片刻",
+      agent_id: "host",
+    });
+    ingestHarnessChunk(SESSION, {
+      type: "reasoning",
+      content: "这是一个系统诊断任务",
+    });
+
+    const { messages } = getSnapshot(SESSION);
+    const host = messages.find((item) => item.speakerAgentId === "host");
+    expect(host?.content).toBe("已安排系统医生，稍等片刻");
+    expect(
+      host?.contentBlocks?.some((block) => block.content.includes("系统诊断")),
+    ).not.toBe(true);
+  });
+
   it("keeps host text on one bubble across ask_agent", () => {
     ingestHarnessChunk(SESSION, {
       type: "token",
@@ -682,6 +701,35 @@ describe("team member live stream", () => {
     expect(host[1]?.status).toBe("streaming");
   });
 
+  it("restores an in-progress member answer after refresh and keeps streaming", () => {
+    ingestHarnessChunk(SESSION, {
+      type: "token",
+      content: "hello ",
+      agent_id: "doctor",
+      team_snapshot: true,
+      team_live: true,
+    });
+    let member = getSnapshot(SESSION).messages.filter(
+      (item) => item.speakerAgentId === "doctor",
+    );
+    expect(member).toHaveLength(1);
+    expect(member[0]?.content).toBe("hello ");
+    expect(member[0]?.status).toBe("streaming");
+    expect(getSnapshot(SESSION).liveSpeakers).toContain("doctor");
+
+    ingestHarnessChunk(SESSION, {
+      type: "token",
+      content: "doc",
+      agent_id: "doctor",
+    });
+    member = getSnapshot(SESSION).messages.filter(
+      (item) => item.speakerAgentId === "doctor" && !item.toolData,
+    );
+    expect(member).toHaveLength(1);
+    expect(member[0]?.content).toBe("hello doc");
+    expect(member[0]?.status).toBe("streaming");
+  });
+
   it("merges a member snapshot onto the live bubble", () => {
     ingestHarnessChunk(SESSION, {
       type: "token",
@@ -813,5 +861,22 @@ describe("team member live stream", () => {
 
     ingestHarnessChunk(SESSION, { type: "done", agent_id: "doctor" });
     expect(getSnapshot(SESSION).liveSpeakers).not.toContain("doctor");
+  });
+
+  it("rewrites peer-local member speakers onto Bridge shadow ids", () => {
+    ingestHarnessChunk(
+      SESSION,
+      {
+        type: "token",
+        content: "please rest",
+        agent_id: "doctor",
+      },
+      "bridge:cid:host",
+    );
+    const { messages } = getSnapshot(SESSION);
+    expect(
+      messages.find((item) => item.content.includes("please rest"))
+        ?.speakerAgentId,
+    ).toBe("bridge:cid:doctor");
   });
 });

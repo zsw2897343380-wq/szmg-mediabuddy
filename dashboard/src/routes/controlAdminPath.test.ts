@@ -44,6 +44,8 @@ describe("pathPermissionKeys", () => {
     expect(NAV_PERMISSIONS["admin-users"]).toEqual(PERM.usersPage);
     expect(NAV_PERMISSIONS["admin-advanced"]).toEqual(PERM.advancedPage);
     expect(ADVANCED_TAB_PERMISSIONS.captcha).toBe("captcha");
+    expect("bridge" in ADVANCED_TAB_PERMISSIONS).toBe(false);
+    expect(pathPermissionKeys("/bridge")).toBeNull();
     expect([...PERM.advancedPage]).toContain("captcha");
   });
 
@@ -59,10 +61,18 @@ describe("pathPermissionKeys", () => {
 
   it("does not gate common pages", () => {
     expect(pathPermissionKeys("/chat")).toBeNull();
-    expect(pathPermissionKeys("/experts")).toBeNull();
-    expect(pathPermissionKeys("/tasks")).toBeNull();
-    expect(pathPermissionKeys("/token-usage")).toBeNull();
-    expect(pathPermissionKeys("/personalization/skills")).toBeNull();
+    expect(pathPermissionKeys("/bridge")).toBeNull();
+    expect(pathPermissionKeys("/personalization/acp")).toBeNull();
+  });
+
+  it("gates ungrouped pages except chat", () => {
+    expect(pathPermissionKeys("/experts")).toEqual([...PERM.experts]);
+    expect(pathPermissionKeys("/tasks")).toEqual([...PERM.tasks]);
+    expect(pathPermissionKeys("/token-usage")).toEqual([...PERM.tokenUsage]);
+    const user = { role: "user", permissions: ["experts"] };
+    expect(canAccessPath(user, "/experts")).toBe(true);
+    expect(canAccessPath(user, "/tasks")).toBe(false);
+    expect(canAccessPath(user, "/chat")).toBe(true);
   });
 
   it("gates settings modules", () => {
@@ -70,9 +80,23 @@ describe("pathPermissionKeys", () => {
     expect(pathPermissionKeys("/skill-packages")).toEqual([
       ...PERM.skillPackages,
     ]);
+    expect(pathPermissionKeys("/personalization/skills")).toEqual([
+      ...PERM.skills,
+    ]);
     expect(pathPermissionKeys("/personalization/channels")).toEqual([
       ...PERM.channels,
     ]);
+    expect(pathPermissionKeys("/personalization/tools")).toEqual([
+      ...PERM.tools,
+    ]);
+    expect(pathPermissionKeys("/personalization/plugins")).toEqual([
+      ...PERM.agentPlugins,
+    ]);
+    expect(pathPermissionKeys("/personalization/memory")).toEqual([
+      ...PERM.memory,
+    ]);
+    expect(pathPermissionKeys("/memory")).toEqual([...PERM.memory]);
+    expect(NAV_PERMISSIONS.personalization).toEqual(PERM.personalization);
     expect(pathPermissionKeys("/knowledge-bases")).toEqual([
       ...PERM.knowledgeBasesPage,
     ]);
@@ -137,7 +161,7 @@ describe("combined capability center routes", () => {
       expect(routeConfigs.some((rc) => rc.path === path)).toBe(true);
     }
     expect(canAccessPath({ role: "user", permissions: [] }, "/skills")).toBe(
-      true,
+      false,
     );
     expect(
       canAccessPath({ role: "user", permissions: [] }, "/connectors"),

@@ -5,6 +5,7 @@ import { Navigate, useLocation } from "react-router-dom";
 const CapabilityCenter = lazy(() => import("../pages/CapabilityCenter"));
 const CronJobsPage = lazy(() => import("../pages/Control/CronJobs"));
 const KnowledgeBasesPage = lazy(() => import("../pages/KnowledgeBases"));
+const BridgePage = lazy(() => import("../pages/Settings/Bridge"));
 const PersonalizationPage = lazy(
   () => import("../pages/Agent/Personalization"),
 );
@@ -51,6 +52,7 @@ export const pathToKey: Record<string, string> = {
   "/connectors": "experts",
   "/skill-packages": "experts",
   "/knowledge-bases": "knowledge-bases",
+  "/bridge": "bridge",
   "/personalization": "personalization",
   "/personalization/skills": "experts",
   "/personalization/tools": "personalization",
@@ -151,6 +153,7 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/connectors", element: <CapabilityCenter /> },
   { path: "/skill-packages", element: <CapabilityCenter /> },
   { path: "/knowledge-bases", element: <KnowledgeBasesPage /> },
+  { path: "/bridge", element: <BridgePage /> },
   {
     path: "/personalization/acp",
     element: <RedirectPreserveSearch to="/acp" />,

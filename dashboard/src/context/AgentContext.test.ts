@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { OctopAgent } from "./AgentContext";
-import { projectChatAgentOption, selectEnabledExperts } from "./AgentContext";
+import {
+  agentsSnapshotEqual,
+  mapBridgeAgent,
+  projectChatAgentOption,
+  selectEnabledExperts,
+} from "./AgentContext";
 
 function agent(
   agent_id: string,
@@ -107,6 +112,8 @@ describe("projectChatAgentOption", () => {
         is_shared: 1,
         is_owner: 0,
         owner_username: "alice",
+        bridge: true,
+        bridge_connection_name: "lab",
       }),
     );
     expect(projected).toEqual({
@@ -118,6 +125,12 @@ describe("projectChatAgentOption", () => {
       is_shared: true,
       is_owner: false,
       owner_username: "alice",
+      bridge: true,
+      bridge_connection_id: null,
+      bridge_connection_name: "lab",
+      bridge_connection_icon: null,
+      bridge_disconnected: false,
+      bridge_inbound: false,
     });
   });
 
@@ -126,5 +139,115 @@ describe("projectChatAgentOption", () => {
     expect(projected.owner_username).toBeNull();
     expect(projected.is_shared).toBe(false);
     expect(projected.is_owner).toBe(false);
+    expect(projected.bridge).toBe(false);
+    expect(projected.bridge_connection_id).toBeNull();
+    expect(projected.bridge_connection_name).toBeNull();
+    expect(projected.bridge_connection_icon).toBeNull();
+    expect(projected.bridge_disconnected).toBe(false);
+    expect(projected.bridge_inbound).toBe(false);
+  });
+
+  it("keeps a disconnected remote expert in the enabled list", () => {
+    const agents = [
+      agent("bridge:cid:aid", "stopped", {
+        bridge: true,
+        bridge_disconnected: true,
+      }),
+      agent("L1", "running"),
+    ];
+    expect(selectEnabledExperts(agents, null).map((a) => a.agent_id)).toEqual([
+      "bridge:cid:aid",
+      "L1",
+    ]);
+  });
+});
+
+describe("mapBridgeAgent", () => {
+  const conn = {
+    connection_id: "cid",
+    display_name: "Lab",
+    icon_name: "cloud",
+    inbound: false,
+    has_password: true,
+  };
+
+  it("keeps the peer expert's model, connectors, knowledge bases, and mode", () => {
+    const mapped = mapBridgeAgent(
+      {
+        agent_id: "bridge:cid:01AGENT",
+        name: "Peer",
+        kind: "expert",
+        default_model: " prov/peer-model ",
+        knowledge_base_ids: ["kb1", "  ", 3],
+        mcp_servers: ["mail"],
+        config: { conversation_mode: "plan", sandbox: "drop-me" },
+      },
+      conn,
+    );
+    expect(mapped.default_model).toBe("prov/peer-model");
+    expect(mapped.knowledge_base_ids).toEqual(["kb1"]);
+    expect(mapped.mcp_servers).toEqual(["mail"]);
+    expect(mapped.config).toEqual({ conversation_mode: "plan" });
+  });
+
+  it("drops connectors on a peer team and ignores a missing composer payload", () => {
+    const team = mapBridgeAgent(
+      {
+        agent_id: "bridge:cid:team",
+        kind: "team",
+        mcp_servers: ["mail"],
+        knowledge_base_ids: ["kb1"],
+      },
+      conn,
+    );
+    expect(team.mcp_servers).toEqual([]);
+    expect(team.knowledge_base_ids).toEqual(["kb1"]);
+    expect(team.default_model).toBeNull();
+
+    const bare = mapBridgeAgent({ agent_id: "bridge:cid:bare" }, conn);
+    expect(bare.default_model).toBeNull();
+    expect(bare.knowledge_base_ids).toBeUndefined();
+    expect(bare.mcp_servers).toBeUndefined();
+    expect(bare.config).toEqual({});
+  });
+});
+
+describe("agentsSnapshotEqual", () => {
+  it("notices expert default model, knowledge bases, and connectors", () => {
+    const base = [
+      agent("A", "running", {
+        default_model: null,
+        knowledge_base_ids: [],
+        mcp_servers: [],
+      }),
+    ];
+    expect(agentsSnapshotEqual(base, base)).toBe(true);
+    expect(
+      agentsSnapshotEqual(base, [
+        agent("A", "running", {
+          default_model: "prov/model",
+          knowledge_base_ids: [],
+          mcp_servers: [],
+        }),
+      ]),
+    ).toBe(false);
+    expect(
+      agentsSnapshotEqual(base, [
+        agent("A", "running", {
+          default_model: null,
+          knowledge_base_ids: ["kb1"],
+          mcp_servers: [],
+        }),
+      ]),
+    ).toBe(false);
+    expect(
+      agentsSnapshotEqual(base, [
+        agent("A", "running", {
+          default_model: null,
+          knowledge_base_ids: [],
+          mcp_servers: ["mail"],
+        }),
+      ]),
+    ).toBe(false);
   });
 });

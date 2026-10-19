@@ -123,7 +123,7 @@ describe("combined capability center", () => {
   });
 
   it("hides restricted resources for a user without their permissions", async () => {
-    state.user = { role: "user", permissions: [] };
+    state.user = { role: "user", permissions: ["skills"] };
     setup("/skills");
     expect(await screen.findByText("skills-agent-one")).toBeVisible();
     expect(
@@ -132,6 +132,25 @@ describe("combined capability center", () => {
     expect(
       screen.queryByRole("link", { name: "capabilityCenter.skillPackages" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not mount skills or experts for connector-only users", async () => {
+    state.user = { role: "user", permissions: ["connectors"] };
+    setup("/connectors");
+    await screen.findByRole("textbox", { name: "connector-draft" });
+    expect(
+      screen.queryByRole("link", { name: "nav.skills" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "expert-filter" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("skills-agent-one")).not.toBeInTheDocument();
+  });
+
+  it("rejects a direct skill URL without permission", () => {
+    state.user = { role: "user", permissions: [] };
+    setup("/skills");
+    expect(screen.getByText("forbidden")).toBeVisible();
   });
 
   it("rejects a direct connector URL without permission", () => {

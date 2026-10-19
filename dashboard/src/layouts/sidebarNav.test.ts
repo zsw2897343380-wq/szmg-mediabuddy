@@ -44,6 +44,21 @@ describe("sidebarNav", () => {
     }
   });
 
+  it.each([
+    ["experts", "/experts"],
+    ["skills", "/skills"],
+    ["skill_packages", "/skill-packages"],
+    ["connectors", "/connectors"],
+  ])(
+    "opens the permitted center resource for %s-only users",
+    (permission, path) => {
+      const user = { ...adminUser, role: "user", permissions: [permission] };
+      const items = buildNavSections(user).flatMap((section) => section.items);
+      expect(items.find((item) => item.key === "experts")?.path).toBe(path);
+      expect(items.some((item) => item.key === "personalization")).toBe(false);
+    },
+  );
+
   it("covers every catalog key from the admin nav", () => {
     const keys = buildNavSections(adminUser, { mobileEnabled: true }).flatMap(
       (section) => section.items.map((item) => item.key),

@@ -206,10 +206,26 @@ export function getActiveAgentId(): string | null {
 }
 
 /**
+ * Optional ``X-Octop-Agent-Id`` for caller-opted header tunnels (composer
+ * GETs, connector lists). Do not auto-attach these on settings pages.
+ */
+export function bridgeAgentHeaders(
+  agentId?: string | null,
+): Record<string, string> | undefined {
+  const id = (agentId ?? "").trim();
+  if (!id) return undefined;
+  return { "X-Octop-Agent-Id": id };
+}
+
+/**
  * Decide whether a request path is "agent-scoped" — i.e. talking to a
  * concrete agent's resource — and therefore should carry the
  * ``X-Octop-Agent-Id`` header. Health, admin, auth, setup, providers, and
  * personas don't need it.
+ *
+ * Composer / knowledge / browser host GETs are NOT auto-scoped: those
+ * settings pages must keep talking to this instance. Callers that need a
+ * remote hop pass ``bridgeAgentHeaders(agentId)`` explicitly.
  */
 function isAgentScopedPath(path: string): boolean {
   // Match `/agents/<id>/...` (one trailing segment after the id).
@@ -217,6 +233,10 @@ function isAgentScopedPath(path: string): boolean {
   if (/^\/agents\/[^/]+(\/|$)/.test(path)) return true;
   // MBTI endpoints that read/write the active agent's persona config.
   if (/^\/mbti\//.test(path)) return true;
+  if (path === "/cron/settings") return true;
+  if (path === "/subagent-catalog" || path.startsWith("/subagent-catalog/")) {
+    return true;
+  }
   return false;
 }
 
@@ -282,6 +302,9 @@ function buildAuthHeaders(path: string): Record<string, string> {
 
 let _redirectingToLogin = false;
 
+/** 401 codes that mean this Octop session is no longer valid. */
+const SESSION_UNAUTHORIZED_CODES = new Set(["AUTH_FAILED", "TOKEN_EXPIRED"]);
+
 /**
  * Send the user to the login screen exactly once, no matter how many parallel
  * requests report an expired session.
@@ -310,11 +333,32 @@ function handleUnauthorized(): void {
  * Handle 401 responses: clear token, redirect to login, and throw.
  * Shared by request(), requestBlob(), and requestUpload().
  */
+async function errorCodeOf(response: Response): Promise<string | undefined> {
+  try {
+    const body = (await response.clone().json()) as {
+      error?: { code?: string };
+    };
+    const code = body?.error?.code;
+    return typeof code === "string" && code.trim() ? code : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function throwIfUnauthorized(
   path: string,
   response: Response,
 ): Promise<void> {
   if (response.status !== 401 || path.startsWith("/auth/")) {
+    return;
+  }
+  const code = await errorCodeOf(response);
+  // Business 401s (peer login, etc.) are not a dead local session.
+  if (
+    code &&
+    !SESSION_UNAUTHORIZED_CODES.has(code) &&
+    !path.startsWith("/setup/")
+  ) {
     return;
   }
   clearAuthToken();

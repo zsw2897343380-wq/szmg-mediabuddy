@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -24,6 +25,7 @@ from octop_harness.plugins import (
     unload_plugin,
 )
 
+from octop.infra.agents.plugins.legacy_imports import ensure_legacy_harness_agent_alias
 from octop.infra.errors import ErrorCode, OctopError, corrupt_config_error
 from octop.infra.utils.json_file import (
     JsonFileCorruptError,
@@ -41,6 +43,21 @@ _GITHUB_BLOB_RE = re.compile(
 )
 
 
+_CHANNEL_FINGERPRINTS: dict[str, str] = {}
+
+
+def _channel_fingerprint(directory: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file() or any(
+            part in {"__pycache__", ".git"} for part in path.relative_to(directory).parts
+        ):
+            continue
+        digest.update(str(path.relative_to(directory)).encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def normalize_plugin_download_url(url: str) -> str:
     """Rewrite GitHub ``/blob/`` (and ``/raw/``) page URLs to raw content URLs.
 
@@ -56,6 +73,12 @@ def normalize_plugin_download_url(url: str) -> str:
     ref = match.group("ref")
     path = match.group("path").lstrip("/")
     return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
+
+
+def _load_plugin_dir(plugin_dir: Path, *, install_deps: bool) -> LoadedPlugin:
+    """Load one plugin, accepting the pre-rename ``harness_agent`` import."""
+    ensure_legacy_harness_agent_alias()
+    return load_plugin_dir(plugin_dir, install_deps=install_deps)
 
 
 def _read_global_plugins(config_path: Path) -> dict[str, bool]:
@@ -387,6 +410,7 @@ class PluginManager:
 
     def load_installed(self, *, install_deps: bool = True) -> list[LoadedPlugin]:
         enabled = self.global_enabled_map()
+        previous = {plugin.manifest.id: plugin for plugin in PluginRegistry().all_loaded()}
         PluginRegistry().clear()
         loaded: list[LoadedPlugin] = []
         for plugin_dir in discover_plugin_dirs(self._plugins_dir):
@@ -398,7 +422,21 @@ class PluginManager:
             if enabled.get(manifest.id, True) is False:
                 continue
             try:
-                loaded.append(load_plugin_dir(plugin_dir, install_deps=install_deps))
+                fingerprint = (
+                    _channel_fingerprint(plugin_dir) if str(manifest.kind) == "channel" else ""
+                )
+                old = previous.get(manifest.id)
+                if (
+                    str(manifest.kind) == "channel"
+                    and old is not None
+                    and _CHANNEL_FINGERPRINTS.get(manifest.id) == fingerprint
+                ):
+                    PluginRegistry().register(old)
+                    loaded.append(old)
+                else:
+                    loaded.append(_load_plugin_dir(plugin_dir, install_deps=install_deps))
+                if str(manifest.kind) == "channel":
+                    _CHANNEL_FINGERPRINTS[manifest.id] = fingerprint
             except Exception as exc:
                 logger.error(
                     "failed to load plugin from %s: %s",
@@ -431,7 +469,7 @@ class PluginManager:
             if PluginRegistry().get(manifest.id) is not None:
                 continue
             try:
-                newly.append(load_plugin_dir(plugin_dir, install_deps=install_deps))
+                newly.append(_load_plugin_dir(plugin_dir, install_deps=install_deps))
                 logger.info(
                     "loaded missing plugin %s v%s",
                     manifest.id,
@@ -445,6 +483,12 @@ class PluginManager:
                     exc_info=True,
                 )
         return newly
+
+    @staticmethod
+    def _channel_registration_error(plugin_id: str) -> str | None:
+        from octop.infra.gateway.plugin_channels import registration_errors
+
+        return registration_errors().get(plugin_id)
 
     def list_installed(self) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
@@ -494,6 +538,7 @@ class PluginManager:
                     "requires": parse_plugin_requires(plugin_dir),
                     "path": str(plugin_dir),
                     "loaded": loaded is not None,
+                    "registration_error": self._channel_registration_error(manifest.id),
                     "enabled": enabled_map.get(manifest.id, True),
                     "ui": ui_meta,
                     "tools": tools_meta,
@@ -518,7 +563,7 @@ class PluginManager:
         if enabled:
             if PluginRegistry().get(plugin_id) is None:
                 try:
-                    load_plugin_dir(plugin_dir, install_deps=False)
+                    _load_plugin_dir(plugin_dir, install_deps=False)
                 except Exception as exc:
                     raise OctopError(
                         ErrorCode.PLUGIN_INSTALL_FAILED,
@@ -621,7 +666,7 @@ class PluginManager:
         shutil.copytree(source, dest)
         unload_plugin(manifest.id)
         try:
-            return load_plugin_dir(dest, install_deps=True)
+            return _load_plugin_dir(dest, install_deps=True)
         except Exception as exc:
             raise OctopError(
                 ErrorCode.PLUGIN_INSTALL_FAILED,
