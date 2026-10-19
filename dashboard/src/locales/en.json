@@ -1,4 +1,18 @@
 {
+  "skillLibrary": {
+    "title": "My skills",
+    "subtitle": "Import and manage skills here. Installed packages are available to your local experts; shared experts and remote workspaces keep their own skills.",
+    "allPackages": "All packages",
+    "myInstalled": "My installed",
+    "searchPlaceholder": "Search skill packages",
+    "installed": "Installed",
+    "paused": "Paused",
+    "enabled": "Enabled",
+    "enablePackage": "Enable this package in my skills",
+    "install": "Install to my skills",
+    "uninstall": "Remove from my skills",
+    "updateFailed": "Could not update your skill library"
+  },
   "capabilityCenter": {
     "title": "Experts · Skills · Connectors",
     "skillsManagement": "Skills management",

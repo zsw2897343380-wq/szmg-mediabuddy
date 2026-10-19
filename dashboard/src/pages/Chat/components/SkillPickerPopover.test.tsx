@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { SkillSpec } from "../../Agent/Skills/useSkills";
 import SkillPickerPopover from "./SkillPickerPopover";
@@ -19,6 +19,28 @@ function skill(
 }
 
 describe("SkillPickerPopover order", () => {
+  it("opens the unified import entry without an agent destination", () => {
+    function Location() {
+      const location = useLocation();
+      return (
+        <output>
+          {location.pathname}
+          {location.search}
+        </output>
+      );
+    }
+    render(
+      <MemoryRouter>
+        <SkillPickerPopover skills={[]} onSelectSkill={vi.fn()} />
+        <Location />
+      </MemoryRouter>,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "skills.importSkills" }),
+    );
+    expect(screen.getByText("/skills?import=1")).toBeInTheDocument();
+  });
+
   it("lists user-installed skills before built-in skills", () => {
     render(
       <MemoryRouter>

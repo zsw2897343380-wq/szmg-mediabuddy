@@ -188,6 +188,9 @@ export function pathPermissionKeys(pathname: string): PermissionKeys | null {
   if (pathname === "/channels" || pathname.startsWith("/channels/")) {
     return PERM.channels;
   }
+  if (pathname === "/skills" || pathname === "/personalization/skills") {
+    return [...PERM.skills, ...PERM.skillPackages];
+  }
   if (
     pathname === "/personalization" ||
     pathname.startsWith("/personalization/") ||

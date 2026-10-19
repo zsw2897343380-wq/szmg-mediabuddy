@@ -1,4 +1,5 @@
-import { request, requestBlob } from "../request";
+import { request as apiRequest, requestBlob } from "../request";
+import { notifySkillsUpdated } from "../../utils/skillsEvents";
 import type {
   CreateSkillPackageBody,
   CopyPackageSkillsBody,
@@ -9,9 +10,32 @@ import type {
   SkillPackageSkillDetail,
   UpdateSkillPackageBody,
   UpdateSkillPackageSkillBody,
+  UserSkillLibrary,
 } from "../types/skillPackage";
 
+async function request<T>(
+  path: string,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<T> {
+  const result = options
+    ? await apiRequest<T>(path, options)
+    : await apiRequest<T>(path);
+  if (options?.method && options.method !== "GET") notifySkillsUpdated();
+  return result;
+}
+
 export const skillPackagesApi = {
+  library: () => request<UserSkillLibrary>("/skill-packages/library"),
+
+  updateLibrary: (packageId: string, installed: boolean, enabled = true) =>
+    request<UserSkillLibrary>(
+      `/skill-packages/library/${encodeURIComponent(packageId)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ installed, enabled }),
+      },
+    ),
+
   list: () => request<SkillPackage[]>("/skill-packages"),
 
   listWritable: () =>

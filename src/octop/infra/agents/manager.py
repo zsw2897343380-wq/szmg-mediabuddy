@@ -79,6 +79,7 @@ from octop.infra.db.repos.audit import ACTOR_SYSTEM
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.skills.presentation import apply_skill_presentation, localize_skill_summary
 from octop.infra.skills.skill_package_store import SkillPackageStore
+from octop.infra.skills.user_library import UserSkillLibrary
 from octop.infra.skills.workspace_catalog import (
     list_workspace_skill_summaries,
     repair_workspace_skill_manifests,
@@ -2659,6 +2660,36 @@ class AgentManager:
         self.persist_harness_config(agent_id, cfg)
         self.sync_effective_tools_disabled(agent_id)
 
+    def effective_skill_package_ids(self, agent_id: str) -> list[str]:
+        """Merge legacy agent mounts with its owner's enabled personal library."""
+        package_ids = skill_package_ids_list(self.get_config(agent_id))
+        row = self._repos.agent_repo.get(agent_id)
+        # Shared agents must never inherit whichever user happens to be chatting.
+        if row is None or row.user_id is None or row.kind == "team":
+            return package_ids
+        library = UserSkillLibrary(
+            settings=self._repos.settings_repo, packages=self._repos.skill_package_repo
+        )
+        state = library.load(row.user_id)
+        # A personal pause wins over legacy explicit mounts of the same package.
+        package_ids = [item for item in package_ids if item not in state.disabled_package_ids]
+        if not self._backend_supports_host_skill_packages(
+            self._backend_spec_for_row(row),
+            workspace_dir=self.resolve_workspace_dir(agent_id),
+        ):
+            return package_ids
+        return list(dict.fromkeys(package_ids + state.enabled_package_ids))
+
+    async def refresh_user_skill_library(self, user_id: int) -> None:
+        """Apply a user's changed installation state to their running agents."""
+
+        def refresh_owned() -> None:
+            for row in self._repos.agent_repo.list_all(include_disabled=False):
+                if row.user_id == user_id and row.kind != "team":
+                    self.sync_skill_package_dirs(row.agent_id)
+
+        await asyncio.get_running_loop().run_in_executor(None, refresh_owned)
+
     def _resolve_skill_package_dirs(self, agent_id: str) -> list[str]:
         """Resolve persisted package ids to existing absolute package skill directories."""
         store = SkillPackageStore(
@@ -2666,7 +2697,7 @@ class AgentManager:
             root=self._paths.skill_packages_dir,
         )
         roots: list[str] = []
-        for package_id in skill_package_ids_list(self.get_config(agent_id)):
+        for package_id in self.effective_skill_package_ids(agent_id):
             if self._repos.skill_package_repo.get(package_id) is None:
                 continue
             roots.append(str(store.package_skills_dir(package_id).resolve()))
@@ -2905,23 +2936,34 @@ class AgentManager:
     async def refresh_agents_for_package(self, package_id: str) -> None:
         """Hot-sync running agents that mount a changed package."""
         for row in self._repos.agent_repo.list_all(include_disabled=False):
-            if package_id not in skill_package_ids_list(self.get_config(row.agent_id)):
+            package_ids = await asyncio.get_running_loop().run_in_executor(
+                None, self.effective_skill_package_ids, row.agent_id
+            )
+            if package_id not in package_ids:
                 continue
             self.sync_skill_package_dirs(row.agent_id)
 
     async def strip_skill_package_id(self, package_id: str) -> None:
         """Remove a deleted package id from every agent and hot-sync running agents."""
+        library = UserSkillLibrary(
+            settings=self._repos.settings_repo, packages=self._repos.skill_package_repo
+        )
+
+        def strip_user_installations() -> None:
+            for user in self._repos.user_repo.list(include_disabled=True):
+                library.update(user.id, package_id, installed=False, enabled=False)
+
+        await asyncio.get_running_loop().run_in_executor(None, strip_user_installations)
         for row in self._repos.agent_repo.list_all():
             cfg = self.get_config(row.agent_id)
             package_ids = skill_package_ids_list(cfg)
-            if package_id not in package_ids:
-                continue
-            remaining = [item for item in package_ids if item != package_id]
-            self._repos.agent_repo.update_config(
-                row.agent_id,
-                skill_package_ids=dump_id_list(remaining),
-                config_json=dumps_config(cfg),
-            )
+            if package_id in package_ids:
+                remaining = [item for item in package_ids if item != package_id]
+                self._repos.agent_repo.update_config(
+                    row.agent_id,
+                    skill_package_ids=dump_id_list(remaining),
+                    config_json=dumps_config(cfg),
+                )
             self.sync_skill_package_dirs(row.agent_id)
 
     def resolve_context_max_tokens(self, agent_id: str, *, fallback: int = 128_000) -> int:
@@ -3022,7 +3064,9 @@ class AgentManager:
                         continue
                     meta, _body = parse_frontmatter(manifest)
                     harness_rows[index] = apply_skill_presentation(row, meta)
-        package_ids = skill_package_ids_list(cfg)
+        package_ids = await asyncio.get_running_loop().run_in_executor(
+            None, self.effective_skill_package_ids, agent_id
+        )
         if not package_ids:
             if locale is not None:
                 return [localize_skill_summary(row, locale) for row in harness_rows]

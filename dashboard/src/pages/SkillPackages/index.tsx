@@ -40,6 +40,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 import { authApi, type OctopUser } from "../../api/modules/auth";
 import { skillPackagesApi } from "../../api/modules/skillPackages";
@@ -47,6 +48,7 @@ import type {
   SkillPackage,
   SkillPackageDetail,
   SkillPackageSkillDetail,
+  UserSkillLibrary,
 } from "../../api/types/skillPackage";
 import { CardSkeleton } from "../../components/Skeleton";
 import { CopyableResourceId } from "../../components/CopyableResourceId";
@@ -164,13 +166,25 @@ function PackageIconPicker({
 
 export default function SkillPackagesPage({
   embedded = false,
+  unified = false,
 }: {
   embedded?: boolean;
+  unified?: boolean;
 }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { viewMode, setViewMode, showCardView } = useCardTableView("card");
   const [packages, setPackages] = useState<SkillPackage[]>([]);
+  const [library, setLibrary] = useState<UserSkillLibrary>({
+    installed_package_ids: [],
+    disabled_package_ids: [],
+  });
+  const [libraryBusy, setLibraryBusy] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState("all");
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { pathname } = useLocation();
+  const importAfterCreate = useRef(false);
   const [selected, setSelected] = useState<SkillPackageDetail | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
@@ -212,8 +226,12 @@ export default function SkillPackagesPage({
       const silent = Boolean(opts?.silent || initialLoadDone.current);
       if (!silent) setLoading(true);
       try {
-        const rows = await skillPackagesApi.list();
+        const [rows, nextLibrary] = await Promise.all([
+          skillPackagesApi.list(),
+          unified ? skillPackagesApi.library() : Promise.resolve(null),
+        ]);
         setPackages(rows);
+        if (nextLibrary) setLibrary(nextLibrary);
         setSelected((current) =>
           current && !rows.some((row) => row.id === current.id)
             ? null
@@ -231,7 +249,7 @@ export default function SkillPackagesPage({
         if (!silent) setLoading(false);
       }
     },
-    [t],
+    [t, unified],
   );
 
   const loadDetail = useCallback(
@@ -243,17 +261,20 @@ export default function SkillPackagesPage({
         if (detailRequestGate.current.isCurrent(requestId)) {
           setSelected(detail);
           setSelectedId(detail.id);
+          return true;
         }
+        return false;
       } catch (error) {
         if (!detailRequestGate.current.isCurrent(requestId)) {
-          return;
+          return false;
         }
         if (isNotFoundApiError(error)) {
           setSelected(null);
           setSelectedId(null);
-          return;
+          return false;
         }
         message.error(apiErrorMessage(error, t("skillPackages.loadFailed"), t));
+        return false;
       } finally {
         if (detailRequestGate.current.isCurrent(requestId)) {
           setDetailLoading(false);
@@ -289,6 +310,87 @@ export default function SkillPackagesPage({
   }, [isMobile]);
 
   const canMutate = Boolean(selected && canMutatePackage(selected, user));
+  const installed = Boolean(
+    selected && library.installed_package_ids.includes(selected.id),
+  );
+  const enabled =
+    installed && !library.disabled_package_ids.includes(selected!.id);
+  const visiblePackages = packages.filter((item) => {
+    if (
+      unified &&
+      libraryFilter === "installed" &&
+      !library.installed_package_ids.includes(item.id)
+    ) {
+      return false;
+    }
+    const query = librarySearch.trim().toLowerCase();
+    return (
+      !query || `${item.name} ${item.description}`.toLowerCase().includes(query)
+    );
+  });
+
+  const updateLibrary = async (
+    packageId: string,
+    nextInstalled: boolean,
+    nextEnabled = true,
+  ) => {
+    setLibraryBusy(true);
+    try {
+      setLibrary(
+        await skillPackagesApi.updateLibrary(
+          packageId,
+          nextInstalled,
+          nextEnabled,
+        ),
+      );
+    } catch (error) {
+      message.error(apiErrorMessage(error, t("skillLibrary.updateFailed"), t));
+    } finally {
+      setLibraryBusy(false);
+    }
+  };
+
+  const ensureInstalled = async (packageId: string) => {
+    if (unified && !library.installed_package_ids.includes(packageId)) {
+      setLibrary(await skillPackagesApi.updateLibrary(packageId, true));
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !unified ||
+      pathname !== "/skills" ||
+      loading ||
+      !user ||
+      searchParams.get("import") !== "1"
+    )
+      return;
+    const nextSearch = new URLSearchParams(searchParams);
+    nextSearch.delete("import");
+    setSearchParams(nextSearch, { replace: true });
+    const target = packages.find((item) => canMutatePackage(item, user));
+    if (target) {
+      setSelectedId(target.id);
+      void loadDetail(target.id).then((loaded) => {
+        if (loaded) setImportModalOpen(true);
+      });
+    } else {
+      importAfterCreate.current = true;
+      setEditingPackageId(null);
+      packageForm.resetFields();
+      setPackageDrawerOpen(true);
+    }
+  }, [
+    unified,
+    pathname,
+    loading,
+    user,
+    searchParams,
+    setSearchParams,
+    packages,
+    loadDetail,
+    packageForm,
+  ]);
 
   const exportPackage = async () => {
     if (!selected || selected.skills.length === 0) return;
@@ -361,11 +463,16 @@ export default function SkillPackagesPage({
       const next = editingPackageId
         ? await skillPackagesApi.update(editingPackageId, payload)
         : await skillPackagesApi.create(payload);
+      if (!editingPackageId) await ensureInstalled(next.id);
       setPackageDrawerOpen(false);
       await loadPackages({ silent: true });
       setSelected(next);
       setSelectedId(next.id);
       if (isMobile) setMobilePane("detail");
+      if (importAfterCreate.current) {
+        importAfterCreate.current = false;
+        setImportModalOpen(true);
+      }
       message.success(
         t(editingPackageId ? "skillPackages.updated" : "skillPackages.created"),
       );
@@ -475,6 +582,7 @@ export default function SkillPackagesPage({
           content: values.content,
         });
       }
+      await ensureInstalled(selected.id);
       setDrawerOpen(false);
       await refreshSelected();
       message.success(t("skillPackages.skillSaved"));
@@ -505,6 +613,7 @@ export default function SkillPackagesPage({
         bundle_url: bundleUrl,
         overwrite: Boolean(options?.overwrite),
       });
+      await ensureInstalled(selected.id);
       await refreshSelected();
       message.success(t("skills.importSuccess"));
       return true;
@@ -547,6 +656,7 @@ export default function SkillPackagesPage({
           failed += 1;
         }
       }
+      if (imported > 0) await ensureInstalled(selected.id);
       await refreshSelected();
       message.success(
         t("skills.zipImportSummary", { imported, skipped, failed }),
@@ -602,10 +712,42 @@ export default function SkillPackagesPage({
   return (
     <PageShell
       embedded={embedded}
-      title={t("skillPackages.title")}
-      subtitle={isMobile ? undefined : t("skillPackages.subtitle")}
+      title={t(unified ? "skillLibrary.title" : "skillPackages.title")}
+      subtitle={
+        isMobile
+          ? undefined
+          : t(unified ? "skillLibrary.subtitle" : "skillPackages.subtitle")
+      }
       fill
     >
+      {unified && (
+        <div className={styles.libraryToolbar}>
+          <Segmented
+            value={libraryFilter}
+            onChange={(value) => setLibraryFilter(String(value))}
+            options={[
+              { value: "all", label: t("skillLibrary.allPackages") },
+              { value: "installed", label: t("skillLibrary.myInstalled") },
+            ]}
+          />
+          <Button
+            icon={<Download size={14} />}
+            onClick={() => {
+              const nextSearch = new URLSearchParams(searchParams);
+              nextSearch.set("import", "1");
+              setSearchParams(nextSearch);
+            }}
+          >
+            {t("skills.importSkills")}
+          </Button>
+          <Input.Search
+            value={librarySearch}
+            onChange={(event) => setLibrarySearch(event.target.value)}
+            placeholder={t("skillLibrary.searchPlaceholder")}
+            allowClear
+          />
+        </div>
+      )}
       {loading && packages.length === 0 ? (
         <div className={styles.emptyLayout}>
           <div className={styles.centered}>
@@ -690,7 +832,7 @@ export default function SkillPackagesPage({
                 <List
                   className={styles.list}
                   split={false}
-                  dataSource={packages}
+                  dataSource={visiblePackages}
                   locale={{
                     emptyText: (
                       <Empty
@@ -762,6 +904,16 @@ export default function SkillPackagesPage({
                           </div>
                         </Tooltip>
                         <div className={styles.listMeta}>
+                          {unified &&
+                            library.installed_package_ids.includes(item.id) && (
+                              <Tag>
+                                {t(
+                                  library.disabled_package_ids.includes(item.id)
+                                    ? "skillLibrary.paused"
+                                    : "skillLibrary.installed",
+                                )}
+                              </Tag>
+                            )}
                           <span
                             className={styles.listCreator}
                             title={t("skillPackages.createdBy", {
@@ -886,6 +1038,35 @@ export default function SkillPackagesPage({
                       </span>
                     </div>
                     <div className={skillStyles.gridToolbarRight}>
+                      {unified && (
+                        <>
+                          {installed && (
+                            <Switch
+                              checked={enabled}
+                              loading={libraryBusy}
+                              checkedChildren={t("skillLibrary.enabled")}
+                              unCheckedChildren={t("skillLibrary.paused")}
+                              aria-label={t("skillLibrary.enablePackage")}
+                              onChange={(value) =>
+                                void updateLibrary(selected.id, true, value)
+                              }
+                            />
+                          )}
+                          <Button
+                            size="small"
+                            loading={libraryBusy}
+                            onClick={() =>
+                              void updateLibrary(selected.id, !installed)
+                            }
+                          >
+                            {t(
+                              installed
+                                ? "skillLibrary.uninstall"
+                                : "skillLibrary.install",
+                            )}
+                          </Button>
+                        </>
+                      )}
                       <Segmented
                         size="small"
                         value={viewMode}
@@ -988,13 +1169,21 @@ export default function SkillPackagesPage({
             : "skillPackages.createPackage",
         )}
         open={packageDrawerOpen}
-        onClose={() => setPackageDrawerOpen(false)}
+        onClose={() => {
+          importAfterCreate.current = false;
+          setPackageDrawerOpen(false);
+        }}
         width={isMobile ? "100%" : 480}
         destroyOnHidden
         className={styles.packageDrawer}
         footer={
           <div className={styles.drawerFooter}>
-            <Button onClick={() => setPackageDrawerOpen(false)}>
+            <Button
+              onClick={() => {
+                importAfterCreate.current = false;
+                setPackageDrawerOpen(false);
+              }}
+            >
               {t("common.cancel")}
             </Button>
             <Button type="primary" onClick={() => void savePackage()}>
@@ -1109,6 +1298,11 @@ export default function SkillPackagesPage({
         open={skillsetHubOpen}
         onClose={() => setSkillsetHubOpen(false)}
         onCreated={async (pkg) => {
+          await ensureInstalled(pkg.id).catch((error) => {
+            message.error(
+              apiErrorMessage(error, t("skillLibrary.updateFailed"), t),
+            );
+          });
           await loadPackages({ silent: true });
           setSelected(pkg);
           setSelectedId(pkg.id);
@@ -1158,7 +1352,15 @@ export default function SkillPackagesPage({
         {selected ? (
           <SkillHubTab
             target={{ type: "package", packageId: selected.id }}
-            onInstalled={() => void refreshSelected()}
+            onInstalled={() => {
+              void ensureInstalled(selected.id)
+                .then(refreshSelected)
+                .catch((error) => {
+                  message.error(
+                    apiErrorMessage(error, t("skillLibrary.updateFailed"), t),
+                  );
+                });
+            }}
           />
         ) : null}
       </Drawer>

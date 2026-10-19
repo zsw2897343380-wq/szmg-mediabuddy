@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Alert, Empty } from "antd";
 import { GraduationCap, Link2, Sparkles } from "lucide-react";
-import AgentSelector from "../../components/AgentSelector";
 import PageLoading from "../../components/PageLoading";
 import { useAgent } from "../../context/AgentContext";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
@@ -39,7 +38,7 @@ export default function CapabilityCenter() {
   const canSkills = userCan(user, "skills");
   const canConnectors = navAllowed(user, "connectors");
   const canPackages = navAllowed(user, "skill-packages");
-  const skillsLink = !canSkills && canPackages ? "/skill-packages" : skillsPath;
+  const skillsLink = skillsPath;
   const onPackages =
     (activeTab === "skills" ? pathname : skillsPath) === "/skill-packages";
 
@@ -123,12 +122,16 @@ export default function CapabilityCenter() {
                   className={styles.skillViews}
                   aria-label={t("capabilityCenter.skillsManagement")}
                 >
-                  {canSkills && (
+                  {(canSkills || canPackages) && (
                     <Link
                       to="/skills"
                       aria-current={!onPackages ? "page" : undefined}
                     >
-                      {t("capabilityCenter.agentSkills")}
+                      {t(
+                        canPackages
+                          ? "skillLibrary.title"
+                          : "capabilityCenter.agentSkills",
+                      )}
                     </Link>
                   )}
                   {canPackages && (
@@ -140,36 +143,38 @@ export default function CapabilityCenter() {
                     </Link>
                   )}
                 </nav>
-                {!onPackages && <AgentSelector />}
               </div>
-              {canSkills && (visited.has("/skills") || !onPackages) && (
-                <div className={styles.panel} hidden={onPackages}>
-                  <Suspense fallback={<PageLoading />}>
-                    {isTeamAgent(activeAgent) ? (
-                      <Empty
-                        description={t("agentSelector.teamNeedsExpert", {
-                          name: activeAgent?.name ?? "",
-                        })}
-                      />
-                    ) : (
-                      <>
-                        {activeAgent?.bridge && (
-                          <Alert
-                            type="info"
-                            showIcon
-                            message={t("chat.remoteExpert.editBanner")}
-                            description={t(
-                              "chat.remoteExpert.editSkillPackages",
-                            )}
-                            style={{ marginBottom: 12 }}
-                          />
-                        )}
-                        <SkillsTabs agentId={activeAgentId} />
-                      </>
-                    )}
-                  </Suspense>
-                </div>
-              )}
+              {(canSkills || canPackages) &&
+                (visited.has("/skills") || !onPackages) && (
+                  <div className={styles.panel} hidden={onPackages}>
+                    <Suspense fallback={<PageLoading />}>
+                      {canPackages ? (
+                        <SkillPackagesPage embedded unified />
+                      ) : isTeamAgent(activeAgent) ? (
+                        <Empty
+                          description={t("agentSelector.teamNeedsExpert", {
+                            name: activeAgent?.name ?? "",
+                          })}
+                        />
+                      ) : (
+                        <>
+                          {activeAgent?.bridge && (
+                            <Alert
+                              type="info"
+                              showIcon
+                              message={t("chat.remoteExpert.editBanner")}
+                              description={t(
+                                "chat.remoteExpert.editSkillPackages",
+                              )}
+                              style={{ marginBottom: 12 }}
+                            />
+                          )}
+                          <SkillsTabs agentId={activeAgentId} />
+                        </>
+                      )}
+                    </Suspense>
+                  </div>
+                )}
               {canPackages &&
                 (visited.has("/skill-packages") || onPackages) && (
                   <div className={styles.panel} hidden={!onPackages}>

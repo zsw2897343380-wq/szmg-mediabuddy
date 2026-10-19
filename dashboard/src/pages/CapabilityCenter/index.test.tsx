@@ -36,7 +36,9 @@ vi.mock("../Agent/Skills/components/SkillsTabs", () => ({
   default: ({ agentId }: { agentId: string }) => <div>skills-{agentId}</div>,
 }));
 vi.mock("../SkillPackages", () => ({
-  default: () => <input aria-label="package-draft" />,
+  default: ({ unified }: { unified?: boolean }) => (
+    <input aria-label={unified ? "library-draft" : "package-draft"} />
+  ),
 }));
 vi.mock("../Agent/Connectors", () => ({
   default: function ConnectorPanel() {
@@ -87,7 +89,10 @@ describe("combined capability center", () => {
       { target: { value: "my expert" } },
     );
     openTab("nav.skills");
-    expect(await screen.findByText("skills-agent-one")).toBeVisible();
+    expect(
+      await screen.findByRole("textbox", { name: "library-draft" }),
+    ).toBeVisible();
+    expect(screen.queryByText("expert-selector")).not.toBeInTheDocument();
     openTab("nav.connectors");
     fireEvent.change(
       await screen.findByRole("textbox", { name: "connector-draft" }),
@@ -132,6 +137,16 @@ describe("combined capability center", () => {
     expect(
       screen.queryByRole("link", { name: "capabilityCenter.skillPackages" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("opens the unified library for package-only users without an expert", async () => {
+    state.user = { role: "user", permissions: ["skill_packages"] };
+    setup("/skills");
+    expect(
+      await screen.findByRole("textbox", { name: "library-draft" }),
+    ).toBeVisible();
+    expect(screen.queryByText("expert-selector")).not.toBeInTheDocument();
+    expect(screen.queryByText("skills-agent-one")).not.toBeInTheDocument();
   });
 
   it("does not mount skills or experts for connector-only users", async () => {

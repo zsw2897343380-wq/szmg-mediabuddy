@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { App } from "antd";
 
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { useAsyncResource } from "../../../hooks/useAsyncResource";
 import { parseApiError } from "../../../utils/apiError";
 import { saveBlobAsFile } from "../../../utils/saveBlobAsFile";
 import { showApiError } from "../../../utils/showApiToast";
+import { SKILLS_UPDATED } from "../../../utils/skillsEvents";
 
 /**
  * SkillSpec mirrors the JSON shape returned by octop's
@@ -145,6 +146,13 @@ export function useSkills(
       logLabel: "Skills",
     },
   );
+
+  useEffect(() => {
+    if (!enabled) return;
+    const refresh = () => void fetchSkills();
+    window.addEventListener(SKILLS_UPDATED, refresh);
+    return () => window.removeEventListener(SKILLS_UPDATED, refresh);
+  }, [enabled, fetchSkills]);
 
   const getDetail = useCallback(
     async (slug: string): Promise<SkillDetail | null> => {

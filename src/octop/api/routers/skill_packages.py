@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 from dataclasses import asdict
+from functools import partial
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Request, status
@@ -30,6 +31,7 @@ from octop.infra.skills.skill_package_store import (
 )
 from octop.infra.skills.skill_packages import SkillPackageError, read_skill_directory
 from octop.infra.skills.skillhub_market import SkillHubMarketError as SkillHubDownloadError
+from octop.infra.skills.user_library import UserSkillLibrary
 from octop.infra.users.identity import User
 from octop.infra.utils.frontmatter import parse_frontmatter
 from octop.infra.utils.locale import Locale, resolve_request_locale
@@ -101,6 +103,24 @@ class ImportPackageSkillBody(BaseModel):
     overwrite: bool = False
 
 
+class UserSkillLibraryResponse(BaseModel):
+    installed_package_ids: list[str] = Field(
+        default_factory=list, description="Packages installed for the signed-in user."
+    )
+    disabled_package_ids: list[str] = Field(
+        default_factory=list, description="Installed packages paused for this user."
+    )
+
+
+class UserSkillLibraryUpdateBody(BaseModel):
+    installed: bool = Field(
+        description="Install or uninstall this package in your personal library."
+    )
+    enabled: bool = Field(
+        default=True, description="Make an installed package available to your local agents."
+    )
+
+
 def _files_from_package_skill_body(
     *,
     content: str,
@@ -146,6 +166,14 @@ def _store(server: OctopServer) -> SkillPackageStore:
     return SkillPackageStore(
         repo=server.services.skill_package_repo,
         root=server.paths.skill_packages_dir,
+    )
+
+
+def _user_library(server: OctopServer) -> UserSkillLibrary:
+    if server.services is None:
+        raise OctopError(ErrorCode.INTERNAL_ERROR, "skill package store not initialized")
+    return UserSkillLibrary(
+        settings=server.services.settings_repo, packages=server.services.skill_package_repo
     )
 
 
@@ -279,6 +307,52 @@ async def list_skill_packages(
         for row in store.repo.list_all()
         if not writable_only or store.can_mutate(row, user)
     ]
+
+
+@router.get(
+    "/library",
+    summary="Get your unified skill library",
+    description="Installation state is private to the signed-in user and does not require an agent.",
+    response_model=UserSkillLibraryResponse,
+)
+async def get_user_skill_library(
+    server: OctopServer = Depends(get_server),
+    user: User = Depends(require_permission("skill_packages")),
+) -> UserSkillLibraryResponse:
+    library = _user_library(server)
+    state = await asyncio.get_running_loop().run_in_executor(None, library.load, user.id)
+    return UserSkillLibraryResponse(**asdict(state))
+
+
+@router.put(
+    "/library/{package_id}",
+    summary="Install, pause, or remove a package in your skill library",
+    description=(
+        "Only changes the signed-in user's installation state. Owned local agents refresh "
+        "immediately; shared agents and unsupported backends do not inherit personal skills."
+    ),
+    response_model=UserSkillLibraryResponse,
+)
+async def update_user_skill_library(
+    package_id: str,
+    body: UserSkillLibraryUpdateBody,
+    server: OctopServer = Depends(get_server),
+    user: User = Depends(require_permission("skill_packages")),
+) -> UserSkillLibraryResponse:
+    library = _user_library(server)
+    state = await asyncio.get_running_loop().run_in_executor(
+        None,
+        partial(
+            library.update,
+            user.id,
+            package_id,
+            installed=body.installed,
+            enabled=body.enabled,
+        ),
+    )
+    if server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_user_skill_library(user.id)
+    return UserSkillLibraryResponse(**asdict(state))
 
 
 @router.get("/hub/search", summary="Search SkillHub for installing into packages")

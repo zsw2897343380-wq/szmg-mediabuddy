@@ -5,12 +5,34 @@ const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 vi.mock("../request", () => ({ request }));
 
 import { skillPackagesApi } from "./skillPackages";
+import { SKILLS_UPDATED } from "../../utils/skillsEvents";
 
 beforeEach(() => {
   request.mockClear();
 });
 
 describe("skillPackagesApi", () => {
+  it("refreshes skill pickers only after a successful personal library change", async () => {
+    const listener = vi.fn();
+    window.addEventListener(SKILLS_UPDATED, listener);
+    request.mockResolvedValueOnce({
+      installed_package_ids: ["pkg-1"],
+      disabled_package_ids: [],
+    });
+    await skillPackagesApi.updateLibrary("pkg-1", true);
+    expect(request).toHaveBeenLastCalledWith("/skill-packages/library/pkg-1", {
+      method: "PUT",
+      body: JSON.stringify({ installed: true, enabled: true }),
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+    request.mockRejectedValueOnce(new Error("failure"));
+    await expect(
+      skillPackagesApi.updateLibrary("pkg-1", true, false),
+    ).rejects.toThrow("failure");
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener(SKILLS_UPDATED, listener);
+  });
+
   it("uses the agent package mount endpoints", () => {
     skillPackagesApi.listMounted("agent-1");
     skillPackagesApi.replaceMounted("agent-1", ["pkg-1", "pkg-2"]);

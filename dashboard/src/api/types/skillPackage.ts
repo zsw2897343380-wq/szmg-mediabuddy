@@ -17,6 +17,11 @@ export interface SkillPackage {
   updated_at: string;
 }
 
+export interface UserSkillLibrary {
+  installed_package_ids: string[];
+  disabled_package_ids: string[];
+}
+
 export interface CopyPackageSkillsBody {
   skill_slugs: string[];
   overwrite?: boolean;

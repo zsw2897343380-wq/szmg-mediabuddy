@@ -1,4 +1,18 @@
 {
+  "skillLibrary": {
+    "title": "我的技能",
+    "subtitle": "在这里统一导入和管理技能。安装的技能包可供你的本地专家使用；共享专家和远程工作空间保留各自的技能配置。",
+    "allPackages": "全部技能包",
+    "myInstalled": "我的安装",
+    "searchPlaceholder": "搜索技能包",
+    "installed": "已安装",
+    "paused": "已暂停",
+    "enabled": "已启用",
+    "enablePackage": "在我的技能中启用此技能包",
+    "install": "安装到我的技能",
+    "uninstall": "从我的技能移除",
+    "updateFailed": "更新统一技能库失败"
+  },
   "capabilityCenter": {
     "title": "专家·技能·连接器",
     "skillsManagement": "技能管理",

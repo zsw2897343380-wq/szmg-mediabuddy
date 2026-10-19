@@ -123,7 +123,7 @@ export default function SkillPickerPopover({
           return;
         }
         onNavigateAway?.();
-        navigate("/personalization/skills");
+        navigate("/skills?import=1");
       }}
       renderItem={(skill) => {
         const label = skillDisplayName(skill);
