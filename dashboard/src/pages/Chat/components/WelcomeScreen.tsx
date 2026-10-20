@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ANIMATED_MASCOT_SRC } from "../../../assets/mascot";
 import {
   ChevronLeft,
   ChevronRight,
-  Coffee,
-  CodeXml,
-  Palette,
+  Newspaper,
+  Clapperboard,
+  Radio,
 } from "lucide-react";
 import WelcomeQuickCards from "./WelcomeQuickCards";
 import styles from "../index.module.less";
@@ -14,17 +15,29 @@ export type WelcomeScene = "office" | "code" | "design";
 
 const SCENE_CATEGORIES = {
   office: [
-    "chat",
-    "document",
-    "finance",
-    "data",
-    "slides",
-    "research",
-    "plan",
-    "website",
+    "topicPlanning",
+    "newsWriting",
+    "factChecking",
+    "shortVideo",
+    "voiceover",
+    "disseminationReview",
   ],
-  code: ["website", "debug", "tests", "refactor", "automation"],
-  design: ["prototype", "poster", "presentation", "illustration"],
+  code: [
+    "shortVideo",
+    "storyboard",
+    "voiceover",
+    "videoEditing",
+    "captions",
+    "coverDesign",
+  ],
+  design: [
+    "distribution",
+    "socialCopy",
+    "headline",
+    "analytics",
+    "disseminationReview",
+    "eventPlanning",
+  ],
 } as const;
 
 export type WelcomeCategory = (typeof SCENE_CATEGORIES)[WelcomeScene][number];
@@ -66,11 +79,11 @@ export default function WelcomeScreen({
                 })
               : t("chatWelcome.greeting")}
           </h1>
-          {isTeam && (
-            <p className={styles.welcomeSubtitle}>
-              {welcomeSuffix ?? t("chatWelcome.descriptionWithTeamSuffix")}
-            </p>
-          )}
+          <p className={styles.welcomeSubtitle}>
+            {isTeam
+              ? welcomeSuffix ?? t("chatWelcome.descriptionWithTeamSuffix")
+              : t("chatWelcome.description")}
+          </p>
         </div>
         <div
           className={styles.welcomeModes}
@@ -79,9 +92,9 @@ export default function WelcomeScreen({
         >
           {(
             [
-              { key: "office", Icon: Coffee },
-              { key: "code", Icon: CodeXml },
-              { key: "design", Icon: Palette },
+              { key: "office", Icon: Newspaper },
+              { key: "code", Icon: Clapperboard },
+              { key: "design", Icon: Radio },
             ] as const
           ).map(({ key, Icon }) => (
             <button
@@ -192,7 +205,7 @@ export function WelcomeComposerHeader({
       </div>
       <img
         className={styles.welcomeMascot}
-        src="/octop-mascot-peek.webp"
+        src={ANIMATED_MASCOT_SRC}
         alt=""
         draggable={false}
       />
@@ -205,11 +218,13 @@ export function WelcomeSuggestions({
   onPromptClick,
   scene = "office",
   selectedCategory = null,
+  generalChat = false,
 }: {
   quickCards: WelcomeQuickCard[];
   onPromptClick: (text: string, options?: { prefill?: boolean }) => void;
   scene?: WelcomeScene;
   selectedCategory?: WelcomeCategory | null;
+  generalChat?: boolean;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -220,7 +235,7 @@ export function WelcomeSuggestions({
         );
         return { title: prompt, description: prompt, prompt, color: "#888888" };
       })
-    : scene === "office"
+    : scene === "office" && !generalChat
     ? quickCards
     : SCENE_CATEGORIES[scene].map((category) => ({
         title: t(`chatWelcome.categories.${category}.label`),

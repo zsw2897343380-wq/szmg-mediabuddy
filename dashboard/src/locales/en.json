@@ -4014,9 +4014,9 @@
     "mascotSwitchHint": "Tap to switch the mascot",
     "descriptionWithAgentSuffix": "— share what's on your mind, work or life",
     "descriptionWithTeamSuffix": "— an expert team that answers together",
-    "description": "Work or life — just tell me what you need, I'll handle it",
+    "description": "From story planning and reporting to publishing and review, work with media experts, specialist skills and platform tools.",
     "newChat": "New task",
-    "inputPlaceholder": "What can I help with? @ Add context, / Use skills and commands",
+    "inputPlaceholder": "What media task can I help with? Reference material, choose an expert or use a media connector.",
     "aiDisclaimer": "AI-generated content. Please verify carefully.",
     "hideThinking": "Hide thinking",
     "showThinking": "Show thinking",
@@ -4063,176 +4063,166 @@
     "quickPrompt12Text": "Please improve the following resume to make it more professional and impactful, and highlight the key strengths:\n\n",
     "workspace": "Workspace",
     "scenes": {
-      "label": "Work scene",
-      "office": "Office",
-      "code": "Code",
-      "design": "Design"
+      "label": "Media workflows",
+      "office": "Newsroom",
+      "code": "Audio & video",
+      "design": "Publishing & growth"
     },
     "categories": {
-      "label": "Task categories",
-      "chat": {
-        "label": "Enterprise chat",
-        "prompt": "Help me organize enterprise chat messages and extract action items."
+      "label": "Media task types",
+      "topicPlanning": {
+        "label": "Story planning",
+        "prompt": "Plan a news story from the following lead, including news value, reporting angles, interviewees and facts to verify:\n\n"
       },
-      "document": {
-        "label": "Documents",
-        "prompt": "Help me draft a work document, starting with its goals and outline."
+      "newsWriting": {
+        "label": "News writing",
+        "prompt": "Write a news story from the following material. Attribute sources, distinguish verified facts from open questions and do not invent quotes:\n\n"
       },
-      "finance": {
-        "label": "Finance",
-        "prompt": "Help me analyze a financial report and identify key metrics and risks."
+      "factChecking": {
+        "label": "Fact checking",
+        "prompt": "Check the facts, figures, dates and quotes in the following story or lead. List sources, evidence and unresolved claims without presenting speculation as fact:\n\n"
       },
-      "data": {
-        "label": "Analyze data",
-        "prompt": "Help me analyze data, find trends, and create clear charts."
+      "shortVideo": {
+        "label": "Short video scripts",
+        "prompt": "Adapt the following news material into a short video script with a hook, visuals, narration, captions and timing, preserving facts and sources:\n\n"
       },
-      "slides": {
-        "label": "Make slides",
-        "prompt": "Create a 10-slide personal or team year-end presentation covering annual goals, key projects, achievements, lessons learned, and next year's plan. Use placeholders for missing information. Use a restrained business style with a white background, deep blue (#173A63), and warm orange (#F08A4B). Express one main conclusion per slide using large numbers, project cards, milestones, and a quarterly roadmap. Highlight outcomes, contributions, and growth."
+      "voiceover": {
+        "label": "Presenter scripts",
+        "prompt": "Rewrite the following news material as a presenter script with natural short sentences, pauses, emphasis and pronunciation notes for difficult names:\n\n"
       },
-      "research": {
-        "label": "Research",
-        "prompt": "Help me research a topic, verify sources, and organize the findings."
+      "disseminationReview": {
+        "label": "Coverage review",
+        "prompt": "Review the following publishing records and performance data, comparing content, audience feedback and channels. Separate evidence from hypotheses and suggest improvements:\n\n"
       },
-      "plan": {
-        "label": "Plan",
-        "prompt": "Help me plan a project with clear goals, steps, and deliverables."
+      "storyboard": {
+        "label": "Storyboarding",
+        "prompt": "Create a storyboard from the following story or concept, listing shot numbers, framing, visuals, audio, captions and duration. Identify missing footage:\n\n"
       },
-      "website": {
-        "label": "Build a website",
-        "prompt": "Help me build a website, starting with its features and page layout."
+      "videoEditing": {
+        "label": "Edit planning",
+        "prompt": "Plan an edit from the following footage list and delivery brief, including story structure, shot order, transitions, sound bites and music suggestions:\n\n"
       },
-      "debug": {
-        "label": "Debug",
-        "prompt": "Help me debug my code, identify the cause, and make a minimal fix."
+      "captions": {
+        "label": "Caption review",
+        "prompt": "Review the following captions for spelling, names, figures, punctuation and line breaks. Preserve timecodes where present and flag uncertainties:\n\n"
       },
-      "tests": {
-        "label": "Write tests",
-        "prompt": "Help me write tests covering core behavior and edge cases."
+      "coverDesign": {
+        "label": "Cover planning",
+        "prompt": "Plan a cover for the following media story, including headline, subheading, visual focus, layout and landscape/portrait adaptations without misleading exaggeration:\n\n"
       },
-      "refactor": {
-        "label": "Refactor",
-        "prompt": "Help me simplify my code while preserving its existing behavior."
+      "distribution": {
+        "label": "Multi-platform publishing",
+        "prompt": "Plan publication of the following story across platforms, adapting headlines, summaries, formats and timing while preserving facts and attribution:\n\n"
       },
-      "automation": {
-        "label": "Automate",
-        "prompt": "Help me write an automation script, starting with inputs, steps, and expected output."
+      "socialCopy": {
+        "label": "Social copy",
+        "prompt": "Write social publishing copy for the following news story, adapting to the audience and platform while preserving facts and avoiding clickbait or unsupported claims:\n\n"
       },
-      "prototype": {
-        "label": "UI prototype",
-        "prompt": "Help me design a UI prototype based on user tasks and page structure."
+      "headline": {
+        "label": "Headline editing",
+        "prompt": "Suggest headlines for the following news story for a news app, public account and short video. Summarize the facts accurately without exaggeration:\n\n"
       },
-      "poster": {
-        "label": "Poster",
-        "prompt": "Help me design a poster, starting with its theme, copy, and visual style."
+      "analytics": {
+        "label": "Audience analytics",
+        "prompt": "Analyze the following media account data across content, audience, channels and engagement. State measurement definitions and suggest testable improvements:\n\n"
       },
-      "presentation": {
-        "label": "Presentation",
-        "prompt": "Help me design the visual style and layout of a presentation."
-      },
-      "illustration": {
-        "label": "Illustration",
-        "prompt": "Help me create an illustration, starting with its content, style, and purpose."
+      "eventPlanning": {
+        "label": "Campaign planning",
+        "prompt": "Plan a media campaign for the following goal, covering audience, theme, interaction, promotion, responsibilities and evaluation:\n\n"
       }
     },
     "previousCategories": "Previous task categories",
     "nextCategories": "Next task categories",
     "taskSuggestions": {
-      "chat": {
-        "1": "What can you do after connecting to WeCom?",
-        "2": "Use my WeCom chat history to write today's work report",
-        "3": "Turn unread WeCom emails into a task list",
-        "4": "Summarize the key points from my unread WeCom messages"
+      "topicPlanning": {
+        "1": "Plan five local news angles around today’s topics",
+        "2": "Turn this news lead into an editorial pitch",
+        "3": "Identify interviewees and questions for this community story",
+        "4": "Plan a reporting series and editorial schedule for this theme"
       },
-      "document": {
-        "1": "Draft a project requirements document",
-        "2": "Turn meeting notes into minutes and action items",
-        "3": "Create a clear weekly work report template",
-        "4": "Turn this long document into a shareable summary"
+      "newsWriting": {
+        "1": "Turn these interview notes into a news story",
+        "2": "Adapt this story into a brief, a feature and a mobile article",
+        "3": "Polish this article while preserving its facts and meaning",
+        "4": "Extract a lead, key details and background from this release"
       },
-      "finance": {
-        "1": "Analyze the key metrics and changes in a financial report",
-        "2": "Create a revenue, cost, and cash flow analysis template",
-        "3": "Compare the financial performance of two companies",
-        "4": "Identify risks and facts to verify in this financial material"
+      "factChecking": {
+        "1": "Check the figures, dates and identities in this article",
+        "2": "Trace this trending claim to its original source",
+        "3": "Compare reports and separate agreed facts from disputed claims",
+        "4": "Check quote attribution and evidence gaps in this report"
       },
-      "data": {
-        "1": "Analyze sales trends in a spreadsheet and create charts",
-        "2": "Find outliers and missing values in my data",
-        "3": "Create a clear data analysis report template",
-        "4": "Turn this data into an interactive dashboard"
+      "shortVideo": {
+        "1": "Adapt this news story into a 60-second vertical video script",
+        "2": "Design a three-second hook and narrative rhythm for this story",
+        "3": "Turn this long report into three short video scripts",
+        "4": "Sequence these field clips with narration and captions"
       },
-      "slides": {
-        "1": "Make a 10-slide annual summary presentation template",
-        "2": "Make a presentation about AI trends over the past year",
-        "3": "Make a POP MART brand analysis presentation",
-        "4": "Make a presentation introducing Journey to the West"
+      "voiceover": {
+        "1": "Rewrite this article as a one-minute presenter script",
+        "2": "Write presenter links and transitions for these news items",
+        "3": "Check this script’s rhythm, names and spoken numbers",
+        "4": "Create formal and conversational presenter versions of this story"
       },
-      "research": {
-        "1": "Research an industry's current state, trends, and opportunities",
-        "2": "Compare the features and user experience of similar products",
-        "3": "Verify sources and prepare a research report on this topic",
-        "4": "Organize research into a comparison of viewpoints with sources"
+      "disseminationReview": {
+        "1": "Review views, engagement and shares for this reporting series",
+        "2": "Compare how this story performed across platforms",
+        "3": "Summarize this week’s content results and next week’s improvements",
+        "4": "Analyze audience feedback and distribution paths for this coverage"
       },
-      "plan": {
-        "1": "Plan a product launch event",
-        "2": "Create a project execution plan with milestones",
-        "3": "Create a social media content plan",
-        "4": "Define project goals, budget, risks, and acceptance criteria"
+      "storyboard": {
+        "1": "Turn this script into a practical shot list",
+        "2": "Plan interview shots and supporting footage for this profile",
+        "3": "Storyboard a 90-second news video and its pacing",
+        "4": "Map available footage to shots and identify gaps"
       },
-      "website": {
-        "1": "Build a product introduction website",
-        "2": "Design and build a clear personal portfolio website",
-        "3": "Build an admin page with filtering and search",
-        "4": "Turn this idea into an interactive web prototype"
+      "videoEditing": {
+        "1": "Plan a news video edit from this footage list",
+        "2": "Structure interview highlights and shorter cuts",
+        "3": "Improve this video’s opening, pacing and ending",
+        "4": "Plan a vertical adaptation of this landscape report"
       },
-      "debug": {
-        "1": "Find and fix the cause of this error log",
-        "2": "Investigate why this page loads slowly",
-        "3": "Reproduce this bug and verify a minimal fix",
-        "4": "Trace why this API request fails"
+      "captions": {
+        "1": "Proofread these news captions and list the changes",
+        "2": "Check names, organizations and number formatting",
+        "3": "Break this transcript into readable captions",
+        "4": "Compare captions against the presenter script for omissions and repetition"
       },
-      "tests": {
-        "1": "Add automated tests for a core business flow",
-        "2": "Design boundary case tests for this API",
-        "3": "Add a regression test that reproduces this bug",
-        "4": "Find important gaps in test coverage"
+      "coverDesign": {
+        "1": "Suggest three cover directions for this news video",
+        "2": "Identify a headline and visual focus for a mobile news cover",
+        "3": "Plan a consistent cover style for this series",
+        "4": "Write cover copy for landscape and portrait platforms"
       },
-      "refactor": {
-        "1": "Simplify this complex logic while preserving its behavior",
-        "2": "Remove duplication while keeping clear module boundaries",
-        "3": "Simplify this component's state and unnecessary updates",
-        "4": "List risks and verification steps for this refactor"
+      "distribution": {
+        "1": "Adapt this report for a news app, a public account and short video",
+        "2": "Plan a cross-platform schedule and asset checklist for this series",
+        "3": "Prepare platform-specific headlines, summaries and tags",
+        "4": "Review attribution, rights and editorial checks in this publishing plan"
       },
-      "automation": {
-        "1": "Write a script to organize files in batches",
-        "2": "Turn this repetitive workflow into an executable script",
-        "3": "Create an automation that regularly summarizes data",
-        "4": "Check this script's inputs, outputs, and failure handling"
+      "socialCopy": {
+        "1": "Write platform-specific social copy for this news story",
+        "2": "Condense this long article into accessible social copy",
+        "3": "Create launch copy and audience questions for this reporting series",
+        "4": "Improve the readability and accuracy of this social post"
       },
-      "prototype": {
-        "1": "Design an interactive prototype for a task management app",
-        "2": "Turn these requirements into an interactive page prototype",
-        "3": "Design an admin interface including empty and error states",
-        "4": "Improve this user flow and create a clickable prototype"
+      "headline": {
+        "1": "Write five accurate and concise headlines for this article",
+        "2": "Provide headlines for app, social and short video publishing",
+        "3": "Check these headlines for exaggeration, ambiguity or factual drift",
+        "4": "Align this series title with its individual story headlines"
       },
-      "poster": {
-        "1": "Design a poster for a product launch",
-        "2": "Create a poster highlighting event details and registration",
-        "3": "Lay out this copy as a clear visual poster",
-        "4": "Explore three visual directions for the same theme"
+      "analytics": {
+        "1": "Analyze this month’s views, follower growth and engagement",
+        "2": "Identify patterns in strong content and the limits of the data",
+        "3": "Compare results across columns and publishing times",
+        "4": "Plan content experiments and evaluation metrics for the next period"
       },
-      "presentation": {
-        "1": "Design consistent visual guidelines for this presentation",
-        "2": "Improve the title, data, and closing slide layouts",
-        "3": "Turn complex charts into clear presentation slides",
-        "4": "Create a set of business presentation slide templates"
-      },
-      "illustration": {
-        "1": "Design a set of illustrations for app empty states",
-        "2": "Create a cover illustration around this theme",
-        "3": "Design consistent scene illustrations for one character",
-        "4": "Create a set of consistent feature icon concepts"
+      "eventPlanning": {
+        "1": "Plan an audience participation campaign for this reporting theme",
+        "2": "Create an execution plan for a media live event",
+        "3": "Plan recruitment and promotion for this field reporting event",
+        "4": "Define the event flow, responsibilities and contingency plans"
       }
     }
   },

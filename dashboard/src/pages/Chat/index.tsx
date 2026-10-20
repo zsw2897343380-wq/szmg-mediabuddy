@@ -1981,6 +1981,7 @@ function ChatPageInner() {
                   null
                 }
                 quickCards={expertQuickCards}
+                generalChat={generalChat}
                 onPromptClick={handlePromptClick}
               />
             )}

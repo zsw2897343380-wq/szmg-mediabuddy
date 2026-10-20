@@ -29,11 +29,11 @@ describe("task welcome interactions", () => {
     );
     fireEvent.click(
       screen.getByRole("button", {
-        name: "chatWelcome.categories.document.label",
+        name: "chatWelcome.categories.newsWriting.label",
       }),
     );
     expect(onPromptClick).toHaveBeenCalledWith(
-      "chatWelcome.categories.document.prompt",
+      "chatWelcome.categories.newsWriting.prompt",
       { prefill: true },
     );
     rerender(
@@ -41,12 +41,12 @@ describe("task welcome interactions", () => {
     );
     expect(
       screen.queryByRole("button", {
-        name: "chatWelcome.categories.document.label",
+        name: "chatWelcome.categories.newsWriting.label",
       }),
     ).toBeNull();
     expect(
       screen.getByRole("button", {
-        name: "chatWelcome.categories.debug.label",
+        name: "chatWelcome.categories.storyboard.label",
       }),
     ).toBeVisible();
   });
@@ -76,19 +76,55 @@ describe("task welcome interactions", () => {
     expect(screen.getByRole("button", { name: /^Task 4/ })).toBeVisible();
   });
 
+  it("uses media suggestions for general chat while retaining expert prompts", () => {
+    const onPromptClick = vi.fn();
+    const quickCards = [
+      {
+        title: "Expert task",
+        description: "",
+        prompt: "Expert prompt",
+        color: "#888",
+      },
+    ];
+    const { rerender } = render(
+      <WelcomeSuggestions
+        generalChat
+        quickCards={quickCards}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^Expert task/ })).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /^chatWelcome\.categories\.topicPlanning\.label/,
+      }),
+    );
+    expect(onPromptClick).toHaveBeenCalledWith(
+      "chatWelcome.categories.topicPlanning.prompt",
+      { prefill: true },
+    );
+    rerender(
+      <WelcomeSuggestions
+        quickCards={quickCards}
+        onPromptClick={onPromptClick}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /^Expert task/ })).toBeVisible();
+  });
+
   it("marks the selected task template and clears it when clicked again", () => {
     const onCategoryChange = vi.fn();
     const onPromptClick = vi.fn();
     const { rerender } = render(
       <WelcomeComposerHeader
         scene="office"
-        selectedCategory="slides"
+        selectedCategory="shortVideo"
         onCategoryChange={onCategoryChange}
         onPromptClick={onPromptClick}
       />,
     );
     const selected = screen.getByRole("button", {
-      name: "chatWelcome.categories.slides.label",
+      name: "chatWelcome.categories.shortVideo.label",
     });
     expect(selected).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(selected);
@@ -103,9 +139,9 @@ describe("task welcome interactions", () => {
       />,
     );
     fireEvent.click(selected);
-    expect(onCategoryChange).toHaveBeenLastCalledWith("slides");
+    expect(onCategoryChange).toHaveBeenLastCalledWith("shortVideo");
     expect(onPromptClick).toHaveBeenLastCalledWith(
-      "chatWelcome.categories.slides.prompt",
+      "chatWelcome.categories.shortVideo.prompt",
       { prefill: true },
     );
   });
@@ -115,7 +151,7 @@ describe("task welcome interactions", () => {
     const { rerender } = render(
       <WelcomeSuggestions
         scene="office"
-        selectedCategory="slides"
+        selectedCategory="shortVideo"
         quickCards={[
           {
             title: "General",
@@ -131,29 +167,29 @@ describe("task welcome interactions", () => {
     expect(screen.getAllByRole("button")).toHaveLength(4);
     fireEvent.click(
       screen.getByRole("button", {
-        name: /^chatWelcome\.taskSuggestions\.slides\.2/,
+        name: /^chatWelcome\.taskSuggestions\.shortVideo\.2/,
       }),
     );
     expect(onPromptClick).toHaveBeenCalledWith(
-      "chatWelcome.taskSuggestions.slides.2",
+      "chatWelcome.taskSuggestions.shortVideo.2",
       { prefill: true },
     );
     rerender(
       <WelcomeSuggestions
         scene="office"
-        selectedCategory="document"
+        selectedCategory="newsWriting"
         quickCards={[]}
         onPromptClick={onPromptClick}
       />,
     );
     expect(
       screen.queryByRole("button", {
-        name: /^chatWelcome\.taskSuggestions\.slides\.2/,
+        name: /^chatWelcome\.taskSuggestions\.shortVideo\.2/,
       }),
     ).toBeNull();
     expect(
       screen.getByRole("button", {
-        name: /^chatWelcome\.taskSuggestions\.document\.1/,
+        name: /^chatWelcome\.taskSuggestions\.newsWriting\.1/,
       }),
     ).toBeVisible();
   });
