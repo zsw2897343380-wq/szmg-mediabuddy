@@ -3202,7 +3202,10 @@ class AgentManager:
                 exc,
             )
             harness_rows = await workspace_fallback()
+        system_seed_slugs = await asyncio.to_thread(self.managed_template_skill_slugs, agent_id)
         for summary in harness_rows:
+            if summary.get("slug") in system_seed_slugs:
+                summary["kind"] = "builtin"
             if summary.get("slug") in disabled or summary.get("name") in disabled:
                 summary["enabled"] = False
         # Surface unrepairable manifests that harness silently skipped.
@@ -3246,6 +3249,11 @@ class AgentManager:
                         continue
                     meta, _body = parse_frontmatter(manifest)
                     harness_rows[index] = apply_skill_presentation(row, meta)
+        from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
+
+        await asyncio.to_thread(
+            BuiltinSkillPreferences(self._repos.settings_repo).register_runtime_skills, harness_rows
+        )
         package_ids = await asyncio.get_running_loop().run_in_executor(
             None, self.effective_skill_package_ids, agent_id
         )
@@ -3322,6 +3330,37 @@ class AgentManager:
 
         return PublicResourcePolicy(self._repos.settings_repo)
 
+    def managed_template_skill_slugs(self, agent_id: str) -> set[str]:
+        """Only unchanged general-runtime seed skills are platform-owned."""
+        from octop.infra.skills.builtin_preferences import is_general_assistant_system_skill
+
+        row = self._repos.agent_repo.get(agent_id)
+        if row is None or not (
+            self.get_config(agent_id).get("general_chat") is True
+            or (row.agent_id == "main" and row.template_name == "general-assistant")
+        ):
+            return set()
+        workspace = self.workspace_for_agent(agent_id)
+        if workspace is None:
+            return set()
+        content = workspace.read_text("skills/octop-assistant/SKILL.md")
+        return (
+            {"octop-assistant"}
+            if is_general_assistant_system_skill("octop-assistant", content)
+            else set()
+        )
+
+    async def refresh_builtin_skill_inventory(self) -> None:
+        """Include legacy builtin copies from running runtimes in system management."""
+        for row in self.list_rows():
+            try:
+                self.get_agent(row.agent_id)
+            except OctopError as exc:
+                if exc.code in {ErrorCode.AGENT_NOT_RUNNING, ErrorCode.AGENT_FAILED}:
+                    continue
+                raise
+            await self.list_skill_summaries(row.agent_id)
+
     def _public_skill_keys(
         self,
         agent_id: str,
@@ -3346,15 +3385,22 @@ class AgentManager:
             return set()
         workspace = self.workspace_for_agent(agent_id) if honor_private else None
         if isinstance(workspace, BackendWorkspace):
+            system_seed_slugs = self.managed_template_skill_slugs(agent_id)
             slugs = {
                 slug
                 for slug in slugs
-                if not any(
+                if slug in system_seed_slugs
+                or not any(
                     workspace.exists(f"{root}/{slug}/SKILL.md")
                     for root in {"skills", workspace.system_rel("skills")}
                 )
             }
-        return BuiltinSkillPreferences.keys_for_slugs(builtin & slugs) | slugs
+        return (
+            BuiltinSkillPreferences(self._repos.settings_repo).registered_filter_keys(
+                builtin & slugs
+            )
+            | slugs
+        )
 
     def effective_skills_disabled(self, agent_id: str, disabled: set[str]) -> set[str]:
         """Platform withdrawal cannot be undone by a personal enable operation."""

@@ -7301,6 +7301,10 @@
     }
   },
   "skillsCenter": {
+    "system": "System skills",
+    "systemPolicy": "Superadministrators publish or withdraw system skills for all accounts. Independent or modified private copies are retained.",
+    "systemToggle": "Publish or withdraw {{name}}",
+    "systemUpdateFailed": "Failed to update system skill publication",
     "presets": "Preset skills",
     "presetsDescription": "Manage shipped skills for your account. Disabled skills are unavailable to general chat and all your local experts, including future experts. Files are kept and can be enabled again. Individual expert disables are preserved.",
     "disableAllPresets": "Disable all presets",

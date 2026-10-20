@@ -115,6 +115,8 @@ async def list_builtin_skills(
     user: Any = Depends(require_permission("skills")),
     server: Any = Depends(get_server),
 ) -> list[BuiltinSkillSummary]:
+    if server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_builtin_skill_inventory()
     preferences = BuiltinSkillPreferences(server.services.settings_repo)
     rows = await asyncio.get_running_loop().run_in_executor(
         None, preferences.list_skills, user.id, resolve_request_locale(request)
@@ -813,6 +815,10 @@ async def get_skill(
     if resolved is None:
         raise OctopError(ErrorCode.NOT_FOUND, f"skill {name!r} not found")
     manifest_path, kind, _body = resolved
+    if name in await asyncio.to_thread(
+        server.app_runtime.agent_registry.managed_template_skill_slugs, agent_id
+    ):
+        kind = "builtin"
     if kind == "builtin":
         from octop.infra.users.public_resources import PublicResourcePolicy
 

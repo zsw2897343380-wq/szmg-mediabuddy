@@ -49,6 +49,8 @@ def _catalog(server: Any) -> PublicResourceCatalog:
 async def list_public_resources(
     request: Request, server: Any = Depends(get_server), _: Any = Depends(require_admin())
 ) -> list[PublicResourceResponse]:
+    if server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_builtin_skill_inventory()
     rows = await asyncio.get_running_loop().run_in_executor(
         None, _catalog(server).list_resources, resolve_request_locale(request)
     )
@@ -67,6 +69,8 @@ async def update_public_resources(
     server: Any = Depends(get_server),
     _: Any = Depends(require_admin()),
 ) -> None:
+    if resource_type == "builtin_skill" and server.app_runtime is not None:
+        await server.app_runtime.agent_registry.refresh_builtin_skill_inventory()
     await asyncio.get_running_loop().run_in_executor(
         None, partial(_catalog(server).update, resource_type, body.ids, enabled=body.enabled)
     )

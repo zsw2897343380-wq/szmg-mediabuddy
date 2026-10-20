@@ -7301,6 +7301,10 @@
     }
   },
   "skillsCenter": {
+    "system": "系统技能",
+    "systemPolicy": "系统技能由超管统一上下架，对所有账号生效。用户独立创建或修改的私有副本保留。",
+    "systemToggle": "上架或下架 {{name}}",
+    "systemUpdateFailed": "更新系统技能状态失败",
     "presets": "预设技能",
     "presetsDescription": "统一管理系统预设技能。禁用后对你账号下的通用对话和所有本地专家生效，新建专家也会继承；技能文件保留，可随时重新启用。专家中单独禁用的技能仍保持禁用。",
     "disableAllPresets": "一键禁用全部",

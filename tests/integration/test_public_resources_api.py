@@ -5,6 +5,82 @@ from typing import Any
 from tests.support.auth import create_user
 
 
+async def test_template_seed_and_legacy_builtin_are_managed_and_private_replacements_survive(
+    env_with_agent: Any,
+) -> None:
+    from octop.infra.agents.experts.catalog import default_library_root
+
+    client, server, admin, agent_id = env_with_agent
+    registry = server.app_runtime.agent_registry
+    registry.persist_harness_config(
+        agent_id, {**registry.get_config(agent_id), "general_chat": True}
+    )
+    workspace = registry.get_agent(agent_id).workspace
+    seed = (default_library_root() / "general-assistant/skills/octop-assistant/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    await workspace.awrite_text("skills/octop-assistant/SKILL.md", seed)
+    await workspace.awrite_text(
+        "_builtin_skills/mcporter/SKILL.md",
+        "---\nname: legacy-mcp-cli\ndescription: Legacy MCP tools\n---\nLegacy builtin",
+    )
+    listing = await client.get("/api/admin/public-resources", headers=admin)
+    assert listing.status_code == 200, listing.text
+    slugs = {
+        item["resource_id"] for item in listing.json() if item["resource_type"] == "builtin_skill"
+    }
+    assert {"octop-assistant", "mcporter"} <= slugs
+    await _toggle(client, admin, "builtin_skill", ["octop-assistant", "mcporter"], False)
+    assert {"octop-assistant", "mcporter", "legacy-mcp-cli"} <= registry.get_agent(
+        agent_id
+    ).config.skills_disabled
+    summaries = (await client.get(f"/api/agents/{agent_id}/skills", headers=admin)).json()
+    assert not {"octop-assistant", "mcporter"} & {item["slug"] for item in summaries}
+    for slug in ("octop-assistant", "mcporter"):
+        assert (
+            await client.get(f"/api/agents/{agent_id}/skills/{slug}", headers=admin)
+        ).status_code == 404
+        assert (
+            await client.post(f"/api/agents/{agent_id}/skills/{slug}/enable", headers=admin)
+        ).status_code == 204
+        assert slug in registry.get_agent(agent_id).config.skills_disabled
+    await registry.stop(agent_id)
+    await registry.start(agent_id)
+    assert {"octop-assistant", "mcporter"} <= registry.get_agent(agent_id).config.skills_disabled
+    # Legacy inventory remains manageable even after its runtime is stopped.
+    await registry.stop(agent_id)
+    stopped_inventory = (await client.get("/api/admin/public-resources", headers=admin)).json()
+    assert any(item["resource_id"] == "mcporter" for item in stopped_inventory)
+    await registry.start(agent_id)
+    await _toggle(client, admin, "builtin_skill", ["octop-assistant", "mcporter"], True)
+    assert (
+        not {"octop-assistant", "mcporter", "legacy-mcp-cli"}
+        & registry.get_agent(agent_id).config.skills_disabled
+    )
+    for slug in ("octop-assistant", "mcporter"):
+        await workspace.awrite_text(
+            f"skills/{slug}/SKILL.md",
+            f"---\nname: {slug}\ndescription: Private replacement\n---\nIndependent private instructions",
+        )
+    await _toggle(client, admin, "builtin_skill", ["octop-assistant", "mcporter"], False)
+    assert not {"octop-assistant", "mcporter"} & registry.get_agent(agent_id).config.skills_disabled
+    summaries = (await client.get(f"/api/agents/{agent_id}/skills", headers=admin)).json()
+    assert {item["slug"] for item in summaries if item["kind"] == "workspace"} >= {
+        "octop-assistant",
+        "mcporter",
+    }
+    await registry.stop(agent_id)
+    await registry.start(agent_id)
+    assert not {"octop-assistant", "mcporter"} & registry.get_agent(agent_id).config.skills_disabled
+    # An identical copy in a separately created expert is independent as well.
+    registry.persist_harness_config(
+        agent_id, {**registry.get_config(agent_id), "general_chat": False}
+    )
+    await workspace.awrite_text("skills/octop-assistant/SKILL.md", seed)
+    await _toggle(client, admin, "builtin_skill", ["octop-assistant"], False)
+    assert "octop-assistant" not in registry.get_agent(agent_id).config.skills_disabled
+
+
 async def _toggle(client: Any, admin: Any, source: str, ids: list[str], enabled: bool) -> None:
     response = await client.put(
         f"/api/admin/public-resources/{source}",

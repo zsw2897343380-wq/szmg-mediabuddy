@@ -50,12 +50,19 @@ import { SkillImportModal } from "./SkillImportModal";
 import type { ParsedZipSkill } from "../Agent/Skills/components/parseSkillZip";
 import type { SkillHubSkill } from "../Agent/Skills/components/SkillHubDetailDrawer";
 import styles from "./UnifiedSkillLibrary.module.less";
+import SystemSkillsPanel from "./SystemSkillsPanel";
 
 type LocalSkill = { skill: SkillPackageSkill; pkg: SkillPackageDetail };
 type Selection =
   | { kind: "local"; item: LocalSkill }
   | { kind: "market"; skill: SkillHubSkill };
-type Catalog = "recommended" | "trending" | "hot" | "newest" | "local";
+type Catalog =
+  | "recommended"
+  | "trending"
+  | "hot"
+  | "newest"
+  | "local"
+  | "system";
 const RANKINGS = ["recommended", "trending", "hot", "newest"] as const;
 
 function normalizeHubSkill(raw: Record<string, unknown>): SkillHubSkill {
@@ -157,7 +164,7 @@ export default function UnifiedSkillLibrary({
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (mine || catalog === "local") return;
+    if (mine || catalog === "local" || catalog === "system") return;
     let current = true;
     const timer = setTimeout(
       () => {
@@ -621,8 +628,23 @@ export default function UnifiedSkillLibrary({
               >
                 {t("skillsCenter.instance")}
               </button>
+              {user?.role === "admin" && (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={catalog === "system"}
+                  className={catalog === "system" ? styles.activeTab : ""}
+                  onClick={() => {
+                    setCatalog("system");
+                    setCategory("");
+                  }}
+                >
+                  {t("skillsCenter.system")}
+                </button>
+              )}
               <Checkbox
                 className={styles.hideInstalled}
+                style={catalog === "system" ? { display: "none" } : undefined}
                 checked={hideInstalled}
                 onChange={(event) => setHideInstalled(event.target.checked)}
               >
@@ -630,7 +652,7 @@ export default function UnifiedSkillLibrary({
               </Checkbox>
             </div>
           )}
-          {categories.length > 0 && (
+          {catalog !== "system" && categories.length > 0 && (
             <div
               className={styles.categories}
               aria-label={t("skillsCenter.categories")}
@@ -667,14 +689,19 @@ export default function UnifiedSkillLibrary({
               }
             />
           )}
-          {!mine && catalog !== "local" && marketError && (
-            <Alert
-              type="warning"
-              message={marketError}
-              description={t("skillsCenter.marketUnavailable")}
-            />
-          )}
-          {loading || (!mine && catalog !== "local" && marketLoading) ? (
+          {!mine &&
+            catalog !== "local" &&
+            catalog !== "system" &&
+            marketError && (
+              <Alert
+                type="warning"
+                message={marketError}
+                description={t("skillsCenter.marketUnavailable")}
+              />
+            )}
+          {!mine && catalog === "system" ? (
+            <SystemSkillsPanel query={query} revision={marketRevision} />
+          ) : loading || (!mine && catalog !== "local" && marketLoading) ? (
             <div className={styles.loading}>
               <Spin />
             </div>
