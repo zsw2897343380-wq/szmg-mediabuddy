@@ -9,7 +9,6 @@ import {
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import WorkBuddyExpertCenter from "./WorkBuddyExpertCenter";
-import type { ExpertSummary } from "./ExpertCard";
 import type { OctopAgent } from "../../../context/AgentContext";
 import type { PublishedExpert } from "../../../api/modules/publishedExperts";
 import { MEDIA_EXPERT_CATEGORIES } from "./expertDiscovery";
@@ -36,10 +35,11 @@ vi.mock("../../../components/Markdown/LazyMarkdown", () => ({
 }));
 vi.mock("./iconForName", () => ({ ExpertIcon: () => <span /> }));
 
-const expert: ExpertSummary = {
+const expert = {
   id: "media-reporter",
-  label: { zh: "采访专家" },
-  description: { zh: "整理采访记录" },
+  slug: "workbuddy-reporter",
+  name: "采访专家",
+  description: "整理采访记录",
   category: "article-production",
   quick_prompts: [
     {
@@ -48,15 +48,15 @@ const expert: ExpertSummary = {
       prompt: { zh: "为我拟定采访提纲" },
     },
   ],
-};
-const general: ExpertSummary = {
-  id: "general-assistant",
-  label: { zh: "通用助手" },
-  description: { zh: "通用任务" },
-};
+} as PublishedExpert;
+const general = {
+  id: "media-general",
+  slug: "workbuddy-general",
+  name: "通用媒体专家",
+  description: "通用任务",
+} as PublishedExpert;
 const defaultProps = {
-  experts: [general, expert],
-  publishedExperts: [],
+  publishedExperts: [general, expert],
   agents: [],
   loading: false,
   lang: "zh" as const,
@@ -101,7 +101,7 @@ describe("WorkBuddy expert center", () => {
       agents: [
         {
           agent_id: "own-reporter",
-          template_name: expert.id,
+          published_expert_id: expert.id,
           config: {},
         } as OctopAgent,
       ],
@@ -109,7 +109,9 @@ describe("WorkBuddy expert center", () => {
     openReporter();
     const dialog = await screen.findByRole("dialog");
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenCalledWith("/experts/media-reporter"),
+      expect(mocks.request).toHaveBeenCalledWith(
+        "/experts/published/media-reporter",
+      ),
     );
     expect(await within(dialog).findByText("采访能力详情")).toBeTruthy();
     fireEvent.click(
@@ -168,7 +170,7 @@ describe("WorkBuddy expert center", () => {
       target: { value: "采访" },
     });
     expect(screen.getByRole("button", { name: /采访专家/ })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /通用助手/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /通用媒体专家/ })).toBeNull();
     fireEvent.click(
       within(filters).getByRole("button", {
         name: "experts.mediaCategories.topic-planning",
@@ -181,12 +183,13 @@ describe("WorkBuddy expert center", () => {
     fireEvent.change(screen.getByRole("textbox"), {
       target: { value: "通用" },
     });
-    expect(screen.getByRole("button", { name: /通用助手/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /通用媒体专家/ })).toBeTruthy();
   });
 
   it("includes public snapshots without fetching external listings and preserves personal/team management", () => {
     renderCenter({
       publishedExperts: [
+        expert,
         {
           id: "own-publication",
           name: "我的发布专家",
@@ -196,7 +199,8 @@ describe("WorkBuddy expert center", () => {
     });
     expect(mocks.list).not.toHaveBeenCalled();
     expect(mocks.get).not.toHaveBeenCalled();
-    expect(screen.getByText("我的发布专家")).toBeTruthy();
+    expect(screen.queryByText("我的发布专家")).toBeNull();
+    expect(screen.getAllByText("采访专家").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "experts.myExperts" }));
     expect(defaultProps.onManage).toHaveBeenCalledOnce();
     fireEvent.click(
@@ -208,11 +212,15 @@ describe("WorkBuddy expert center", () => {
   it("filters an imported public expert and opens its prompt and install flow", async () => {
     const published = {
       id: "workbuddy-import",
+      slug: "workbuddy-topic-planner",
       name: "导入的选题专家",
       description: "公共选题模板",
       category: "topic-planning",
     } as PublishedExpert;
-    renderCenter({ experts: [], publishedExperts: [published] });
+    renderCenter({ publishedExperts: [published] });
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.mediaExperts" }),
+    );
     fireEvent.click(
       screen.getByRole("button", {
         name: "experts.mediaCategories.topic-planning",
@@ -235,6 +243,59 @@ describe("WorkBuddy expert center", () => {
     );
   });
 
+  it("opens all 42 media publications by default and preserves team management", () => {
+    const publishedExperts = Array.from(
+      { length: 42 },
+      (_, index) =>
+        ({
+          id: `import-${index}`,
+          slug: `workbuddy-media-${index}`,
+          name: `媒体模板 ${index}`,
+          description: "已恢复的媒体专家",
+          category:
+            MEDIA_EXPERT_CATEGORIES[index % MEDIA_EXPERT_CATEGORIES.length],
+        }) as PublishedExpert,
+    );
+    renderCenter({ publishedExperts });
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "experts.workbuddy.mediaExperts",
+      "experts.workbuddy.teams",
+    ]);
+    expect(
+      screen.getByRole("tab", { name: "experts.workbuddy.mediaExperts" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
+    ).toHaveLength(42);
+    expect(screen.queryByText("通用媒体专家")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "experts.mediaCategories.topic-planning",
+      }),
+    );
+    expect(
+      screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
+    ).toHaveLength(6);
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "媒体模板 40" },
+    });
+    expect(
+      screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
+    ).toHaveLength(1);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "" } });
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.teams" }),
+    );
+    expect(screen.getByText("Teams management")).toBeTruthy();
+    expect(screen.queryByText("媒体模板 0")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.mediaExperts" }),
+    );
+    expect(
+      screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
+    ).toHaveLength(42);
+  });
+
   it("creates an uninstalled configured expert without changing its source", () => {
     renderCenter();
     fireEvent.change(screen.getByRole("textbox"), {
@@ -244,7 +305,7 @@ describe("WorkBuddy expert center", () => {
       screen.getByRole("button", { name: "experts.workbuddy.summon" }),
     );
     expect(defaultProps.onCreate).toHaveBeenCalledWith(
-      { kind: "builtin", expert },
+      { kind: "published", expert },
       undefined,
     );
   });

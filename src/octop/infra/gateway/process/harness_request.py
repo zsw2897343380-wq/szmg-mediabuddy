@@ -305,6 +305,7 @@ def build_harness_request(
     auto_route: bool = False,
     message_kwargs: dict[str, Any] | None = None,
     reasoning_overrides: dict[str, Any] | None = None,
+    locale: str | Locale | None = None,
 ) -> dict[str, Any]:
     if messages is not None:
         req: dict[str, Any] = {
@@ -316,6 +317,8 @@ def build_harness_request(
         if agent_id is not None:
             req["agent_id"] = agent_id
         configurable: dict[str, Any] = {}
+        if locale is not None:
+            configurable["locale"] = normalize_locale(str(locale))
         if auto_route:
             configurable["octop_auto_route"] = True
         if session_key is not None:
@@ -352,6 +355,8 @@ def build_harness_request(
     if agent_id is not None:
         req["agent_id"] = agent_id
     configurable = {}
+    if locale is not None:
+        configurable["locale"] = normalize_locale(str(locale))
     if auto_route:
         configurable["octop_auto_route"] = True
     if session_key is not None:

@@ -10,7 +10,32 @@ from octop_gateway.models import (
     TextContent,
 )
 
-from octop.infra.gateway.process.harness_request import build_content_from_message
+from octop.infra.gateway.process.harness_request import (
+    build_content_from_message,
+    build_harness_request,
+)
+
+
+@pytest.mark.parametrize("messages", [None, [{"role": "user", "content": "hello"}]])
+@pytest.mark.parametrize("locale, expected", [("zh-CN", "zh"), ("en-US", "en")])
+def test_request_passes_locale_alongside_reasoning_and_routing(messages, locale, expected) -> None:
+    request = build_harness_request(
+        thread_id="test",
+        user_id=1,
+        source="dashboard",
+        text="hello",
+        messages=messages,
+        locale=locale,
+        auto_route=True,
+        session_key="session",
+        reasoning_overrides={"model_fields": {"reasoning_effort": "high"}},
+    )
+    assert request["configurable"] == {
+        "locale": expected,
+        "octop_auto_route": True,
+        "session_key": "session",
+        "octop_reasoning_overrides": {"model_fields": {"reasoning_effort": "high"}},
+    }
 
 
 @pytest.mark.asyncio

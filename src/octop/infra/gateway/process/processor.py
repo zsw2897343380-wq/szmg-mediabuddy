@@ -836,6 +836,7 @@ class GlobalProcessor:
             agent_id=agent_id,
             session_key=session_key,
             source=f"{msg.channel_type}/{msg.channel_id}",
+            locale=locale,
             content=content,
             model=model_ref,
             auto_route=model_route.automatic,
@@ -1480,6 +1481,7 @@ class GlobalProcessor:
             auto_route=model_route.automatic,
             message_kwargs=message_kwargs or None,
             reasoning_overrides=reasoning_overrides,
+            locale=locale,
         )
         self.teams.stamp_host_runtime(request, agent_id)
         self._attach_turn_knowledge_config(

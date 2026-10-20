@@ -48,33 +48,12 @@ import {
 import type { ZipImportSummary } from "../Agent/Skills/components/SkillImportModal";
 import { SkillImportModal } from "./SkillImportModal";
 import type { ParsedZipSkill } from "../Agent/Skills/components/parseSkillZip";
-import type { SkillHubSkill } from "../Agent/Skills/components/SkillHubDetailDrawer";
 import styles from "./UnifiedSkillLibrary.module.less";
 import SystemSkillsPanel from "./SystemSkillsPanel";
 
 type LocalSkill = { skill: SkillPackageSkill; pkg: SkillPackageDetail };
-type Selection =
-  | { kind: "local"; item: LocalSkill }
-  | { kind: "market"; skill: SkillHubSkill };
-type Catalog =
-  | "recommended"
-  | "trending"
-  | "hot"
-  | "newest"
-  | "local"
-  | "system";
-const RANKINGS = ["recommended", "trending", "hot", "newest"] as const;
-
-function normalizeHubSkill(raw: Record<string, unknown>): SkillHubSkill {
-  const slug = String(raw.slug ?? raw.name ?? "");
-  return {
-    ...(raw as unknown as SkillHubSkill),
-    slug,
-    name: String(raw.name ?? raw.display_name_zh ?? raw.display_name ?? slug),
-    description: String(raw.description ?? ""),
-    iconUrl: (raw.iconUrl ?? raw.icon_url) as string | undefined,
-  };
-}
+type Selection = { kind: "local"; item: LocalSkill };
+type Catalog = "recommended" | "system";
 
 function SkillIcon({
   skill,
@@ -99,7 +78,7 @@ export default function UnifiedSkillLibrary({
 }: {
   embedded?: boolean;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -116,11 +95,7 @@ export default function UnifiedSkillLibrary({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [hideInstalled, setHideInstalled] = useState(false);
-  const [rankings, setRankings] = useState<Record<string, SkillHubSkill[]>>({});
-  const [market, setMarket] = useState<SkillHubSkill[]>([]);
-  const [marketLoading, setMarketLoading] = useState(false);
-  const [marketError, setMarketError] = useState("");
-  const [marketRevision, setMarketRevision] = useState(0);
+  const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [detail, setDetail] = useState<SkillPackageSkillDetail | null>(null);
@@ -163,60 +138,6 @@ export default function UnifiedSkillLibrary({
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  useEffect(() => {
-    if (mine || catalog === "local" || catalog === "system") return;
-    let current = true;
-    const timer = setTimeout(
-      () => {
-        setMarketLoading(true);
-        setMarketError("");
-        const request = query.trim()
-          ? skillPackagesApi
-              .hubSearch(query.trim())
-              .then((rows) => ({ search: rows.map(normalizeHubSkill) }))
-          : skillPackagesApi.hubRankings().then((response) => {
-              const data = response as {
-                rankings?: Record<
-                  string,
-                  { skills?: Record<string, unknown>[] }
-                >;
-                errors?: Record<string, string>;
-              };
-              if (Object.keys(data.errors ?? {}).length)
-                throw new Error(Object.values(data.errors!)[0]);
-              return {
-                rankings: Object.fromEntries(
-                  Object.entries(data.rankings ?? {}).map(([key, value]) => [
-                    key,
-                    (value.skills ?? []).map(normalizeHubSkill),
-                  ]),
-                ),
-              };
-            });
-        void request
-          .then((result) => {
-            if (!current) return;
-            if ("search" in result) setMarket(result.search);
-            else setRankings(result.rankings);
-          })
-          .catch((error) => {
-            if (current)
-              setMarketError(
-                apiErrorMessage(error, t("skillsCenter.marketFailed"), t),
-              );
-          })
-          .finally(() => {
-            if (current) setMarketLoading(false);
-          });
-      },
-      query.trim() ? 350 : 0,
-    );
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [catalog, mine, query, marketRevision, t]);
-
   const localSkills = useMemo(
     () =>
       packages.flatMap((pkg) => pkg.skills.map((skill) => ({ skill, pkg }))),
@@ -234,35 +155,15 @@ export default function UnifiedSkillLibrary({
       user && (user.role === "admin" || pkg.created_by === String(user.id)),
     );
   const installedSkills = localSkills.filter((item) => isInstalled(item));
-  const installedMatch = (skill: SkillHubSkill) =>
-    installedSkills.find((item) => item.skill.slug === skill.slug);
   const packageDisplayName = (pkg: SkillPackageDetail) => {
     const skill = pkg.skills.length === 1 ? pkg.skills[0] : undefined;
     return skill && pkg.name === skill.slug ? skill.name || pkg.name : pkg.name;
   };
-  const marketSkills = Array.from(
-    new Map(
-      (query.trim() ? market : rankings[catalog] ?? []).map((skill) => [
-        skill.slug,
-        skill,
-      ]),
-    ).values(),
-  );
-  const categories =
-    mine || catalog === "local"
-      ? packages
-          .filter(
-            (pkg) =>
-              !mine || installedSkills.some((item) => item.pkg.id === pkg.id),
-          )
-          .map((pkg) => ({ id: pkg.id, name: packageDisplayName(pkg) }))
-      : [
-          ...new Set(
-            marketSkills
-              .map((skill) => skill.category)
-              .filter((value): value is string => Boolean(value)),
-          ),
-        ].map((name) => ({ id: name, name }));
+  const categories = packages
+    .filter(
+      (pkg) => !mine || installedSkills.some((item) => item.pkg.id === pkg.id),
+    )
+    .map((pkg) => ({ id: pkg.id, name: packageDisplayName(pkg) }));
   const visibleLocal = (mine ? installedSkills : localSkills).filter(
     (item) =>
       (!category || item.pkg.id === category) &&
@@ -272,12 +173,6 @@ export default function UnifiedSkillLibrary({
           .includes(query.trim().toLocaleLowerCase())) &&
       (mine || !hideInstalled || !isInstalled(item)),
   );
-  const visibleMarket = marketSkills.filter(
-    (skill) =>
-      (!category || skill.category === category) &&
-      (!hideInstalled || !installedMatch(skill)),
-  );
-
   const updateLibrary = async (
     item: LocalSkill,
     installed: boolean,
@@ -323,13 +218,6 @@ export default function UnifiedSkillLibrary({
   const closeDetail = () => {
     ++detailRequest.current;
     setSelection(null);
-    setDetailLoading(false);
-  };
-  const openMarket = (skill: SkillHubSkill) => {
-    ++detailRequest.current;
-    setSelection({ kind: "market", skill });
-    setDetail(null);
-    setOverviewQuery("");
     setDetailLoading(false);
   };
   const confirmRemove = (item: LocalSkill) =>
@@ -437,40 +325,6 @@ export default function UnifiedSkillLibrary({
     }
   };
 
-  const installMarket = async (skill: SkillHubSkill) => {
-    if (busy) return;
-    const existing = localSkills.find((item) => item.skill.slug === skill.slug);
-    if (existing) {
-      await updateLibrary(existing, true);
-      return;
-    }
-    setBusy(`market:${skill.slug}`);
-    let createdPackageId: string | undefined;
-    try {
-      const pkg = await skillPackagesApi.create({
-        name: skill.name,
-        description: skill.description_zh || skill.description,
-      });
-      createdPackageId = pkg.id;
-      const result = await skillPackagesApi.hubInstall(pkg.id, {
-        skill_name: skill.slug,
-        display_name: skill.name,
-        icon_url: skill.iconUrl ?? undefined,
-      });
-      if (!result.installed) throw new Error(t("skills.installFailed"));
-      setLibrary(
-        await skillPackagesApi.updateSkillLibrary(pkg.id, result.name, true),
-      );
-      await refresh();
-      message.success(t("skills.installSuccess"));
-    } catch (error) {
-      if (createdPackageId) await removeEmptyImport(createdPackageId);
-      message.error(apiErrorMessage(error, t("skills.installFailed"), t));
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const exportLocal = async (item: LocalSkill) => {
     try {
       await saveBlobAsFile(
@@ -507,19 +361,9 @@ export default function UnifiedSkillLibrary({
     }
   };
   const selectedLocal =
-    selection?.kind === "local"
-      ? isInstalled(selection.item)
-        ? selection.item
-        : undefined
-      : selection?.kind === "market"
-      ? installedMatch(selection.skill)
-      : undefined;
-  const selectedSkill =
-    selection?.kind === "local" ? selection.item.skill : selection?.skill;
-  const selectedDescription =
-    selection?.kind === "market" && i18n.language.startsWith("zh")
-      ? selection.skill.description_zh || selection.skill.description
-      : selectedSkill?.description;
+    selection && isInstalled(selection.item) ? selection.item : undefined;
+  const selectedSkill = selection?.item.skill;
+  const selectedDescription = selectedSkill?.description;
   const preview = detail?.body || selectedDescription || "";
   const overviewMatches = overviewQuery
     ? preview.toLocaleLowerCase().split(overviewQuery.toLocaleLowerCase())
@@ -572,7 +416,7 @@ export default function UnifiedSkillLibrary({
                 aria-label={t("common.refresh")}
                 onClick={() => {
                   void refresh();
-                  setMarketRevision((value) => value + 1);
+                  setRevision((value) => value + 1);
                 }}
               />
             </Tooltip>
@@ -605,32 +449,17 @@ export default function UnifiedSkillLibrary({
               role="tablist"
               aria-label={t("skillsCenter.catalog")}
             >
-              {RANKINGS.map((key) => (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={catalog === key}
-                  className={catalog === key ? styles.activeTab : ""}
-                  key={key}
-                  onClick={() => {
-                    setCatalog(key);
-                    setCategory("");
-                  }}
-                >
-                  {t(`skills.ranking${key[0].toUpperCase()}${key.slice(1)}`)}
-                </button>
-              ))}
               <button
                 type="button"
                 role="tab"
-                aria-selected={catalog === "local"}
-                className={catalog === "local" ? styles.activeTab : ""}
+                aria-selected={catalog === "recommended"}
+                className={catalog === "recommended" ? styles.activeTab : ""}
                 onClick={() => {
-                  setCatalog("local");
+                  setCatalog("recommended");
                   setCategory("");
                 }}
               >
-                {t("skillsCenter.instance")}
+                {t("skills.rankingRecommended")}
               </button>
               {user?.role === "admin" && (
                 <button
@@ -693,213 +522,135 @@ export default function UnifiedSkillLibrary({
               }
             />
           )}
-          {!mine &&
-            catalog !== "local" &&
-            catalog !== "system" &&
-            marketError && (
-              <Alert
-                type="warning"
-                message={marketError}
-                description={t("skillsCenter.marketUnavailable")}
-              />
-            )}
           {!mine && catalog === "system" ? (
-            <SystemSkillsPanel query={query} revision={marketRevision} />
-          ) : loading || (!mine && catalog !== "local" && marketLoading) ? (
+            <SystemSkillsPanel query={query} revision={revision} />
+          ) : loading ? (
             <div className={styles.loading}>
               <Spin />
             </div>
           ) : (
             <>
               <div className={styles.grid}>
-                {mine || catalog === "local"
-                  ? visibleLocal.map((item) => (
+                {visibleLocal.map((item) => (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={item.skill.name}
+                    className={`${styles.card} ${
+                      mine && !isEnabled(item) ? styles.disabled : ""
+                    }`}
+                    key={`${item.pkg.id}/${item.skill.slug}`}
+                    onClick={() => void openLocal(item)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        void openLocal(item);
+                      }
+                    }}
+                  >
+                    <SkillIcon skill={item.skill} />
+                    <div className={styles.cardBody}>
+                      <div className={styles.cardName}>{item.skill.name}</div>
                       <div
-                        role="button"
-                        tabIndex={0}
-                        aria-label={item.skill.name}
-                        className={`${styles.card} ${
-                          mine && !isEnabled(item) ? styles.disabled : ""
-                        }`}
-                        key={`${item.pkg.id}/${item.skill.slug}`}
-                        onClick={() => void openLocal(item)}
-                        onKeyDown={(event) => {
-                          if (
-                            event.target === event.currentTarget &&
-                            (event.key === "Enter" || event.key === " ")
-                          ) {
-                            event.preventDefault();
-                            void openLocal(item);
-                          }
-                        }}
+                        className={styles.cardDescription}
+                        title={item.skill.description}
                       >
-                        <SkillIcon skill={item.skill} />
-                        <div className={styles.cardBody}>
-                          <div className={styles.cardName}>
-                            {item.skill.name}
-                          </div>
-                          <div
-                            className={styles.cardDescription}
-                            title={item.skill.description}
+                        {item.skill.description || t("skills.noDescription")}
+                      </div>
+                    </div>
+                    <div
+                      className={styles.cardActions}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {mine ? (
+                        <>
+                          <Dropdown
+                            menu={{
+                              items: [
+                                {
+                                  key: "detail",
+                                  label: t("common.viewDetail"),
+                                  onClick: () => void openLocal(item),
+                                },
+                                ...(item.pkg.can_download === false ||
+                                item.pkg.allow_download === false
+                                  ? []
+                                  : [
+                                      {
+                                        key: "export",
+                                        icon: <Download size={14} />,
+                                        label: t("skills.exportSkill"),
+                                        onClick: () => void exportLocal(item),
+                                      },
+                                    ]),
+                                {
+                                  key: "remove",
+                                  icon: <Trash2 size={14} />,
+                                  label: t("skillLibrary.uninstall"),
+                                  danger: true,
+                                  onClick: () => confirmRemove(item),
+                                },
+                              ],
+                            }}
+                            trigger={["click"]}
                           >
-                            {item.skill.description ||
-                              t("skills.noDescription")}
-                          </div>
-                        </div>
-                        <div
-                          className={styles.cardActions}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {mine ? (
-                            <>
-                              <Dropdown
-                                menu={{
-                                  items: [
-                                    {
-                                      key: "detail",
-                                      label: t("common.viewDetail"),
-                                      onClick: () => void openLocal(item),
-                                    },
-                                    ...(item.pkg.can_download === false ||
-                                    item.pkg.allow_download === false
-                                      ? []
-                                      : [
-                                          {
-                                            key: "export",
-                                            icon: <Download size={14} />,
-                                            label: t("skills.exportSkill"),
-                                            onClick: () =>
-                                              void exportLocal(item),
-                                          },
-                                        ]),
-                                    {
-                                      key: "remove",
-                                      icon: <Trash2 size={14} />,
-                                      label: t("skillLibrary.uninstall"),
-                                      danger: true,
-                                      onClick: () => confirmRemove(item),
-                                    },
-                                  ],
-                                }}
-                                trigger={["click"]}
-                              >
-                                <button
-                                  className={styles.more}
-                                  type="button"
-                                  aria-label={t("skillsCenter.more", {
-                                    name: item.skill.name,
-                                  })}
-                                >
-                                  <MoreHorizontal size={16} />
-                                </button>
-                              </Dropdown>
-                              <Tooltip
-                                title={t("skillsCenter.enable", {
-                                  name: item.skill.name,
-                                })}
-                              >
-                                <Switch
-                                  size="small"
-                                  aria-label={t("skillsCenter.enable", {
-                                    name: item.skill.name,
-                                  })}
-                                  checked={isEnabled(item)}
-                                  disabled={Boolean(busy)}
-                                  loading={
-                                    busy === `${item.pkg.id}/${item.skill.slug}`
-                                  }
-                                  onChange={(checked) =>
-                                    void updateLibrary(item, true, checked)
-                                  }
-                                />
-                              </Tooltip>
-                            </>
-                          ) : isInstalled(item) ? (
-                            <Check
-                              size={16}
-                              aria-label={t("skillLibrary.installed")}
-                            />
-                          ) : (
                             <button
+                              className={styles.more}
                               type="button"
-                              className={styles.add}
-                              aria-label={t("skillsCenter.install", {
+                              aria-label={t("skillsCenter.more", {
                                 name: item.skill.name,
                               })}
-                              disabled={Boolean(busy)}
-                              onClick={() => void updateLibrary(item, true)}
                             >
-                              <Plus size={16} />
+                              <MoreHorizontal size={16} />
                             </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  : visibleMarket.map((skill) => (
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        aria-label={skill.name}
-                        className={styles.card}
-                        key={skill.slug}
-                        onClick={() => openMarket(skill)}
-                        onKeyDown={(event) => {
-                          if (
-                            event.target === event.currentTarget &&
-                            (event.key === "Enter" || event.key === " ")
-                          ) {
-                            event.preventDefault();
-                            openMarket(skill);
-                          }
-                        }}
-                      >
-                        <SkillIcon
-                          skill={{ icon_url: skill.iconUrl ?? undefined }}
-                        />
-                        <div className={styles.cardBody}>
-                          <div className={styles.cardName}>{skill.name}</div>
-                          <div
-                            className={styles.cardDescription}
-                            title={skill.description_zh || skill.description}
+                          </Dropdown>
+                          <Tooltip
+                            title={t("skillsCenter.enable", {
+                              name: item.skill.name,
+                            })}
                           >
-                            {i18n.language.startsWith("zh")
-                              ? skill.description_zh || skill.description
-                              : skill.description}
-                          </div>
-                        </div>
-                        <div className={styles.cardActions}>
-                          {installedMatch(skill) ? (
-                            <Check
-                              size={16}
-                              aria-label={t("skillLibrary.installed")}
-                            />
-                          ) : (
-                            <button
-                              className={styles.add}
-                              type="button"
-                              disabled={Boolean(busy)}
-                              aria-label={t("skillsCenter.install", {
-                                name: skill.name,
+                            <Switch
+                              size="small"
+                              aria-label={t("skillsCenter.enable", {
+                                name: item.skill.name,
                               })}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void installMarket(skill);
-                              }}
-                            >
-                              {busy === `market:${skill.slug}` ? (
-                                <Spin size="small" />
-                              ) : (
-                                <Plus size={16} />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                              checked={isEnabled(item)}
+                              disabled={Boolean(busy)}
+                              loading={
+                                busy === `${item.pkg.id}/${item.skill.slug}`
+                              }
+                              onChange={(checked) =>
+                                void updateLibrary(item, true, checked)
+                              }
+                            />
+                          </Tooltip>
+                        </>
+                      ) : isInstalled(item) ? (
+                        <Check
+                          size={16}
+                          aria-label={t("skillLibrary.installed")}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.add}
+                          aria-label={t("skillsCenter.install", {
+                            name: item.skill.name,
+                          })}
+                          disabled={Boolean(busy)}
+                          onClick={() => void updateLibrary(item, true)}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              {(mine || catalog === "local"
-                ? visibleLocal.length === 0
-                : !marketError && visibleMarket.length === 0) && (
+              {visibleLocal.length === 0 && (
                 <Empty
                   className={styles.empty}
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -929,14 +680,8 @@ export default function UnifiedSkillLibrary({
             <div className={styles.detailHeader}>
               <SkillIcon
                 skill={{
-                  icon_url:
-                    selection.kind === "local"
-                      ? selection.item.skill.icon_url
-                      : selection.skill.iconUrl ?? undefined,
-                  emoji:
-                    selection.kind === "local"
-                      ? selection.item.skill.emoji
-                      : undefined,
+                  icon_url: selectedSkill.icon_url,
+                  emoji: selectedSkill.emoji,
                 }}
               />
               <div className={styles.detailTitle}>
@@ -963,11 +708,7 @@ export default function UnifiedSkillLibrary({
                     <Button
                       type="primary"
                       loading={Boolean(busy)}
-                      onClick={() =>
-                        selection.kind === "market"
-                          ? void installMarket(selection.skill)
-                          : void updateLibrary(selection.item, true)
-                      }
+                      onClick={() => void updateLibrary(selection.item, true)}
                     >
                       {t("skillLibrary.install")}
                     </Button>

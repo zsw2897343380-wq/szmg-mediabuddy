@@ -32,7 +32,6 @@ const state = vi.hoisted(() => ({
     createSkill: vi.fn(),
     hubRankings: vi.fn(),
     hubSearch: vi.fn(),
-    hubInstall: vi.fn(),
   },
 }));
 const rows = [
@@ -142,27 +141,6 @@ beforeEach(() => {
     id: "imported",
     skills: [],
   });
-  state.api.hubRankings.mockResolvedValue({
-    rankings: {
-      recommended: {
-        skills: [
-          {
-            slug: "market-reader",
-            name: "Market Reader",
-            description: "Read from the market",
-            category: "Documents",
-          },
-        ],
-      },
-    },
-  });
-  state.api.hubSearch.mockResolvedValue([
-    { slug: "searched", name: "Searched skill", description: "Search result" },
-  ]);
-  state.api.hubInstall.mockResolvedValue({
-    installed: true,
-    name: "market-reader",
-  });
   state.api.updateSkillLibrary.mockImplementation(
     async (id: string, slug: string, installed: boolean, enabled = true) => {
       state.library = {
@@ -189,31 +167,40 @@ function setup(path = "/skills") {
 }
 async function showLocal() {
   fireEvent.click(
-    await screen.findByRole("tab", { name: "skillsCenter.instance" }),
+    await screen.findByRole("tab", { name: "skills.rankingRecommended" }),
   );
   return screen.findByRole("button", { name: "Reader" });
 }
 
 describe("WorkBuddy unified skill center", () => {
-  it("does not retain repeated market cards when switching to installed skills", async () => {
-    state.library.installed_package_ids = ["office"];
-    const marketSkill = {
-      slug: "market-reader",
-      name: "Market Reader",
-      description: "Repeated marketplace result",
-    };
-    state.api.hubRankings.mockResolvedValue({
-      rankings: { recommended: { skills: [marketSkill, marketSkill] } },
-    });
+  it("recommends shared skills without fetching the old market recommendations", async () => {
     setup();
-    await screen.findAllByRole("button", { name: "Market Reader" });
-    fireEvent.click(screen.getByRole("button", { name: /skillLibrary.title/ }));
     expect(
       await screen.findByRole("button", { name: "Reader" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Market Reader" }),
+      screen.getByRole("tab", { name: "skills.rankingRecommended" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.queryByRole("tab", { name: "skillsCenter.instance" }),
     ).not.toBeInTheDocument();
+    expect(state.api.hubRankings).not.toHaveBeenCalled();
+    for (const name of [
+      "skills.rankingTrending",
+      "skills.rankingHot",
+      "skills.rankingNewest",
+    ]) {
+      expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
+    }
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "skillsCenter.search" }),
+      { target: { value: "Write" } },
+    );
+    expect(screen.getByRole("button", { name: "Writer" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Reader" }),
+    ).not.toBeInTheDocument();
+    expect(state.api.hubSearch).not.toHaveBeenCalled();
   });
 
   it("installs one skill from a multi-skill package, then pauses and removes only that skill", async () => {
@@ -304,33 +291,6 @@ describe("WorkBuddy unified skill center", () => {
       ),
     );
   });
-  it("searches the real market and installs through the catalog API without selecting an expert", async () => {
-    setup();
-    const card = await screen.findByRole("button", { name: "Market Reader" });
-    fireEvent.click(
-      within(card).getByRole("button", { name: "skillsCenter.install" }),
-    );
-    await waitFor(() =>
-      expect(state.api.hubInstall).toHaveBeenCalledWith("imported", {
-        skill_name: "market-reader",
-        display_name: "Market Reader",
-        icon_url: undefined,
-      }),
-    );
-    expect(state.api.updateSkillLibrary).toHaveBeenCalledWith(
-      "imported",
-      "market-reader",
-      true,
-    );
-    fireEvent.change(
-      screen.getByRole("textbox", { name: "skillsCenter.search" }),
-      { target: { value: "searched" } },
-    );
-    expect(
-      await screen.findByRole("button", { name: "Searched skill" }),
-    ).toBeInTheDocument();
-    expect(state.api.hubSearch).toHaveBeenLastCalledWith("searched");
-  });
   it("opens a local skill detail with keyboard and searches its real manifest", async () => {
     setup();
     fireEvent.keyDown(await showLocal(), { key: " " });
@@ -374,12 +334,11 @@ describe("WorkBuddy unified skill center", () => {
     );
     expect(toggle).toHaveAttribute("aria-checked", "true");
   });
-  it("keeps local skills available when the real market is offline", async () => {
+  it("does not depend on external market availability", async () => {
     state.api.hubRankings.mockRejectedValue(new Error("offline"));
     setup();
-    expect(
-      await screen.findByText("skillsCenter.marketUnavailable"),
-    ).toBeInTheDocument();
+
+    expect(state.api.hubRankings).not.toHaveBeenCalled();
     expect(await showLocal()).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Market Reader" }),

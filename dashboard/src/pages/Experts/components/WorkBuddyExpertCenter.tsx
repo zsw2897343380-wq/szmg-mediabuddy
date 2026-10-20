@@ -11,7 +11,6 @@ import { apiErrorMessage } from "../../../utils/apiError";
 import Markdown from "../../../components/Markdown/LazyMarkdown";
 import { CapabilityHeaderActions } from "../../CapabilityCenter/HeaderActions";
 import { ExpertIcon } from "./iconForName";
-import type { ExpertSummary } from "./ExpertCard";
 import type { QuickPrompt } from "./welcomeManifest";
 import type { CreateFromTemplateSource } from "./CreateFromExpertDrawer";
 import {
@@ -25,7 +24,6 @@ import {
 import styles from "../index.module.less";
 
 interface Props {
-  experts: ExpertSummary[];
   publishedExperts: PublishedExpert[];
   agents: OctopAgent[];
   loading: boolean;
@@ -36,7 +34,6 @@ interface Props {
 }
 
 export default function WorkBuddyExpertCenter({
-  experts,
   publishedExperts,
   agents,
   loading,
@@ -50,7 +47,7 @@ export default function WorkBuddyExpertCenter({
   const { setActiveAgent } = useAgent();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  const [section, setSection] = useState<"expert" | "team">("expert");
+  const [section, setSection] = useState<"media" | "team">("media");
   const [sort, setSort] = useState<DiscoverySort>("reco");
   const [selected, setSelected] = useState<DiscoveryExpert | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -65,16 +62,15 @@ export default function WorkBuddyExpertCenter({
     [],
   );
 
+  // The restored WorkBuddy collection keeps its original publication slugs.
   const entries = useMemo(
-    () => [
-      ...experts.map((expert) =>
-        discoveryExpert({ kind: "builtin", expert }, agents, lang),
-      ),
-      ...publishedExperts.map((expert) =>
-        discoveryExpert({ kind: "published", expert }, agents, lang),
-      ),
-    ],
-    [experts, publishedExperts, agents, lang],
+    () =>
+      publishedExperts
+        .filter((expert) => expert.slug?.startsWith("workbuddy-"))
+        .map((expert) =>
+          discoveryExpert({ kind: "published", expert }, agents, lang),
+        ),
+    [publishedExperts, agents, lang],
   );
   const categories = MEDIA_EXPERT_CATEGORIES;
   const visible = useMemo(
@@ -178,7 +174,7 @@ export default function WorkBuddyExpertCenter({
         </div>
       </CapabilityHeaderActions>
       <div className={styles.centerScroll}>
-        {!query.trim() && section === "expert" && entries.length > 0 && (
+        {!query.trim() && section !== "team" && entries.length > 0 && (
           <section
             className={styles.featuredScenes}
             aria-label={t("experts.workbuddy.featuredScenes")}
@@ -225,10 +221,13 @@ export default function WorkBuddyExpertCenter({
             <button
               type="button"
               role="tab"
-              aria-selected={section === "expert"}
-              onClick={() => setSection("expert")}
+              aria-selected={section === "media"}
+              onClick={() => {
+                setSection("media");
+                setCategory("");
+              }}
             >
-              {t("experts.workbuddy.experts")}
+              {t("experts.workbuddy.mediaExperts")}
             </button>
             <button
               type="button"
@@ -239,7 +238,7 @@ export default function WorkBuddyExpertCenter({
               {t("experts.workbuddy.teams")}
             </button>
           </div>
-          {section === "expert" && (
+          {section !== "team" && (
             <div
               className={styles.centerSort}
               role="group"
