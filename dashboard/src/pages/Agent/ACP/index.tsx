@@ -21,6 +21,8 @@ import {
 import { BUILTIN_RUNNER_ORDER, isBuiltinRunner } from "./constants";
 import channelStyles from "../Channels/index.module.less";
 import styles from "./index.module.less";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 
 const EMPTY_RUNNERS: Record<string, ACPRunnerConfig> = {};
 
@@ -32,6 +34,8 @@ interface ACPPanelProps {
 /** ACP runners manager — shared by `/acp` and Personalization → Tools. */
 export function ACPPanel({ agentId: agentIdProp }: ACPPanelProps = {}) {
   const { t } = useTranslation();
+  const user = useCurrentUser();
+  const canEdit = userCan(user, "acp.edit");
   const { modal, message } = App.useApp();
   const { activeAgentId: contextAgentId, agents } = useAgent();
   const activeAgentId =
@@ -273,7 +277,8 @@ export function ACPPanel({ agentId: agentIdProp }: ACPPanelProps = {}) {
     });
   };
 
-  const toolToggleDisabled = !activeAgentId || toolLoading;
+  const toolToggleDisabled =
+    !activeAgentId || toolLoading || !userCan(user, "acp.use");
 
   const toolSwitch = (
     <Switch
@@ -295,7 +300,7 @@ export function ACPPanel({ agentId: agentIdProp }: ACPPanelProps = {}) {
           <div className={styles.description}>{t("acp.description")}</div>
           <p className={styles.scopeHint}>{t("acp.globalRunnersHint")}</p>
         </div>
-        <Button type="primary" onClick={openCreate}>
+        <Button type="primary" onClick={openCreate} disabled={!canEdit}>
           {t("acp.create")}
         </Button>
       </div>
@@ -320,7 +325,7 @@ export function ACPPanel({ agentId: agentIdProp }: ACPPanelProps = {}) {
               config={cfg}
               isHover={hoverKey === key}
               toggleLoading={toggleLoadingKey === key}
-              interactionDisabled={outboundBlocked}
+              interactionDisabled={outboundBlocked || !canEdit}
               onClick={() => openEdit(key)}
               onMouseEnter={() => setHoverKey(key)}
               onMouseLeave={() => setHoverKey(null)}
@@ -355,7 +360,10 @@ export function ACPPanel({ agentId: agentIdProp }: ACPPanelProps = {}) {
           isCreateMode || (activeKey ? !isBuiltinRunner(activeKey) : false)
         }
         canDelete={
-          !isCreateMode && activeKey !== null && !isBuiltinRunner(activeKey)
+          userCan(user, "acp.delete") &&
+          !isCreateMode &&
+          activeKey !== null &&
+          !isBuiltinRunner(activeKey)
         }
         onClose={() => setDrawerOpen(false)}
         onSubmit={handleSubmit}

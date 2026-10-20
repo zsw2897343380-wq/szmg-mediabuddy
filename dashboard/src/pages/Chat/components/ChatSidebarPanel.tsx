@@ -7,6 +7,8 @@ import type { Session } from "../hooks/useSessions";
 import type { OctopAgent } from "../../../context/AgentContext";
 import RailEdgeControl from "../../../components/RailEdgeControl";
 import styles from "../index.module.less";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 
 /** Dispatched when the chat history rail expand control is clicked. */
 export const EXPAND_CHAT_RAIL_EVENT = "octop:expand-chat-rail";
@@ -78,6 +80,7 @@ export default function ChatSidebarPanel({
   navEmbedded = false,
 }: ChatSidebarPanelProps) {
   const { t } = useTranslation();
+  const user = useCurrentUser();
 
   const handleRailToggle = useCallback(() => {
     if (sidebarOpen) {
@@ -89,7 +92,7 @@ export default function ChatSidebarPanel({
     onSidebarOpenChange(true);
   }, [sidebarOpen, onSidebarOpenChange]);
 
-  const sessionList = navEmbedded ? (
+  const sessionList = !userCan(user, "records.view") ? null : navEmbedded ? (
     <MinimalAgentSessionNav
       agents={agents}
       activeId={activeThreadId}

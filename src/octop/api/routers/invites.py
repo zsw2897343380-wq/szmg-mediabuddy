@@ -77,7 +77,7 @@ class InviteRedeemBody(BaseModel):
 @admin_router.get("", summary="List user invites")
 async def list_invites(
     request: Request,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     base = _public_base(request)
@@ -88,7 +88,7 @@ async def list_invites(
 async def create_invite(
     body: InviteCreateBody,
     request: Request,
-    actor: User = Depends(require_permission("users")),
+    actor: User = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     role_name: str | None = None
@@ -126,7 +126,7 @@ async def create_invite(
 async def revoke_invite(
     invite_id: int,
     request: Request,
-    actor: User = Depends(require_permission("users")),
+    actor: User = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     payload = _service(server).revoke(invite_id, actor_username=actor.username)

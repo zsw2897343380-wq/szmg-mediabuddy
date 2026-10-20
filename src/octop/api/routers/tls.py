@@ -54,7 +54,7 @@ def _preflight_response(result: PreflightResult) -> PreflightResponse:
 
 @router.get("/status", summary="TLS and issuance task status")
 async def tls_status(
-    _: Any = Depends(require_permission("tls")),
+    _: Any = Depends(require_permission("tls.view")),
     server: Any = Depends(get_server),
 ) -> TlsStatusResponse:
     assert server.services is not None
@@ -67,7 +67,7 @@ async def tls_status(
 async def tls_preflight(
     body: PreflightBody,
     request: Request,
-    _: Any = Depends(require_permission("tls")),
+    _: Any = Depends(require_permission("tls.edit")),
     server: Any = Depends(get_server),
 ) -> PreflightResponse:
     assert server.services is not None
@@ -81,7 +81,7 @@ async def tls_preflight(
 async def tls_issue(
     body: IssueBody,
     request: Request,
-    _: Any = Depends(require_permission("tls")),
+    _: Any = Depends(require_permission("tls.edit")),
     server: Any = Depends(get_server),
 ) -> PreflightResponse:
     assert server.services is not None

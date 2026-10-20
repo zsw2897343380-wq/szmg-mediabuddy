@@ -71,7 +71,7 @@ def _after_env_sync(server: Any, previous: dict[str, str], new: dict[str, str]) 
 
 @router.get("", summary="List global environment variables")
 async def list_envs(
-    _: Any = Depends(require_permission("envs")),
+    _: Any = Depends(require_permission("envs.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, str]]:
     path = env_file_path(server.paths.root)
@@ -91,7 +91,7 @@ async def list_envs(
 )
 async def batch_save_envs(
     body: dict[str, str] = Body(...),
-    _: Any = Depends(require_permission("envs")),
+    _: Any = Depends(require_permission("envs.edit")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, str]]:
     cleaned: dict[str, str] = {}
@@ -118,7 +118,7 @@ async def batch_save_envs(
 )
 async def delete_env(
     key: str,
-    _: Any = Depends(require_permission("envs")),
+    _: Any = Depends(require_permission("envs.edit")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, str]]:
     k = key.strip()

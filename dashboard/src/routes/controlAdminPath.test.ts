@@ -32,7 +32,7 @@ describe("pathPermissionKeys", () => {
       ...PERM.mobile,
     ]);
     expect(pathPermissionKeys("/remote-phone")).toEqual([...PERM.mobile]);
-    expect(pathPermissionKeys("/acp")).toBe("admin");
+    expect(pathPermissionKeys("/acp")).toEqual(["acp"]);
   });
 
   it("keeps sso on users page, not advanced", () => {
@@ -45,7 +45,7 @@ describe("pathPermissionKeys", () => {
     expect(NAV_PERMISSIONS["admin-advanced"]).toEqual(PERM.advancedPage);
     expect(ADVANCED_TAB_PERMISSIONS.captcha).toBe("captcha");
     expect("bridge" in ADVANCED_TAB_PERMISSIONS).toBe(false);
-    expect(pathPermissionKeys("/bridge")).toBeNull();
+    expect(pathPermissionKeys("/bridge")).toEqual(["bridge"]);
     expect([...PERM.advancedPage]).toContain("captcha");
   });
 
@@ -59,20 +59,20 @@ describe("pathPermissionKeys", () => {
     expect(NAV_PERMISSIONS.models).toEqual(PERM.modelsPage);
   });
 
-  it("does not gate common pages", () => {
-    expect(pathPermissionKeys("/chat")).toBeNull();
-    expect(pathPermissionKeys("/bridge")).toBeNull();
+  it("gates chat and bridge while keeping redirect aliases available", () => {
+    expect(pathPermissionKeys("/chat")).toEqual(["chat", "records"]);
+    expect(pathPermissionKeys("/bridge")).toEqual(["bridge"]);
     expect(pathPermissionKeys("/personalization/acp")).toBeNull();
   });
 
-  it("gates ungrouped pages except chat", () => {
+  it("gates all ungrouped pages", () => {
     expect(pathPermissionKeys("/experts")).toEqual([...PERM.experts]);
     expect(pathPermissionKeys("/tasks")).toEqual([...PERM.tasks]);
     expect(pathPermissionKeys("/token-usage")).toEqual([...PERM.tokenUsage]);
     const user = { role: "user", permissions: ["experts"] };
     expect(canAccessPath(user, "/experts")).toBe(true);
     expect(canAccessPath(user, "/tasks")).toBe(false);
-    expect(canAccessPath(user, "/chat")).toBe(true);
+    expect(canAccessPath(user, "/chat")).toBe(false);
   });
 
   it("gates settings modules", () => {

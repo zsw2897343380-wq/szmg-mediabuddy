@@ -157,7 +157,7 @@ async def list_channels(
     agent_id: str,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     _require_agent_access(agent_id, user=user, as_user=as_user, server=server)
@@ -173,7 +173,7 @@ async def create_channel(
     body: ChannelCreateBody,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _require_agent_access(agent_id, user=user, as_user=as_user, server=server)
@@ -200,7 +200,7 @@ async def get_channel(
     channel_id: str,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _require_agent_access(agent_id, user=user, as_user=as_user, server=server)
@@ -219,7 +219,7 @@ async def patch_channel(
     body: ChannelPatchBody,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _require_agent_access(agent_id, user=user, as_user=as_user, server=server)
@@ -243,7 +243,7 @@ async def delete_channel(
     agent_id: str,
     channel_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     _require_agent_access(agent_id, user=user, as_user=as_user, server=server)
@@ -259,7 +259,7 @@ async def test_channel(
     channel_id: str,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Probe a channel via Gateway.probe_channel()."""
@@ -281,7 +281,7 @@ async def probe_channel_config(
     body: ChannelProbeBody,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Probe channel credentials from a draft config (no save required)."""
@@ -492,7 +492,7 @@ def _prune_dingtalk_registration_sessions(now: float) -> None:
 async def dingtalk_qrcode_generate(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Start DingTalk Device Flow while retaining the device code server-side."""
@@ -536,7 +536,7 @@ async def dingtalk_qrcode_poll(
     body: DingTalkRegistrationPollBody,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll DingTalk registration and create the channel without exposing secrets."""
@@ -637,7 +637,7 @@ async def dingtalk_qrcode_poll(
 async def wecom_qrcode_generate(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Generate WeCom AI Bot QR code for registration."""
@@ -656,7 +656,7 @@ async def wecom_qrcode_poll(
     agent_id: str,
     as_user: int | None = None,
     scode: str = Body(..., embed=True),
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll WeCom QR scan result."""
@@ -681,7 +681,7 @@ async def wecom_qrcode_poll(
 async def qq_qrcode_generate(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create an in-memory QQ Bot binding session and return its QR target URL."""
@@ -703,7 +703,7 @@ async def qq_qrcode_poll(
     agent_id: str,
     as_user: int | None = None,
     qrcode_token: str = Body(..., embed=True),
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll the active QQ Bot binding task and return credentials after confirmation."""
@@ -738,7 +738,7 @@ def _get_weixin_qr_login() -> Any:
 async def weixin_qrcode_generate(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Generate WeChat iLink Bot QR code."""
@@ -765,7 +765,7 @@ async def weixin_qrcode_poll(
     agent_id: str,
     as_user: int | None = None,
     qrcode_token: str = Body(..., embed=True),
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll WeChat QR scan result (single long-poll, ~40s)."""
@@ -820,7 +820,7 @@ async def feishu_bot_creator_start(
     agent_id: str,
     as_user: int | None = None,
     body: dict[str, Any] = Body(default=None),
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Start the Feishu bot creator subprocess."""
@@ -875,7 +875,7 @@ async def feishu_bot_creator_start(
 async def feishu_bot_creator_poll(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll feishu bot creator subprocess for new output."""
@@ -929,7 +929,7 @@ async def feishu_bot_creator_poll(
 async def feishu_bot_creator_stop(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Stop the feishu bot creator subprocess."""
@@ -968,7 +968,7 @@ async def yuanbao_bot_creator_start(
     agent_id: str,
     as_user: int | None = None,
     body: dict[str, Any] = Body(default=None),
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Start the YuanBao bot creator subprocess."""
@@ -1024,7 +1024,7 @@ async def yuanbao_bot_creator_start(
 async def yuanbao_bot_creator_poll(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll YuanBao bot creator subprocess for new output."""
@@ -1089,7 +1089,7 @@ async def yuanbao_bot_creator_poll(
 async def yuanbao_bot_creator_stop(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("channels")),
+    user: Any = Depends(require_permission("channels.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Stop the YuanBao bot creator subprocess."""

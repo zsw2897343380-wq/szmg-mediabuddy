@@ -13,7 +13,7 @@ from octop.api.common.agent import assert_agent_access_row, assert_agent_owner
 from octop.api.common.agent_runtime import AgentRuntimeFields, runtime_field_updates
 from octop.api.common.validators import assert_user_backend_root_dirs
 from octop.api.common.workspace import require_agent_workspace
-from octop.api.deps import current_user, get_server
+from octop.api.deps import current_user, get_server, require_any_permission
 from octop.infra.agents.experts.avatar import (
     agent_avatar_api_path,
     delete_workspace_avatar,
@@ -33,7 +33,7 @@ from octop.infra.agents.settings.runtime_limits import (
     agent_runtime_values,
 )
 from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.users.permissions import user_has_permission
+from octop.infra.users.permissions import assert_permission, user_has_permission
 
 logger = logging.getLogger(__name__)
 
@@ -285,10 +285,12 @@ async def list_agents(
 @router.post("", status_code=201, summary="Create agent")
 async def create_agent(
     body: AgentCreateBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.create", "assistants.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create a new agent from a template or custom config for the current user."""
+    if body.is_shared:
+        assert_permission(user, "experts.publish")
     from octop.infra.agents.manager import AgentCreateSpec  # noqa: PLC0415
 
     assert server.app_runtime is not None
@@ -383,10 +385,12 @@ _assert_agent_owner = assert_agent_owner
 async def patch_agent(
     agent_id: str,
     body: AgentPatchBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.edit", "assistants.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Partially update agent fields. Owner or admin only."""
+    if body.is_shared is not None:
+        assert_permission(user, "experts.publish")
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.get_row(agent_id)
     if row is None:
@@ -450,7 +454,7 @@ async def patch_agent(
 @router.delete("/{agent_id}", status_code=204, summary="Delete agent")
 async def delete_agent(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.delete", "assistants.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     """Permanently remove an agent and its runtime. Owner or admin."""
@@ -466,7 +470,7 @@ async def delete_agent(
 async def upload_agent_avatar(
     agent_id: str,
     file: UploadFile = File(...),  # noqa: B008
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.edit", "assistants.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, str]:
     """Store an uploaded image in the agent workspace and set ``icon_url``."""
@@ -508,7 +512,7 @@ async def get_agent_avatar(
 @router.delete("/{agent_id}/avatar", status_code=204, summary="Delete expert avatar")
 async def delete_agent_avatar(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.edit", "assistants.edit")),
     server: Any = Depends(get_server),
 ) -> Response:
     """Remove the workspace avatar file and clear ``icon_url``."""
@@ -522,7 +526,7 @@ async def delete_agent_avatar(
 @router.post("/{agent_id}/start", status_code=204, summary="Start agent")
 async def start_agent(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.use", "assistants.use")),
     server: Any = Depends(get_server),
 ) -> None:
     """Load a stopped agent into the harness runtime."""
@@ -537,7 +541,7 @@ async def start_agent(
 @router.post("/{agent_id}/stop", status_code=204, summary="Stop agent")
 async def stop_agent(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.use", "assistants.use")),
     server: Any = Depends(get_server),
 ) -> None:
     """Unload agent from harness runtime; persists ``last_state=stopped``."""
@@ -552,7 +556,7 @@ async def stop_agent(
 @router.post("/{agent_id}/reload", status_code=204, summary="Reload agent")
 async def reload_agent(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_any_permission("experts.use", "assistants.use")),
     server: Any = Depends(get_server),
 ) -> None:
     """Hot-reload agent config, skills, and MCP connectors without restarting the server."""

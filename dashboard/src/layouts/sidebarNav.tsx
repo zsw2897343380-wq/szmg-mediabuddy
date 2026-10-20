@@ -153,15 +153,17 @@ export function buildNavSections(
   user: OctopUser | null,
   opts?: { mobileEnabled?: boolean },
 ): NavSection[] {
-  const topItems: NavItem[] = [
-    {
-      key: "chat",
-      path: "/assistants",
-      icon: <Bot size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.assistant",
-      badge: "BETA",
-    },
-  ];
+  const topItems: NavItem[] = navAllowed(user, "chat")
+    ? [
+        {
+          key: "chat",
+          path: "/assistants",
+          icon: <Bot size={iconSize} strokeWidth={iconStroke} />,
+          labelKey: "nav.assistant",
+          badge: "BETA",
+        },
+      ]
+    : [];
   const centerPath = navAllowed(user, "experts")
     ? "/experts"
     : userCan(user, "skills")
@@ -223,13 +225,14 @@ export function buildNavSections(
     });
   }
   // User-scoped remote Octop links stay available without a module permission.
-  settingsItems.push({
-    key: "bridge",
-    path: "/bridge",
-    icon: <Cloudy size={iconSize} strokeWidth={iconStroke} />,
-    labelKey: "nav.bridge",
-    badge: "Beta",
-  });
+  if (navAllowed(user, "bridge"))
+    settingsItems.push({
+      key: "bridge",
+      path: "/bridge",
+      icon: <Cloudy size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.bridge",
+      badge: "Beta",
+    });
   if (settingsItems.length > 0) {
     sections.push({
       id: "settings",
@@ -259,7 +262,7 @@ export function buildNavSections(
       labelKey: "nav.remoteDesktop",
     });
   }
-  // ACP: no module key this round — admin role only.
+  // ACP can be delegated independently of the administrator role.
   if (navAllowed(user, "acp")) {
     controlItems.push({
       key: "acp",

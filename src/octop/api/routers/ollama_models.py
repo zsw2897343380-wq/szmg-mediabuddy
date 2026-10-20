@@ -77,7 +77,7 @@ def _task_to_response(task: DownloadTask) -> OllamaDownloadTaskResponse:
 )
 async def list_ollama_models(
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.view")),
 ) -> list[OllamaModelResponse]:
     """Return models from the Ollama daemon and/or the configured models dir."""
     from octop.infra.utils.ollama_manager import (
@@ -153,7 +153,7 @@ async def list_ollama_models(
 async def download_ollama_model(
     body: OllamaDownloadRequest,
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.edit")),
 ) -> OllamaDownloadTaskResponse:
     """Start a background pull via Ollama SDK.
 
@@ -217,7 +217,7 @@ async def _run_pull_in_background(
     summary="Get Ollama download tasks",
 )
 async def get_ollama_download_status(
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.edit")),
 ) -> list[OllamaDownloadTaskResponse]:
     """Return all Ollama-related download tasks."""
     tasks = await get_tasks(backend="ollama")
@@ -230,7 +230,7 @@ async def get_ollama_download_status(
 )
 async def cancel_ollama_download(
     task_id: str,
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.edit")),
 ) -> dict[str, Any]:
     """Cancel a pending or downloading Ollama model pull."""
     success = await cancel_task(task_id)
@@ -249,7 +249,7 @@ async def cancel_ollama_download(
 async def delete_ollama_model(
     name: str,
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.edit")),
 ) -> dict[str, Any]:
     """Delete an Ollama model via the SDK."""
     try:
@@ -323,7 +323,7 @@ def _service_status(server: Any, *, enabled: bool, running: bool) -> OllamaServi
 )
 async def get_ollama_service(
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.view")),
 ) -> OllamaServiceStatus:
     from octop.infra.utils.ollama_manager import is_ollama_reachable
 
@@ -348,7 +348,7 @@ async def get_ollama_service(
 async def put_ollama_service(
     body: OllamaServiceBody,
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("ollama_models")),
+    _: Any = Depends(require_permission("ollama_models.edit")),
 ) -> OllamaServiceStatus:
     from octop.infra.utils.ollama_manager import (
         SETTINGS_KEY_MODELS_DIR,

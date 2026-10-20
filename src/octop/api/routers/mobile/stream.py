@@ -537,7 +537,7 @@ async def mobile_stream_ws(
             )
             await websocket.close(code=4001, reason=f"auth failed: {exc}")
             return
-        if not user_has_permission(user, "mobile"):
+        if not user_has_permission(user, "mobile.view"):
             await websocket.close(code=4003, reason="permission required")
             return
 
@@ -552,8 +552,9 @@ async def mobile_stream_ws(
 
         # Connecting the phone stream binds it for agent tools (same idea as
         # an active browser / desktop session) — no separate UI toggle.
-        set_mobile_agent_control(enabled=True, device=device)
-        bound_device = device
+        if user_has_permission(user, "mobile.use"):
+            set_mobile_agent_control(enabled=True, device=device)
+            bound_device = device
 
         quality, max_fps, max_side = _clamp_stream_params(
             int(start_msg.get("quality") or 80),
@@ -623,6 +624,8 @@ async def mobile_stream_ws(
             msg = json.loads(msg_raw)
             if msg.get("type") == "stop":
                 break
+            if not user_has_permission(user, "mobile.use"):
+                continue
             try:
                 await _handle_input(
                     websocket,

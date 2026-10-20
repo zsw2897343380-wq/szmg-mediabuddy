@@ -24,7 +24,6 @@ from pydantic import BaseModel, Field
 from starlette.websockets import WebSocketState
 
 from octop.api.deps import (
-    current_user,
     get_server,
     require_permission,
     resolve_user_from_token,
@@ -113,13 +112,15 @@ class VoiceConfigurationTestBody(VoiceProviderCreateBody):
 
 
 @router.get("/presets")
-async def list_voice_presets(_: Any = Depends(current_user)) -> list[dict[str, Any]]:
+async def list_voice_presets(
+    _: Any = Depends(require_permission("voice.view")),
+) -> list[dict[str, Any]]:
     return load_voice_presets()
 
 
 @router.get("/providers")
 async def list_voice_providers(
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
@@ -127,7 +128,7 @@ async def list_voice_providers(
 
 @router.get("/active")
 async def get_active_voice(
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return _active_payload(_voice_manager(server))
@@ -136,7 +137,7 @@ async def get_active_voice(
 @router.put("/active")
 async def set_active_voice(
     body: ActiveVoiceBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _voice_manager(server)
@@ -149,7 +150,7 @@ async def transcribe_audio(
     audio: UploadFile = File(...),
     language: str = Form(default="zh-CN"),
     provider: str | None = Form(default=None),
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     data = await audio.read()
@@ -168,7 +169,7 @@ async def transcribe_audio(
 @router.post("/tts")
 async def synthesize_speech(
     body: TTSBody,
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     mgr = _voice_manager(server)
@@ -334,7 +335,7 @@ async def stream_transcription(
 
 @admin_router.get("")
 async def admin_list_voice_providers(
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
@@ -343,7 +344,7 @@ async def admin_list_voice_providers(
 @admin_router.post("", status_code=201)
 async def admin_create_voice_provider(
     body: VoiceProviderCreateBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     repo = server.services.voice_provider_repo
@@ -369,7 +370,7 @@ async def admin_create_voice_provider(
 async def admin_patch_voice_provider(
     provider_id: int,
     body: VoiceProviderPatchBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     repo = server.services.voice_provider_repo
@@ -394,7 +395,7 @@ async def admin_patch_voice_provider(
 @admin_router.delete("/{provider_id}", status_code=204)
 async def admin_delete_voice_provider(
     provider_id: int,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> None:
     repo = server.services.voice_provider_repo
@@ -415,7 +416,7 @@ async def admin_test_voice_provider(
     provider_id: int,
     body: VoiceTestBody,
     request: Request,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return await _voice_manager(server).test_provider(
@@ -427,7 +428,7 @@ async def admin_test_voice_provider(
 async def admin_test_voice_configuration(
     body: VoiceConfigurationTestBody,
     request: Request,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return await _voice_manager(server).test_configuration(

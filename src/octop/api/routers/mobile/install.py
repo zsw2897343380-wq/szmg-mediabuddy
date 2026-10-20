@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/mobile/install")
 async def install_mobile(
     request: Request,
-    _user: User = Depends(require_permission("mobile")),
+    _user: User = Depends(require_permission("mobile.edit")),
 ) -> StreamingResponse:
     locale = resolve_request_locale(request)
 

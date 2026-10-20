@@ -14,7 +14,7 @@ from fastapi import APIRouter, Body, Depends
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_owner as _assert_agent_owner
-from octop.api.deps import current_user, get_server, require_admin
+from octop.api.deps import get_server, require_permission
 from octop.infra.errors import ErrorCode, OctopError
 
 logger = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ def _agent_row(server: Any, agent_id: str, user: Any) -> Any:
 
 @router.get("/acp", summary="Get global ACP runners")
 async def get_global_acp_runners(
-    user: Any = Depends(require_admin()),
+    user: Any = Depends(require_permission("acp.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return ACP runner definitions shared by all agents for the current user."""
@@ -158,7 +158,7 @@ async def get_global_acp_runners(
 @router.put("/acp", summary="Update global ACP runners")
 async def put_global_acp_runners(
     body: ACPRunnersBody,
-    user: Any = Depends(require_admin()),
+    user: Any = Depends(require_permission("acp.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Replace the current user's global ACP runner configuration."""
@@ -172,7 +172,7 @@ async def put_global_acp_runners(
 @router.get("/acp/{runner_name}", summary="Get global ACP runner")
 async def get_global_acp_runner(
     runner_name: str,
-    user: Any = Depends(require_admin()),
+    user: Any = Depends(require_permission("acp.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     registry = _registry(server)
@@ -186,7 +186,7 @@ async def get_global_acp_runner(
 async def put_global_acp_runner(
     runner_name: str,
     body: ACPRunnerBody = Body(...),
-    user: Any = Depends(require_admin()),
+    user: Any = Depends(require_permission("acp.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     key = runner_name.strip()
@@ -204,7 +204,7 @@ async def put_global_acp_runner(
 @router.delete("/acp/{runner_name}", status_code=204, summary="Delete global ACP runner")
 async def delete_global_acp_runner(
     runner_name: str,
-    user: Any = Depends(require_admin()),
+    user: Any = Depends(require_permission("acp.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     if runner_name in _BUILTIN_RUNNERS:
@@ -221,7 +221,7 @@ async def delete_global_acp_runner(
 @router.get("/agents/{agent_id}/acp", summary="Get ACP config")
 async def get_acp_config(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return global runners plus per-agent ``acp_runner`` tool toggle."""
@@ -235,7 +235,7 @@ async def get_acp_config(
 async def put_acp_config(
     agent_id: str,
     body: ACPConfigBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Update per-agent tool toggle; optional ``runners`` updates global definitions."""
@@ -254,7 +254,7 @@ async def put_acp_config(
 async def put_acp_tool_toggle(
     agent_id: str,
     body: ACPAgentToolBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Enable or disable the ``acp_runner`` tool for one agent only."""
@@ -269,7 +269,7 @@ async def put_acp_tool_toggle(
 async def get_acp_runner(
     agent_id: str,
     runner_name: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _agent_row(server, agent_id, user)
@@ -281,7 +281,7 @@ async def put_acp_runner(
     agent_id: str,
     runner_name: str,
     body: ACPRunnerBody = Body(...),
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _agent_row(server, agent_id, user)
@@ -296,7 +296,7 @@ async def put_acp_runner(
 async def delete_acp_runner(
     agent_id: str,
     runner_name: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("acp.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     _agent_row(server, agent_id, user)

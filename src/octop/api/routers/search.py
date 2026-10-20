@@ -46,7 +46,7 @@ class TestSearchResponse(BaseModel):
 async def test_search_provider(
     provider_id: str,
     body: TestSearchRequest,
-    _: Any = Depends(require_permission("search")),
+    _: Any = Depends(require_permission("search.edit")),
 ) -> TestSearchResponse:
     result = await probe_search_provider(provider_id, body.env_vars)
     return TestSearchResponse(**result)

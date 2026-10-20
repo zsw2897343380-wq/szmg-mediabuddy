@@ -8,10 +8,14 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from pydantic import BaseModel, Field
 
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import current_user, get_server, require_any_permission, require_permission
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.identity import Role, User
-from octop.infra.users.permissions import PERMISSIONS, effective_permissions
+from octop.infra.users.permissions import (
+    PERMISSIONS,
+    expand_permissions,
+    user_has_permission,
+)
 from octop.infra.users.resource_policy import (
     normalize_max_agents,
     normalize_token_quota,
@@ -204,7 +208,7 @@ def _assert_can_assign(actor: User, permissions: list[str]) -> None:
     """Non-admin actors may only grant permissions they themselves hold."""
     if actor.is_admin:
         return
-    missing = sorted(set(permissions) - set(actor.permissions or []))
+    missing = sorted(expand_permissions(permissions) - expand_permissions(actor.permissions or []))
     if missing:
         raise OctopError(
             ErrorCode.FORBIDDEN,
@@ -216,7 +220,7 @@ def _assert_can_assign(actor: User, permissions: list[str]) -> None:
 def _can_manage_users(row: Any) -> bool:
     if str(getattr(row, "role", "")) == "admin":
         return True
-    return "users" in (getattr(row, "permissions", None) or [])
+    return bool({"users", "users.permissions"} & set(getattr(row, "permissions", None) or []))
 
 
 def _assert_not_last_user_manager(
@@ -229,7 +233,7 @@ def _assert_not_last_user_manager(
     """Refuse stripping ``users`` if no one else could manage users afterward."""
     if target_user_id != actor.id:
         return
-    if "users" in new_permissions:
+    if {"users", "users.permissions"} & set(new_permissions):
         return
     managers = [
         u
@@ -253,6 +257,8 @@ async def list_permission_catalog(
     items: list[dict[str, str]] = []
     zh = locale.startswith("zh")
     for key, p in PERMISSIONS.items():
+        if not p.parent:
+            continue
         labels = [(p.label_zh, p.label_en), *p.extra_tabs]
         for label_zh, label_en in labels:
             items.append(
@@ -262,6 +268,7 @@ async def list_permission_catalog(
                     "label": label_zh if zh else label_en,
                     "page": p.page,
                     "page_label": (p.page_zh if zh else p.page_en) if p.page else "",
+                    "parent": p.parent,
                 }
             )
     return items
@@ -269,7 +276,7 @@ async def list_permission_catalog(
 
 @router.get("")
 async def list_users(
-    _: Any = Depends(require_permission("users")), server: Any = Depends(get_server)
+    _: Any = Depends(require_permission("users.view")), server: Any = Depends(get_server)
 ) -> list[dict[str, Any]]:
     rows = server.user_manager.list_all(include_disabled=True)
     policy_map = server.services.user_policy_repo.list_by_user_ids([r.id for r in rows])
@@ -279,9 +286,13 @@ async def list_users(
 @router.post("", status_code=201)
 async def create_user(
     body: UserCreateBody,
-    actor: Any = Depends(require_permission("users")),
+    actor: Any = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    if not user_has_permission(actor, "users.permissions"):
+        raise OctopError(
+            ErrorCode.FORBIDDEN, "permission required", details={"permission": "users.permissions"}
+        )
     role_id, template_name, template_perms, template_policies = _resolve_role_template(
         server, body.role
     )
@@ -391,9 +402,20 @@ async def _batch_apply_one(
 )
 async def batch_users(
     body: UserBatchBody,
-    actor: Any = Depends(require_permission("users")),
+    actor: Any = Depends(require_any_permission("users.edit", "users.delete", "users.permissions")),
     server: Any = Depends(get_server),
 ) -> UserBatchResponse:
+    required = (
+        "users.delete"
+        if body.action == "delete"
+        else "users.permissions"
+        if body.action.startswith("set_")
+        else "users.edit"
+    )
+    if not user_has_permission(actor, required):
+        raise OctopError(
+            ErrorCode.FORBIDDEN, "permission required", details={"permission": required}
+        )
     if body.action == "set_token_quota":
         normalize_token_quota(body.token_quota)
     if body.action == "set_max_agents":
@@ -432,7 +454,7 @@ async def batch_users(
 @router.get("/{user_id}")
 async def get_user(
     user_id: int,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     row = server.user_manager.get_row(user_id)
@@ -445,9 +467,31 @@ async def get_user(
 async def patch_user(
     user_id: int,
     body: UserPatchBody,
-    actor: Any = Depends(require_permission("users")),
+    actor: Any = Depends(require_any_permission("users.edit", "users.permissions")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    if body.model_fields_set - {
+        "role",
+        "role_name",
+        "permissions",
+        "token_quota",
+        "max_agents",
+        "workspace_root_dir",
+    } and not user_has_permission(actor, "users.edit"):
+        raise OctopError(
+            ErrorCode.FORBIDDEN, "permission required", details={"permission": "users.edit"}
+        )
+    if {
+        "role",
+        "role_name",
+        "permissions",
+        "token_quota",
+        "max_agents",
+        "workspace_root_dir",
+    } & body.model_fields_set and not user_has_permission(actor, "users.permissions"):
+        raise OctopError(
+            ErrorCode.FORBIDDEN, "permission required", details={"permission": "users.permissions"}
+        )
     row = server.user_manager.get_row(user_id)
     if row is None:
         raise OctopError(ErrorCode.NOT_FOUND, "user not found")
@@ -472,6 +516,7 @@ async def patch_user(
         if user_id == actor.id and role_id != Role.ADMIN:
             raise OctopError(ErrorCode.FORBIDDEN, "cannot demote yourself")
         _require_admin_to_grant_admin(actor, role_id)
+        _assert_can_assign(actor, template_perms)
         await server.user_manager.set_role(row.username, role_id)
         if "role_name" not in body.model_fields_set:
             server.services.user_repo.set_role_name(user_id, template_name)
@@ -516,7 +561,7 @@ async def patch_user(
 @router.post("/{user_id}/unlock-login", status_code=204, summary="Clear login lockout")
 async def unlock_user_login(
     user_id: int,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.reset_password")),
     server: Any = Depends(get_server),
 ) -> None:
     """Clear failed-login counter and temporary lock for a user."""
@@ -530,7 +575,7 @@ async def unlock_user_login(
 async def reset_password(
     user_id: int,
     body: ResetPasswordBody,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.reset_password")),
     server: Any = Depends(get_server),
 ) -> None:
     row = server.user_manager.get_row(user_id)
@@ -542,7 +587,7 @@ async def reset_password(
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: int,
-    actor: Any = Depends(require_permission("users")),
+    actor: Any = Depends(require_permission("users.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     if user_id == actor.id:
@@ -558,7 +603,7 @@ async def delete_user(
 async def upload_user_avatar(
     user_id: int,
     file: UploadFile = File(...),  # noqa: B008
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, str | None]:
     if server.user_manager.get_row(user_id) is None:
@@ -579,7 +624,7 @@ async def get_user_avatar(
     actor: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> Any:
-    if actor.id != user_id and "users" not in effective_permissions(actor):
+    if actor.id != user_id and not user_has_permission(actor, "users.view"):
         raise OctopError(ErrorCode.FORBIDDEN, "not allowed to read this avatar")
     from octop.infra.users.profile_avatar import avatar_response
 
@@ -591,7 +636,7 @@ async def get_user_avatar(
 @router.delete("/{user_id}/avatar", status_code=204)
 async def delete_user_avatar(
     user_id: int,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     if server.user_manager.get_row(user_id) is None:

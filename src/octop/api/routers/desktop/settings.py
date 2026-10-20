@@ -28,7 +28,7 @@ class DesktopGeometryRequest(BaseModel):
 @router.post("/desktop/geometry")
 async def set_desktop_geometry(
     body: DesktopGeometryRequest,
-    _user: User = Depends(require_permission("desktop")),
+    _user: User = Depends(require_permission("desktop.edit")),
 ) -> dict[str, object]:
     """Resize the Linux virtual desktop (restarts Xvnc). Admin only."""
     if desktop_status().platform != "linux":
@@ -42,7 +42,7 @@ async def set_desktop_geometry(
 
 @router.get("/desktop/geometry")
 async def get_desktop_geometry(
-    _user: User = Depends(require_permission("desktop")),
+    _user: User = Depends(require_permission("desktop.view")),
 ) -> dict[str, object]:
     geometry = read_geometry()
     w, h = parse_geometry(geometry)

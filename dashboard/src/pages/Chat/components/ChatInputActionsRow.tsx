@@ -62,6 +62,8 @@ import { SHORTCUT_ICON_TONE_CLASS } from "../utils/slashShortcutStyles";
 import { isSttAvailable } from "../../../hooks/useVoiceInput";
 import { parseSkillSlugsInText } from "../utils/skillSlash";
 import { useSkillDisplayName } from "../../Agent/Skills/skillDisplayNames";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 import {
   mentionedExpertIds,
   mentionedSubagentSlugs,
@@ -258,6 +260,9 @@ export default function ChatInputActionsRow({
 }: ChatInputActionsRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const user = useCurrentUser();
+  const canChat = userCan(user, "chat.use");
+  const canUpload = userCan(user, "chat.upload");
   const remoteManaged = Boolean(agentId?.startsWith("bridge:"));
   const skillDisplayName = useSkillDisplayName();
   const actionsRowRef = useRef<HTMLDivElement | null>(null);
@@ -352,13 +357,21 @@ export default function ChatInputActionsRow({
   );
   const allowWriteTools = conversationMode === "craft";
   const showConnectorPicker = Boolean(
-    allowWriteTools && availableConnectors && onConnectorsChange,
+    userCan(user, "connectors.use") &&
+      allowWriteTools &&
+      availableConnectors &&
+      onConnectorsChange,
   );
   const showKnowledgePicker = Boolean(
-    availableKnowledgeBases && onKnowledgeBaseIdsChange,
+    userCan(user, "knowledge_bases.use") &&
+      availableKnowledgeBases &&
+      onKnowledgeBaseIdsChange,
   );
   const showSkillPicker = Boolean(
-    allowWriteTools && availableSkills && onInsertSkillCommand,
+    userCan(user, "skills.use") &&
+      allowWriteTools &&
+      availableSkills &&
+      onInsertSkillCommand,
   );
   const showExpertPicker = Boolean(
     allowWriteTools &&
@@ -749,6 +762,7 @@ export default function ChatInputActionsRow({
           <button
             type="button"
             className={styles.mobileOverflowItem}
+            disabled={!canChat}
             onClick={() => {
               closePlusMenu();
               onNewChat();
@@ -761,7 +775,12 @@ export default function ChatInputActionsRow({
             type="button"
             className={styles.mobileOverflowItem}
             disabled={
-              !text.trim() || polishing || isStreaming || disabled || !agentId
+              !text.trim() ||
+              polishing ||
+              isStreaming ||
+              disabled ||
+              !agentId ||
+              !canChat
             }
             onClick={() => {
               closePlusMenu();
@@ -774,7 +793,7 @@ export default function ChatInputActionsRow({
           <button
             type="button"
             className={styles.mobileOverflowItem}
-            disabled={uploading}
+            disabled={uploading || !canUpload}
             onClick={() => {
               closePlusMenu();
               onFileSelect();
@@ -786,7 +805,7 @@ export default function ChatInputActionsRow({
           <button
             type="button"
             className={styles.mobileOverflowItem}
-            disabled={uploading}
+            disabled={uploading || !canUpload}
             onClick={() => {
               closePlusMenu();
               onFolderSelect();
@@ -1179,7 +1198,7 @@ export default function ChatInputActionsRow({
             <button
               className={styles.secondaryBtn}
               type="button"
-              disabled={uploading}
+              disabled={uploading || !canUpload}
               aria-label={t("upload.tooltip", "Upload")}
               aria-haspopup="menu"
               hidden={taskLayout}
@@ -1446,7 +1465,7 @@ export default function ChatInputActionsRow({
           <button
             className={styles.sendBtn}
             onClick={onSubmit}
-            disabled={!canSend}
+            disabled={!canSend || !canChat}
             title={t("chat.send", "Send")}
             type="button"
           >

@@ -185,7 +185,7 @@ async def oauth_unbind(
 async def get_oauth_provider(
     kind: SsoKind,
     request: Request,
-    _: Any = Depends(require_permission("sso")),
+    _: Any = Depends(require_permission("sso.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return admin-safe provider configuration; the client secret is omitted."""
@@ -199,7 +199,7 @@ async def put_oauth_provider(
     kind: SsoKind,
     body: OauthProviderPutBody,
     request: Request,
-    _: Any = Depends(require_permission("sso")),
+    _: Any = Depends(require_permission("sso.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create or update provider settings; the client secret is write-only."""
@@ -221,7 +221,7 @@ async def put_oauth_provider(
 @router.post("/oauth/providers/{kind}/test", summary="Test OAuth provider connection")
 async def test_oauth_provider(
     kind: SsoKind,
-    _: Any = Depends(require_permission("sso")),
+    _: Any = Depends(require_permission("sso.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, bool | str]:
     """Verify provider credentials without changing configuration."""

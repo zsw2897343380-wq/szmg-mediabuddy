@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/browser/uninstall")
 async def uninstall_browser(
     request: Request,
-    _user: User = Depends(require_permission("browser")),
+    _user: User = Depends(require_permission("browser.edit")),
 ) -> StreamingResponse:
     """Stream browser uninstall progress as SSE (admin only)."""
     locale = resolve_request_locale(request)

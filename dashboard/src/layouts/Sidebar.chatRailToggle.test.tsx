@@ -12,6 +12,13 @@ import Sidebar from "./Sidebar";
 vi.mock("../components/AvatarDropdown", () => ({
   default: () => null,
 }));
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({
+    role: "user",
+    permissions: ["chat", "assistants", "records"],
+  }),
+  useSetCurrentUser: () => vi.fn(),
+}));
 vi.mock("../components/AppVersionBadge", () => ({
   default: () => null,
 }));

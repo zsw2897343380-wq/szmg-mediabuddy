@@ -40,6 +40,8 @@ import PageShell from "../../../layouts/PageShell";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { UsageStats, type UsageStatItem } from "./UsageStats";
 import { useUserRole } from "../../../hooks/useUserRole";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 import { request, requestBlob } from "../../../api/request";
 import { useAgent } from "../../../context/AgentContext";
 import { useTheme } from "../../../context/ThemeContext";
@@ -831,7 +833,8 @@ export default function TokenUsagePage() {
   const { t } = useTranslation();
   const { agents } = useAgent();
   const role = useUserRole();
-  const isAdmin = role === "admin";
+  const user = useCurrentUser();
+  const isAdmin = userCan(user, "token_usage.all");
   const isMobile = useIsMobile();
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(() =>
     defaultLast30dRange(),
@@ -941,7 +944,7 @@ export default function TokenUsagePage() {
       return;
     }
     let cancelled = false;
-    void request<UsageUserOption[]>("/users")
+    void request<UsageUserOption[]>("/usage/users")
       .then((rows) => {
         if (!cancelled) setUsers(rows);
       })
@@ -1079,7 +1082,7 @@ export default function TokenUsagePage() {
             <Button
               icon={<Download size={14} />}
               loading={exporting}
-              disabled={role === null}
+              disabled={role === null || !userCan(user, "token_usage.export")}
               onClick={() => void onExportExcel()}
               aria-label={t("tokenUsage.exportExcel")}
             >

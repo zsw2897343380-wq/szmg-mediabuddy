@@ -197,3 +197,18 @@ def require_admin() -> Callable[..., Awaitable[User]]:
         return user
 
     return _dep
+
+
+def require_any_permission(*keys: str) -> Callable[..., Awaitable[User]]:
+    """Require one of several operations sharing an HTTP resource."""
+    if not keys or any(key not in PERMISSIONS for key in keys):
+        raise RuntimeError(f"unknown permission keys: {keys}")
+
+    async def _dep(user: User = Depends(current_user)) -> User:
+        if not any(user_has_permission(user, key) for key in keys):
+            raise OctopError(
+                ErrorCode.FORBIDDEN, "permission required", details={"permissions": list(keys)}
+            )
+        return user
+
+    return _dep

@@ -188,7 +188,8 @@ export default function SecuritySettingsPage() {
           mode: values.tool_guard_mode ?? policy?.tool_guard?.mode ?? "warn",
         },
       };
-      const saved = await securityApi.savePolicy(body);
+      const section = activeTab as keyof SecurityPolicy;
+      const saved = await securityApi.savePolicy({ [section]: body[section] });
       setPolicy(saved);
       message.success(t("security.saved"));
     } catch (err) {
@@ -200,9 +201,10 @@ export default function SecuritySettingsPage() {
     }
   };
 
-  const saveFooter = (
-    <PolicyFooter saving={saving} onSave={() => void handleSave()} />
-  );
+  const saveFooter =
+    userCan(user, "security.edit") || userCan(user, `security.${activeTab}`) ? (
+      <PolicyFooter saving={saving} onSave={() => void handleSave()} />
+    ) : null;
 
   const renderPolicyTab = () => {
     switch (activeTab) {
@@ -413,7 +415,13 @@ export default function SecuritySettingsPage() {
       <Form
         form={form}
         layout="vertical"
-        disabled={loading}
+        disabled={
+          loading ||
+          !(
+            userCan(user, "security.edit") ||
+            userCan(user, `security.${activeTab}`)
+          )
+        }
         className={styles.panel}
         hidden={activeTab === "audit"}
         preserve

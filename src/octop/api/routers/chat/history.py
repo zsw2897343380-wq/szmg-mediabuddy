@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, Response
 
 from octop.api.common.agent import require_agent_row
 from octop.api.common.agent_workspace import resolve_agent_workspace_dir
-from octop.api.deps import current_user, get_server
+from octop.api.deps import current_user, get_server, require_permission
 from octop.api.routers.chat.models import ForkThreadBody, RebindSessionBody, RenameThreadBody
 from octop.api.routers.chat.serialize import (
     HISTORY_DEFAULT_LIMIT,
@@ -108,7 +108,7 @@ async def list_threads(
         ),
     ] = "sidebar",
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """List conversation threads for an agent, including which thread is active for this user.
@@ -182,7 +182,7 @@ async def get_history_migration_status(
 async def start_history_migration(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Queue a bounded batch; the gateway decodes exactly one checkpoint at a time."""
@@ -233,7 +233,7 @@ async def start_history_migration(
 async def create_thread(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("chat.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Start a new conversation (/new equivalent for dashboard)."""
@@ -306,7 +306,7 @@ async def get_thread_history(
     offset: int = 0,
     cursor: str | None = None,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return recent messages for a thread, including tool calls and thinking blocks.
@@ -427,7 +427,7 @@ async def mark_thread_read(
     agent_id: str,
     thread_id: str,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.view")),
     server: Any = Depends(get_server),
 ) -> None:
     """Clear unread message count for a thread (e.g. when the user opens it in the dashboard)."""
@@ -446,7 +446,7 @@ async def fork_thread(
     body: ForkThreadBody,
     request: Request,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("chat.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create a new dashboard thread with history through *message_id*.
@@ -480,7 +480,7 @@ async def fork_thread(
 async def rebind_session(
     agent_id: str,
     body: RebindSessionBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("chat.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Point the user's dashboard session at an existing thread."""
@@ -501,7 +501,7 @@ async def export_history(
     thread_id: str,
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.export")),
     server: Any = Depends(get_server),
 ) -> Any:
     from fastapi.responses import JSONResponse  # noqa: PLC0415
@@ -533,7 +533,7 @@ async def patch_thread(
     thread_id: str,
     body: RenameThreadBody,
     as_user: int | None = None,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Update sidebar metadata or sticky composer settings for a thread."""
@@ -624,7 +624,7 @@ async def delete_thread(
     thread_id: str,
     as_user: int | None = None,
     compact: bool | None = Query(default=None),
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("records.delete")),
     server: Any = Depends(get_server),
 ) -> Response:
     """Remove a conversation thread, its checkpoint data, and its metadata.

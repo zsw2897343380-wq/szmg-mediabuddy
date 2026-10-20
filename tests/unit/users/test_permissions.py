@@ -11,6 +11,7 @@ from octop.infra.users.permissions import (
     BASELINE_PERMISSIONS,
     PERMISSIONS,
     effective_permissions,
+    expand_permissions,
     user_has_permission,
     validate_permission_keys,
 )
@@ -27,7 +28,15 @@ def test_catalog_has_no_empty_keys_and_no_deferred_dead_keys() -> None:
     for key in PERMISSIONS:
         assert key == PERMISSIONS[key].key
         assert PERMISSIONS[key].label_zh and PERMISSIONS[key].label_en
-    assert "acp" not in PERMISSIONS
+    assert {
+        "acp",
+        "bridge",
+        "workspace",
+        "public_resources",
+        "assistants",
+        "chat",
+        "records",
+    } <= set(PERMISSIONS)
 
 
 def test_user_has_permission_admin_bypass() -> None:
@@ -45,7 +54,7 @@ def test_user_has_permission_normal_hit_and_miss() -> None:
 
 def test_baseline_is_settings_group() -> None:
     assert {
-        key for key, p in PERMISSIONS.items() if p.category in {"settings", "nav"}
+        key for key, p in PERMISSIONS.items() if not p.parent and p.category in {"settings", "nav"}
     } == BASELINE_PERMISSIONS
     assert BASELINE_PERMISSIONS
     assert "experts" in BASELINE_PERMISSIONS
@@ -57,7 +66,7 @@ def test_categories_match_nav_groups() -> None:
     allowed = {"settings", "control", "admin", "nav"}
     for p in PERMISSIONS.values():
         assert p.category in allowed
-    assert {k for k, p in PERMISSIONS.items() if p.category == "settings"} == {
+    assert {k for k, p in PERMISSIONS.items() if not p.parent and p.category == "settings"} == {
         "skills",
         "subagents",
         "tools",
@@ -68,11 +77,14 @@ def test_categories_match_nav_groups() -> None:
         "connectors",
         "skill_packages",
         "knowledge_bases",
+        "bridge",
+        "workspace",
     }
     assert PERMISSIONS["skills"].page == "personalization"
     assert PERMISSIONS["agent_plugins"].page == "personalization"
-    assert {k for k, p in PERMISSIONS.items() if p.category == "control"} == {
+    assert {k for k, p in PERMISSIONS.items() if not p.parent and p.category == "control"} == {
         "terminal",
+        "acp",
         "browser",
         "desktop",
         "mobile",
@@ -98,3 +110,20 @@ def test_validate_permission_keys_rejects_unknown() -> None:
 def test_effective_permissions_admin_gets_catalog() -> None:
     admin = _FakeUser(is_admin=True, permissions=[])
     assert effective_permissions(admin) == sorted(ALL_PERMISSION_KEYS)
+
+
+@pytest.mark.parametrize("module", ["experts", "skills", "connectors", "tasks", "users", "backup"])
+def test_view_does_not_grant_mutations(module: str) -> None:
+    user = _FakeUser(False, [f"{module}.view"])
+    assert user_has_permission(user, module)
+    assert user_has_permission(user, f"{module}.view")
+    assert not user_has_permission(user, f"{module}.delete")
+    assert not user_has_permission(user, f"{module}.edit")
+
+
+def test_legacy_grants_expand_without_escalating_usage_scope() -> None:
+    user = _FakeUser(False, ["users", "token_usage"])
+    assert user_has_permission(user, "users.permissions")
+    assert not user_has_permission(user, "token_usage.all")
+    assert "users.permissions" in expand_permissions(user.permissions or [])
+    assert "token_usage.all" not in expand_permissions(user.permissions or [])

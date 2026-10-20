@@ -46,6 +46,7 @@ from octop.api.routers.browser.harness import (
     harness_page_url,
     resolve_harness_session,
 )
+from octop.infra.users.permissions import user_has_permission
 from octop.infra.utils.browser_media import user_browser_profile
 
 logger = logging.getLogger(__name__)
@@ -350,6 +351,10 @@ async def browser_stream_ws(
         await websocket.close(code=4001, reason=f"auth failed: {exc}")
         return
 
+    required = "browser.view" if listen_only else "browser.use"
+    if not user_has_permission(user, required):
+        await websocket.close(code=4003, reason="permission required")
+        return
     await websocket.accept()
 
     async def send_json(payload: dict[str, Any]) -> None:

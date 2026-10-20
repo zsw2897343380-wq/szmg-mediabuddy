@@ -285,7 +285,7 @@ async def desktop_stream_ws(
             )
             await websocket.close(code=4001, reason=f"auth failed: {exc}")
             return
-        if not user_has_permission(user, "desktop"):
+        if not user_has_permission(user, "desktop.view"):
             await websocket.close(code=4003, reason="permission required")
             return
 
@@ -345,7 +345,7 @@ async def desktop_stream_ws(
                 continue
             if msg.get("type") == "stop":
                 break
-            if session is not None:
+            if session is not None and user_has_permission(user, "desktop.use"):
                 try:
                     await _handle_input(
                         websocket,

@@ -746,7 +746,24 @@ export function PermissionCheckboxPicker({
   disabled,
 }: PermissionCheckboxPickerProps) {
   const { t } = useTranslation();
-  const selected = value ?? [];
+  const selected = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (value ?? []).flatMap((key) => {
+            const operations = catalog.filter(
+              (item) =>
+                item.key.startsWith(`${key}.`) &&
+                item.key !== "token_usage.all",
+            );
+            return operations.length
+              ? operations.map((item) => item.key)
+              : [key];
+          }),
+        ),
+      ),
+    [value, catalog],
+  );
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const [navLayout, setNavLayout] = useState<SidebarNavLayout | null>(null);
   const [navReady, setNavReady] = useState(false);
@@ -777,10 +794,25 @@ export function PermissionCheckboxPicker({
   const toggle = (key: string, checked: boolean) => {
     if (disabled) return;
     if (checked) {
-      onChange?.([...selected, key]);
+      const viewKey = `${key.split(".")[0]}.view`;
+      onChange?.(
+        Array.from(
+          new Set([
+            ...selected,
+            key,
+            ...(catalog.some((item) => item.key === viewKey) ? [viewKey] : []),
+          ]),
+        ),
+      );
       return;
     }
-    onChange?.(selected.filter((k) => k !== key));
+    onChange?.(
+      selected.filter(
+        (k) =>
+          k !== key &&
+          !(key.endsWith(".view") && k.startsWith(`${key.split(".")[0]}.`)),
+      ),
+    );
   };
 
   const setGroup = (keys: string[], checked: boolean) => {
@@ -1285,6 +1317,8 @@ export default function UsersListPanel() {
     const map = new Map<string, string>();
     for (const item of permCatalog) {
       map.set(item.key, permFullLabel(item));
+      const module = item.key.split(".")[0]!;
+      if (!map.has(module)) map.set(module, item.label.split(" · ")[0]!);
     }
     return map;
   }, [permCatalog]);
