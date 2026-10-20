@@ -236,6 +236,10 @@ export default function UnifiedSkillLibrary({
   const installedSkills = localSkills.filter((item) => isInstalled(item));
   const installedMatch = (skill: SkillHubSkill) =>
     installedSkills.find((item) => item.skill.slug === skill.slug);
+  const packageDisplayName = (pkg: SkillPackageDetail) => {
+    const skill = pkg.skills.length === 1 ? pkg.skills[0] : undefined;
+    return skill && pkg.name === skill.slug ? skill.name || pkg.name : pkg.name;
+  };
   const marketSkills = Array.from(
     new Map(
       (query.trim() ? market : rankings[catalog] ?? []).map((skill) => [
@@ -251,7 +255,7 @@ export default function UnifiedSkillLibrary({
             (pkg) =>
               !mine || installedSkills.some((item) => item.pkg.id === pkg.id),
           )
-          .map((pkg) => ({ id: pkg.id, name: pkg.name }))
+          .map((pkg) => ({ id: pkg.id, name: packageDisplayName(pkg) }))
       : [
           ...new Set(
             marketSkills
@@ -986,7 +990,9 @@ export default function UnifiedSkillLibrary({
             </p>
             {selection.kind === "local" && (
               <div className={styles.source}>
-                {t("skillsCenter.source", { name: selection.item.pkg.name })}
+                {t("skillsCenter.source", {
+                  name: packageDisplayName(selection.item.pkg),
+                })}
               </div>
             )}
             <div className={styles.overviewHeader}>
