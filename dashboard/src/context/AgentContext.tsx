@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { ReactNode } from "react";
@@ -161,6 +162,8 @@ export function agentsSnapshotEqual(
         a.unread_count === b.unread_count &&
         a.bootstrap_pending === b.bootstrap_pending &&
         a.name === b.name &&
+        a.description === b.description &&
+        a.system_prompt === b.system_prompt &&
         a.icon === b.icon &&
         a.icon_name === b.icon_name &&
         a.icon_url === b.icon_url &&
@@ -403,21 +406,20 @@ export function mapBridgeAgent(
 export function AgentProvider({ children }: { children: ReactNode }) {
   const [agents, setAgents] = useState<OctopAgent[]>([]);
   const [activeAgentId, setActiveAgentIdState] = useState<string | null>(null);
+  const activeAgentIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const persistAndApply = useCallback((id: string | null) => {
-    setActiveAgentIdState((prev) => {
-      // Skip the re-render when the id hasn't changed.
-      if (prev === id) return prev;
-      if (id) {
-        localStorage.setItem(STORAGE_KEY, id);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-      setActiveAgentId(id); // populates request.ts module-level cache
-      return id;
-    });
+    if (activeAgentIdRef.current === id) return;
+    activeAgentIdRef.current = id;
+    if (id) {
+      localStorage.setItem(STORAGE_KEY, id);
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    setActiveAgentId(id); // populates request.ts module-level cache
+    setActiveAgentIdState(id);
   }, []);
 
   const refresh = useCallback(
@@ -445,8 +447,13 @@ export function AgentProvider({ children }: { children: ReactNode }) {
           return merged;
         });
 
-        // Reconcile selection with what the server reports. Keep a
-        // disconnected remote pin instead of jumping to the first local expert.
+        // Keep this tab's valid selection. Another tab may have changed the
+        // stored preference while this page was running a task.
+        const current = activeAgentIdRef.current;
+        if (current && merged.some((agent) => agent.agent_id === current))
+          return;
+
+        // Restore the saved preference on initial load or after removal.
         const stored = localStorage.getItem(STORAGE_KEY);
         const haveStored = stored && merged.some((a) => a.agent_id === stored);
         if (haveStored) {

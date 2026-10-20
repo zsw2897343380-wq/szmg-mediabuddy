@@ -229,7 +229,14 @@ export default function UnifiedSkillLibrary({
   const installedSkills = localSkills.filter((item) => isInstalled(item));
   const installedMatch = (skill: SkillHubSkill) =>
     installedSkills.find((item) => item.skill.slug === skill.slug);
-  const marketSkills = query.trim() ? market : rankings[catalog] ?? [];
+  const marketSkills = Array.from(
+    new Map(
+      (query.trim() ? market : rankings[catalog] ?? []).map((skill) => [
+        skill.slug,
+        skill,
+      ]),
+    ).values(),
+  );
   const categories =
     mine || catalog === "local"
       ? packages

@@ -195,6 +195,27 @@ async function showLocal() {
 }
 
 describe("WorkBuddy unified skill center", () => {
+  it("does not retain repeated market cards when switching to installed skills", async () => {
+    state.library.installed_package_ids = ["office"];
+    const marketSkill = {
+      slug: "market-reader",
+      name: "Market Reader",
+      description: "Repeated marketplace result",
+    };
+    state.api.hubRankings.mockResolvedValue({
+      rankings: { recommended: { skills: [marketSkill, marketSkill] } },
+    });
+    setup();
+    await screen.findAllByRole("button", { name: "Market Reader" });
+    fireEvent.click(screen.getByRole("button", { name: /skillLibrary.title/ }));
+    expect(
+      await screen.findByRole("button", { name: "Reader" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Market Reader" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("installs one skill from a multi-skill package, then pauses and removes only that skill", async () => {
     setup();
     const reader = await showLocal();
