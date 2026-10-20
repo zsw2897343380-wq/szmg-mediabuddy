@@ -13,6 +13,7 @@ import { CONNECTORS_CHANGED_EVENT } from "../../Agent/Connectors/customMcpUtils"
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { useAgent } from "../../../context/AgentContext";
 import { activeModelToRef } from "./useChatContextWindow";
+import { PENDING_THREAD_ID } from "../constants";
 import {
   hasSavedConnectors,
   loadSavedConnectors,
@@ -126,6 +127,15 @@ export function useChatComposerResources(
       }
     >
   >({});
+  const selectionKey = JSON.stringify([
+    resolvedAgentId,
+    activeThreadId ?? null,
+  ]);
+  const previousSelectionScope = useRef({
+    agentId: resolvedAgentId,
+    threadId: activeThreadId,
+    key: selectionKey,
+  });
 
   useEffect(() => {
     composerTouchedRef.current = false;
@@ -144,9 +154,33 @@ export function useChatComposerResources(
   // connectors). Account preferred model only fills in when the expert is Auto.
   // Sending still omits a selection that matches the expert default.
   useEffect(() => {
-    const local = activeThreadId
-      ? conversationOverrides[activeThreadId]
-      : undefined;
+    const previous = previousSelectionScope.current;
+    previousSelectionScope.current = {
+      agentId: resolvedAgentId,
+      threadId: activeThreadId,
+      key: selectionKey,
+    };
+    // The first send moves a draft through __pending__ to the real thread id.
+    // Move its explicit selection too, including Auto (null) and reasoning.
+    const inherited =
+      previous.agentId === resolvedAgentId &&
+      previous.key !== selectionKey &&
+      activeThreadId &&
+      isPendingThread(activeThreadId) &&
+      (!previous.threadId || previous.threadId === PENDING_THREAD_ID)
+        ? conversationOverrides[previous.key]
+        : undefined;
+    const local = conversationOverrides[selectionKey] ?? inherited;
+    if (inherited) {
+      setConversationOverrides((current) => {
+        const next = {
+          ...current,
+          [selectionKey]: current[selectionKey] ?? inherited,
+        };
+        delete next[previous.key];
+        return next;
+      });
+    }
     setSelectedModel(
       local
         ? local.model
@@ -159,6 +193,7 @@ export function useChatComposerResources(
     expertDefaultModel,
     preferredModel,
     conversationOverrides,
+    selectionKey,
   ]);
 
   useEffect(() => {
@@ -166,9 +201,7 @@ export function useChatComposerResources(
     const capability = availableModels.find(
       (model) => `${model.provider_name}/${model.model}` === selectedModel,
     )?.reasoning_config;
-    const local = activeThreadId
-      ? conversationOverrides[activeThreadId]
-      : undefined;
+    const local = conversationOverrides[selectionKey];
     setReasoningMode(
       local
         ? local.mode
@@ -193,6 +226,7 @@ export function useChatComposerResources(
     modelReasoning,
     availableModels,
     conversationOverrides,
+    selectionKey,
   ]);
 
   useEffect(() => {
@@ -479,16 +513,14 @@ export function useChatComposerResources(
       const nextEffort = defaults?.effort || capability?.default_effort || null;
       setReasoningMode(nextMode);
       setReasoningEffort(nextEffort);
-      if (activeThreadId) {
-        setConversationOverrides((current) => ({
-          ...current,
-          [activeThreadId]: {
-            model,
-            mode: nextMode,
-            effort: nextEffort,
-          },
-        }));
-      }
+      setConversationOverrides((current) => ({
+        ...current,
+        [selectionKey]: {
+          model,
+          mode: nextMode,
+          effort: nextEffort,
+        },
+      }));
       if (
         resolvedAgentId &&
         activeThreadId &&
@@ -501,23 +533,29 @@ export function useChatComposerResources(
         });
       }
     },
-    [activeThreadId, availableModels, modelReasoning, resolvedAgentId],
+    [
+      activeThreadId,
+      availableModels,
+      modelReasoning,
+      resolvedAgentId,
+      selectionKey,
+    ],
   );
 
   const handleReasoningChange = useCallback(
     (mode: "auto" | "enabled" | "disabled", effort: string | null) => {
       setReasoningMode(mode);
       setReasoningEffort(effort);
-      if (activeThreadId) {
-        setConversationOverrides((current) => ({
-          ...current,
-          [activeThreadId]: {
-            model: selectedModel,
-            mode,
-            effort,
-          },
-        }));
-      }
+      setConversationOverrides((current) => ({
+        ...current,
+        [selectionKey]: {
+          model: current[selectionKey]
+            ? current[selectionKey].model
+            : selectedModel,
+          mode,
+          effort,
+        },
+      }));
       if (
         resolvedAgentId &&
         activeThreadId &&
@@ -529,7 +567,7 @@ export function useChatComposerResources(
         });
       }
     },
-    [activeThreadId, resolvedAgentId, selectedModel],
+    [activeThreadId, resolvedAgentId, selectedModel, selectionKey],
   );
 
   const handleConversationModeChange = useCallback(

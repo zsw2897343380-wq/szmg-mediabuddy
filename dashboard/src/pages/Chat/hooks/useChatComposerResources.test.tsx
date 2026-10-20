@@ -79,6 +79,7 @@ vi.mock("../../../context/AgentContext", () => ({
 
 import { preferencesApi } from "../../../api/modules/preferences";
 import { useChatComposerResources } from "./useChatComposerResources";
+import { markPendingThread, clearPendingThread } from "./useSessions";
 import {
   setPendingAttachConnector,
   peekPendingAttachConnector,
@@ -209,6 +210,106 @@ describe("useChatComposerResources — per-expert KB selection", () => {
 });
 
 describe("useChatComposerResources — expert default model", () => {
+  it.each(["prov/chosen", null])(
+    "keeps the homepage selection %s through pending and resolved chat creation",
+    async (model) => {
+      agentState.agents = [
+        { agent_id: "expertA", default_model: "prov/expert" },
+      ];
+      const { result, rerender } = renderHook(
+        ({
+          threadId,
+          stickyModel,
+        }: {
+          threadId: string | null;
+          stickyModel?: string | null;
+        }) => useChatComposerResources("expertA", threadId, stickyModel),
+        {
+          initialProps: { threadId: null } as {
+            threadId: string | null;
+            stickyModel?: string | null;
+          },
+        },
+      );
+      await waitFor(() =>
+        expect(result.current.selectedModel).toBe("prov/expert"),
+      );
+      act(() => {
+        result.current.setSelectedModel(model);
+        result.current.handleReasoningChange("enabled", "high");
+      });
+      rerender({ threadId: "__pending__" });
+      expect(result.current.selectedModel).toBe(model);
+      expect(result.current.reasoningMode).toBe("enabled");
+      expect(result.current.reasoningEffort).toBe("high");
+      markPendingThread("new-thread");
+      rerender({ threadId: "new-thread" });
+      clearPendingThread("new-thread");
+      expect(result.current.selectedModel).toBe(model);
+      expect(result.current.reasoningMode).toBe("enabled");
+      expect(result.current.reasoningEffort).toBe("high");
+      // A delayed thread refresh must not replace an explicit selection either.
+      rerender({ threadId: "new-thread", stickyModel: "prov/expert" });
+      expect(result.current.selectedModel).toBe(model);
+      // Existing chats and a later new draft retain their own defaults.
+      rerender({ threadId: "other-thread", stickyModel: "prov/other" });
+      expect(result.current.selectedModel).toBe("prov/other");
+      rerender({ threadId: null });
+      expect(result.current.selectedModel).toBe("prov/expert");
+      rerender({ threadId: "__pending__" });
+      expect(result.current.selectedModel).toBe("prov/expert");
+    },
+  );
+
+  it("does not apply the homepage choice to an existing chat or another expert", async () => {
+    agentState.agents = [
+      { agent_id: "expertA", default_model: "prov/a" },
+      { agent_id: "expertB", default_model: "prov/b" },
+    ];
+    const { result, rerender } = renderHook(
+      ({
+        agentId,
+        threadId,
+        stickyModel,
+      }: {
+        agentId: string;
+        threadId: string | null;
+        stickyModel?: string;
+      }) => useChatComposerResources(agentId, threadId, stickyModel),
+      {
+        initialProps: { agentId: "expertA", threadId: null } as {
+          agentId: string;
+          threadId: string | null;
+          stickyModel?: string;
+        },
+      },
+    );
+    await waitFor(() => expect(result.current.selectedModel).toBe("prov/a"));
+    act(() => result.current.setSelectedModel("prov/chosen"));
+    rerender({
+      agentId: "expertA",
+      threadId: "existing",
+      stickyModel: "prov/history",
+    });
+    expect(result.current.selectedModel).toBe("prov/history");
+    rerender({ agentId: "expertB", threadId: "__pending__" });
+    expect(result.current.selectedModel).toBe("prov/b");
+  });
+
+  it("keeps the choice when creation resolves before the pending page renders", async () => {
+    const { result, rerender } = renderHook(
+      ({ threadId }: { threadId: string | null }) =>
+        useChatComposerResources("expertA", threadId),
+      { initialProps: { threadId: null } as { threadId: string | null } },
+    );
+    await waitFor(() => expect(result.current.modelsReady).toBe(true));
+    act(() => result.current.setSelectedModel("prov/fast"));
+    markPendingThread("fast-created");
+    rerender({ threadId: "fast-created" });
+    clearPendingThread("fast-created");
+    expect(result.current.selectedModel).toBe("prov/fast");
+  });
+
   it("prefers the expert default over the account preferred model", async () => {
     agentState.agents = [
       {
