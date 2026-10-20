@@ -31,7 +31,10 @@ import {
   groupConsecutiveAssistantMessages,
   type MessageGroup,
 } from "../utils/messageGrouping";
-import { resolveLiveSpeakerNames } from "../utils/liveSpeakerLabel";
+import {
+  hasMultipleTurnSpeakers,
+  resolveLiveSpeakerNames,
+} from "../utils/liveSpeakerLabel";
 import { useAgent } from "../../../context/AgentContext";
 import {
   nextCanLoadOlder,
@@ -345,6 +348,11 @@ export default function MessageList(props: MessageListProps) {
         limit: 2,
       }),
     [liveSpeakers, agents, activeAgent?.agent_id, activeAgent?.name],
+  );
+  const showSpeakerNames = hasMultipleTurnSpeakers(
+    messages,
+    liveSpeakers,
+    agentId ?? activeAgent?.agent_id,
   );
 
   const stableSessionKey = sessionKey || "__default__";
@@ -802,7 +810,8 @@ export default function MessageList(props: MessageListProps) {
               showElapsed={isAwaitingAssistantReply}
               membersOnly={generatingMembersOnly}
               speakerNames={liveSpeakerNames}
-              showAvatar={isAwaitingAssistantReply}
+              showSpeakerNames={showSpeakerNames}
+              showAvatar={isAwaitingAssistantReply && showSpeakerNames}
               agentId={agentId}
             />
           </div>
@@ -816,6 +825,7 @@ export default function MessageList(props: MessageListProps) {
       isAwaitingAssistantReply,
       generatingMembersOnly,
       liveSpeakerNames,
+      showSpeakerNames,
       agentId,
       refreshFooter,
     ],

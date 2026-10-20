@@ -1,4 +1,28 @@
 import { ASK_USER_TOOL_NAME } from "../../../api/types/hitl";
+import { rewritePeerSpeakerId } from "../../../utils/remoteExpert";
+import type { ChatMessage } from "../hooks/useChat";
+
+/** Keep speaker labels for a multi-expert turn, even after all but one finish. */
+export function hasMultipleTurnSpeakers(
+  messages: ReadonlyArray<ChatMessage>,
+  liveSpeakers: ReadonlyArray<string>,
+  hostId?: string | null,
+): boolean {
+  const speakerKey = (id?: string) =>
+    rewritePeerSpeakerId(hostId, id) || hostId || "";
+  const speakers = new Set(liveSpeakers.map(speakerKey));
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message.role === "user") {
+      if (new Set(message.composerContext?.targetAgents).size > 1) return true;
+      break;
+    }
+    if (message.role === "assistant") {
+      speakers.add(speakerKey(message.speakerAgentId));
+    }
+  }
+  return speakers.size > 1;
+}
 
 /** Resolve display names for speakers still generating in a team room. */
 

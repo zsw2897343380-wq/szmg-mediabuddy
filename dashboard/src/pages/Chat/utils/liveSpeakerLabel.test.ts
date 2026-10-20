@@ -1,9 +1,73 @@
 import { describe, expect, it } from "vitest";
 import {
   hasInFlightTool,
+  hasMultipleTurnSpeakers,
   hasStreamingThinking,
   resolveLiveSpeakerNames,
 } from "./liveSpeakerLabel";
+import type { ChatMessage } from "../hooks/useChat";
+
+describe("hasMultipleTurnSpeakers", () => {
+  const user: ChatMessage = {
+    id: "user",
+    role: "user",
+    content: "hello",
+    timestamp: 1,
+  };
+  const assistant = (speakerAgentId?: string): ChatMessage => ({
+    id: speakerAgentId || "host",
+    role: "assistant",
+    content: "reply",
+    speakerAgentId,
+    timestamp: 2,
+  });
+
+  it("hides names for general and single-expert replies", () => {
+    expect(hasMultipleTurnSpeakers([user], [""], "host")).toBe(false);
+    expect(hasMultipleTurnSpeakers([user, assistant()], ["host"], "host")).toBe(
+      false,
+    );
+    expect(
+      hasMultipleTurnSpeakers([user, assistant("doctor")], ["doctor"], "host"),
+    ).toBe(false);
+  });
+
+  it("shows names as soon as multiple experts are selected", () => {
+    expect(
+      hasMultipleTurnSpeakers(
+        [{ ...user, composerContext: { targetAgents: ["doctor", "nurse"] } }],
+        ["doctor"],
+        "host",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps names when only the last expert is still answering", () => {
+    expect(
+      hasMultipleTurnSpeakers([user, assistant("doctor")], ["nurse"], "host"),
+    ).toBe(true);
+  });
+
+  it("does not carry multi-expert labels into a later solo turn", () => {
+    expect(
+      hasMultipleTurnSpeakers(
+        [user, assistant("doctor"), assistant("nurse"), user, assistant()],
+        ["host"],
+        "host",
+      ),
+    ).toBe(false);
+  });
+
+  it("normalizes remote speaker ids before counting", () => {
+    expect(
+      hasMultipleTurnSpeakers(
+        [user, assistant("doctor")],
+        ["bridge:peer:doctor"],
+        "bridge:peer:host",
+      ),
+    ).toBe(false);
+  });
+});
 
 describe("resolveLiveSpeakerNames", () => {
   const agents = [

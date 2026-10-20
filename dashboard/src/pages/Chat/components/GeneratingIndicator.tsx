@@ -17,6 +17,8 @@ interface GeneratingIndicatorProps {
   membersOnly?: boolean;
   /** Named speakers still generating (e.g. ["临床助手"]). */
   speakerNames?: ReadonlyArray<string>;
+  /** Only identify speakers when multiple experts participate in this turn. */
+  showSpeakerNames?: boolean;
   /** Expert whose reply has not drawn a row yet. Keeps the avatar from popping in later. */
   showAvatar?: boolean;
   agentId?: string | null;
@@ -70,6 +72,7 @@ export default function GeneratingIndicator({
   showElapsed = false,
   membersOnly = false,
   speakerNames = [],
+  showSpeakerNames = false,
   showAvatar = false,
   agentId = null,
 }: GeneratingIndicatorProps) {
@@ -83,7 +86,7 @@ export default function GeneratingIndicator({
 
   const named = speakerNames.filter((n) => n.trim());
   let label: string;
-  if (membersOnly || named.length > 0) {
+  if (showSpeakerNames && (membersOnly || named.length > 0)) {
     if (named.length === 1) {
       label = t("chat.memberResponding", {
         name: named[0],
@@ -100,12 +103,12 @@ export default function GeneratingIndicator({
       });
     }
   } else if (showTimer) {
-    label = t("chat.generatingWithElapsed", {
+    label = t("chat.respondingWithElapsed", {
       seconds: elapsed,
-      defaultValue: "生成中 · {{seconds}}s",
+      defaultValue: "正在回答 · {{seconds}}s",
     });
   } else {
-    label = t("chat.generating", "生成中");
+    label = t("chat.responding", "正在回答");
   }
 
   return (

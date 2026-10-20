@@ -1405,6 +1405,8 @@
     "thinking": "Thinking",
     "continuing": "Continuing",
     "generating": "Generating",
+    "responding": "Responding",
+    "respondingWithElapsed": "Responding · {{seconds}}s",
     "generatingWithElapsed": "Generating · {{seconds}}s",
     "membersResponding": "Members responding",
     "memberResponding": "{{name}} is responding",

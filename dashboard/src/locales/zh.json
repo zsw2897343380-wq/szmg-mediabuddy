@@ -1405,6 +1405,8 @@
     "thinking": "正在思考",
     "continuing": "继续生成中",
     "generating": "生成中",
+    "responding": "正在回答",
+    "respondingWithElapsed": "正在回答 · {{seconds}}s",
     "generatingWithElapsed": "生成中 · {{seconds}}s",
     "membersResponding": "成员回答中",
     "memberResponding": "{{name}} 正在回答",
