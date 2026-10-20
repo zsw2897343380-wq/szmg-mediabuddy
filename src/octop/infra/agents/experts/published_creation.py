@@ -162,6 +162,9 @@ def _snapshot_meta(
 
 
 def require_published_expert(services: Any, expert_id: str) -> PublishedExpertRow:
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    PublicResourcePolicy(services.settings_repo).require("published_expert", expert_id)
     row = services.published_expert_repo.get(expert_id)
     if row is None:
         raise OctopError(ErrorCode.NOT_FOUND, f"published expert {expert_id!r} not found")

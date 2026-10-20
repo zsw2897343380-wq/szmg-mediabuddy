@@ -69,6 +69,7 @@ from octop.infra.connectors.probe import (
 from octop.infra.connectors.service import ConnectorNameTakenError, ConnectorService
 from octop.infra.db.repos.connectors import ConnectorRepo
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.public_resources import PublicResourcePolicy
 from octop.infra.utils.locale import resolve_request_locale
 from octop.infra.utils.ulid import new_ulid
 
@@ -539,6 +540,7 @@ async def get_catalog(
             locale=resolve_request_locale(request),
         )
         for e in list_catalog()
+        if PublicResourcePolicy(settings).allows("connector_catalog", e.kind)
     ]
 
 
@@ -718,6 +720,7 @@ async def create_instance(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Connect a third-party account as a new named instance."""
+    PublicResourcePolicy(server.services.settings_repo).require("connector_catalog", body.kind)
     if is_custom_mcp_kind(body.kind):
         raise OctopError(
             ErrorCode.CONNECTOR_KIND_UNSUPPORTED,

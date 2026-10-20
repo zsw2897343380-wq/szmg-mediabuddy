@@ -58,6 +58,10 @@ def require_agent_row(
             raise OctopError(ErrorCode.FORBIDDEN, "agent not owned by as_user")
     else:
         assert_agent_access_row(row, user)
+        if not user.is_admin and not user_owns_agent(row, user):
+            from octop.infra.users.public_resources import PublicResourcePolicy
+
+            PublicResourcePolicy(server.services.settings_repo).require("shared_expert", agent_id)
     return row
 
 

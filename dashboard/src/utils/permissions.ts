@@ -63,6 +63,7 @@ export const NAV_PERMISSIONS = {
   "remote-desktop": ["desktop", "mobile"],
   "remote-phone": PERM.mobile,
   acp: "admin",
+  "admin-public-resources": "admin",
   "admin-users": PERM.usersPage,
   models: PERM.modelsPage,
   "admin-storage": PERM.storage,

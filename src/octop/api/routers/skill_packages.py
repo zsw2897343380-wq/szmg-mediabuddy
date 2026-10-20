@@ -33,6 +33,7 @@ from octop.infra.skills.skill_packages import SkillPackageError, read_skill_dire
 from octop.infra.skills.skillhub_market import SkillHubMarketError as SkillHubDownloadError
 from octop.infra.skills.user_library import UserSkillLibrary
 from octop.infra.users.identity import User
+from octop.infra.users.public_resources import PublicResourcePolicy
 from octop.infra.utils.frontmatter import parse_frontmatter
 from octop.infra.utils.locale import Locale, resolve_request_locale
 
@@ -173,6 +174,7 @@ def _store(server: OctopServer) -> SkillPackageStore:
     return SkillPackageStore(
         repo=server.services.skill_package_repo,
         root=server.paths.skill_packages_dir,
+        public_policy=PublicResourcePolicy(server.services.settings_repo),
     )
 
 

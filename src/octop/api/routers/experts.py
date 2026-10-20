@@ -478,7 +478,14 @@ def _published_summary_dict(row: Any, server: Any) -> dict[str, Any]:
 
 def _require_published_expert(server: Any, expert_id: str) -> Any:
     assert server.services is not None
+    _public_policy(server).require("published_expert", expert_id)
     return require_published_expert(server.services, expert_id)
+
+
+def _public_policy(server: Any) -> Any:
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    return PublicResourcePolicy(server.services.settings_repo)
 
 
 @router.get("/experts/published", summary="List published expert templates")
@@ -490,6 +497,7 @@ async def list_published_experts(
     return [
         _published_summary_dict(row, server)
         for row in server.services.published_expert_repo.list_all()
+        if _public_policy(server).allows("published_expert", row.id)
     ]
 
 
@@ -703,7 +711,11 @@ async def list_experts(
     catalog = server.expert_catalog
     if catalog is None:
         return []
-    return [_summary_dict(s) for s in catalog.list_summaries()]
+    return [
+        _summary_dict(s)
+        for s in catalog.list_summaries()
+        if _public_policy(server).allows("expert_template", s.id)
+    ]
 
 
 @router.get(
@@ -836,6 +848,7 @@ async def get_expert(
     _: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    _public_policy(server).require("expert_template", expert_id)
     catalog = server.expert_catalog
     expert = None if catalog is None else catalog.get(expert_id)
     if expert is None:
@@ -851,6 +864,7 @@ async def create_agent_from_expert(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create an agent with the expert template workspace files."""
+    _public_policy(server).require("expert_template", expert_id)
     catalog = server.expert_catalog
     expert = None if catalog is None else catalog.get(expert_id)
     if expert is None:

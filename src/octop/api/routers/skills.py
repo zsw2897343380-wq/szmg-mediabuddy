@@ -119,7 +119,14 @@ async def list_builtin_skills(
     rows = await asyncio.get_running_loop().run_in_executor(
         None, preferences.list_skills, user.id, resolve_request_locale(request)
     )
-    return [BuiltinSkillSummary(**row) for row in rows]
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    policy = PublicResourcePolicy(server.services.settings_repo)
+    return [
+        BuiltinSkillSummary(**row)
+        for row in rows
+        if policy.allows("builtin_skill", str(row["slug"]))
+    ]
 
 
 @router.put(
@@ -566,13 +573,26 @@ async def list_skills(
 ) -> list[dict[str, Any]]:
     await _ctx(agent_id, user=user, as_user=as_user, server=server, owner_only=False)
     assert server.app_runtime is not None
-    return cast(
+    rows = cast(
         list[dict[str, Any]],
         await server.app_runtime.agent_registry.list_skill_summaries(
             agent_id,
             locale=resolve_request_locale(request),
         ),
     )
+
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    policy = PublicResourcePolicy(server.services.settings_repo)
+    return [
+        row
+        for row in rows
+        if (row.get("kind") != "builtin" or policy.allows("builtin_skill", str(row.get("slug"))))
+        and (
+            row.get("kind") != "package"
+            or policy.allows("package_skill", f"{row.get('package_id')}/{row.get('slug')}")
+        )
+    ]
 
 
 class SkillPackageMountBody(BaseModel):
@@ -793,6 +813,10 @@ async def get_skill(
     if resolved is None:
         raise OctopError(ErrorCode.NOT_FOUND, f"skill {name!r} not found")
     manifest_path, kind, _body = resolved
+    if kind == "builtin":
+        from octop.infra.users.public_resources import PublicResourcePolicy
+
+        PublicResourcePolicy(server.services.settings_repo).require("builtin_skill", name)
     manifest = await _aread_text(ctx.workspace, manifest_path)
     assert manifest is not None
     meta, body = _parse_frontmatter(manifest)

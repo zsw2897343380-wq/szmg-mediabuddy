@@ -245,6 +245,7 @@
     "SKILL_PACKAGE_LOCKED": "This skill was copied from a locked skill package and cannot be edited in the workspace."
   },
   "nav": {
+    "publicResources": "Public resources",
     "assistant": "Assistant",
     "more": "More",
     "chat": "Conversation",
@@ -7274,6 +7275,28 @@
     "step4Desc": "When finished, type \"结束\" (or \"end\") to stop; after confirmation the skill is saved under the task goal. Type the goal keyword later to replay it.",
     "envNotReady": "Browser environment required first",
     "title": "Skill recording guide"
+  },
+  "publicResources": {
+    "name": "Resource name",
+    "description": "Superadministrators publish or withdraw public experts, skills and connectors. Withdrawal hides public entries and stops live references. Independently created or copied private resources are retained.",
+    "search": "Search public resources",
+    "disableVisible": "Withdraw filtered results",
+    "enableVisible": "Publish filtered results",
+    "failed": "Failed to update public resources",
+    "source": "Source",
+    "availability": "Public availability",
+    "toggle": "Publish {{name}}",
+    "published": "Published",
+    "withdrawn": "Withdrawn",
+    "sources": {
+      "expert_template": "System expert template",
+      "published_expert": "Published expert template",
+      "shared_expert": "Shared expert instance",
+      "builtin_skill": "System preset skill",
+      "package_skill": "Public skill package",
+      "connector_catalog": "Connector type",
+      "shared_connector": "Shared connector"
+    }
   },
   "skillsCenter": {
     "presets": "Preset skills",

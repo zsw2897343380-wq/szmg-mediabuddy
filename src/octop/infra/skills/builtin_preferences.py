@@ -42,7 +42,10 @@ class BuiltinSkillPreferences:
         return {value for value in values if isinstance(value, str)}
 
     def filter_keys(self, user_id: int) -> set[str]:
-        slugs = self.disabled(user_id)
+        return self.keys_for_slugs(self.disabled(user_id))
+
+    @staticmethod
+    def keys_for_slugs(slugs: set[str]) -> set[str]:
         keys = set(slugs)
         for skills in _manifests().values():
             keys.update(

@@ -245,6 +245,7 @@
     "SKILL_PACKAGE_LOCKED": "此技能复制自锁定策略的技能包，无法在工作区编辑。"
   },
   "nav": {
+    "publicResources": "公共资源管理",
     "assistant": "助理",
     "more": "更多",
     "chat": "对话",
@@ -7274,6 +7275,28 @@
     "step4Desc": "操作完成后，输入\"结束\"停止录制，确认后技能将以任务目标为名保存。之后只需输入任务目标关键词即可触发回放。",
     "envNotReady": "请先安装浏览器环境",
     "title": "技能录制引导"
+  },
+  "publicResources": {
+    "name": "资源名称",
+    "description": "由超管统一上架或下架公共专家、技能和连接器。下架后从用户目录隐藏，并停用仍引用公共资源的功能；用户独立创建或复制的私有资源保留。",
+    "search": "搜索公共资源",
+    "disableVisible": "下架当前筛选结果",
+    "enableVisible": "上架当前筛选结果",
+    "failed": "更新公共资源失败",
+    "source": "资源来源",
+    "availability": "公共可用状态",
+    "toggle": "上架 {{name}}",
+    "published": "已上架",
+    "withdrawn": "已下架",
+    "sources": {
+      "expert_template": "系统专家模板",
+      "published_expert": "发布的专家模板",
+      "shared_expert": "共享专家实例",
+      "builtin_skill": "系统预设技能",
+      "package_skill": "公共技能包",
+      "connector_catalog": "连接器类型",
+      "shared_connector": "共享连接器"
+    }
   },
   "skillsCenter": {
     "presets": "预设技能",

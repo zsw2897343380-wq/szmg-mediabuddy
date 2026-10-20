@@ -2116,6 +2116,7 @@ def wire_shared_member_peers(
     *,
     load_agent: Callable[[str], AgentRow | None],
     load_user: Callable[[int], Any],
+    public_available: Callable[[str], bool] | None = None,
 ) -> None:
     """Let a team allowlist see shared experts owned by other accounts.
 
@@ -2131,6 +2132,15 @@ def wire_shared_member_peers(
     original_resolve = getattr(harness_team, "_resolve_peer_entry", None)
     if original_list is None or original_resolve is None:
         return
+
+    original_load = load_agent
+
+    def visible_shared_row(agent_id: str) -> AgentRow | None:
+        if public_available is not None and not public_available(agent_id):
+            return None
+        return original_load(agent_id)
+
+    load_agent = visible_shared_row
 
     def list_peers(
         user_id: str | int,

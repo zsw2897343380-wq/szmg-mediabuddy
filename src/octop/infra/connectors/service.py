@@ -463,7 +463,29 @@ class ConnectorService:
     ) -> dict[str, Any]:
         return self.patch_custom_server(user_id, server_name, default_open=default_open)
 
-    def list_instances_for_api(self, user_id: int) -> list[dict[str, Any]]:
+    def public_instance_enabled(self, instance: Any) -> bool:
+        from octop.infra.users.public_resources import PublicResourcePolicy
+
+        policy = PublicResourcePolicy(self._settings_repo)
+        return policy.allows("connector_catalog", instance.kind) and (
+            not instance.shared or policy.allows("shared_connector", instance.instance_id)
+        )
+
+    def public_custom_enabled(self, parent_id: str, name: str, spec: Any) -> bool:
+        from octop.infra.connectors.custom_mcp import shared_synthetic_instance_id
+        from octop.infra.users.public_resources import PublicResourcePolicy
+
+        return (
+            not isinstance(spec, dict)
+            or spec.get("shared") is not True
+            or PublicResourcePolicy(self._settings_repo).allows(
+                "shared_connector", shared_synthetic_instance_id(parent_id, name)
+            )
+        )
+
+    def list_instances_for_api(
+        self, user_id: int, *, include_disabled_public: bool = False
+    ) -> list[dict[str, Any]]:
         """Built-in rows + expanded custom servers (hide parent custom-mcp row)."""
         out: list[dict[str, Any]] = []
         custom_row = self._repo.get_by_user_kind(user_id, CUSTOM_MCP_KIND)
@@ -507,11 +529,32 @@ class ConnectorService:
         for item in out:
             item.setdefault("owner_user_id", user_id)
             item.setdefault("shared", False)
-        return out
+        if include_disabled_public:
+            return out
+        from octop.infra.users.public_resources import PublicResourcePolicy
+
+        policy = PublicResourcePolicy(self._settings_repo)
+        own_custom_parent = self._repo.get_by_user_kind(user_id, CUSTOM_MCP_KIND)
+
+        def visible(item: dict[str, Any]) -> bool:
+            if not policy.allows("connector_catalog", str(item["kind"])):
+                return False
+            key = str(item["instance_id"])
+            if (
+                own_custom_parent is not None
+                and item["kind"] == CUSTOM_MCP_KIND
+                and item.get("owner_user_id") == user_id
+            ):
+                key = f"custom:{own_custom_parent.instance_id}:{item['mcp_server_name']}"
+            return not item.get("shared") or policy.allows("shared_connector", key)
+
+        return [item for item in out if visible(item)]
 
     def list_active_mcp_server_names(self, user_id: int) -> list[str]:
         names: list[str] = []
         for inst in self._repo.list_visible(user_id):
+            if not self.public_instance_enabled(inst):
+                continue
             if is_custom_mcp_kind(inst.kind):
                 continue
             if inst.status != "active" or not inst.has_credentials:
@@ -524,7 +567,12 @@ class ConnectorService:
             if parent.user_id == user_id or not parent.has_credentials:
                 continue
             for name, spec in extract_servers(self.decrypt(parent.instance_id)).items():
-                if isinstance(spec, dict) and spec.get("shared") is True and server_enabled(spec):
+                if (
+                    isinstance(spec, dict)
+                    and spec.get("shared") is True
+                    and server_enabled(spec)
+                    and self.public_custom_enabled(parent.instance_id, name, spec)
+                ):
                     names.append(shared_mcp_server_name(parent.instance_id, name))
         return sorted(names)
 
@@ -532,6 +580,8 @@ class ConnectorService:
         """Active connectors marked default_open (dashboard + all IM channels)."""
         names: list[str] = []
         for inst in self._repo.list_by_user(user_id):
+            if not self.public_instance_enabled(inst):
+                continue
             if is_custom_mcp_kind(inst.kind):
                 continue
             if inst.status != "active" or not inst.has_credentials:
@@ -582,12 +632,21 @@ class ConnectorService:
         return list(names)
 
     def custom_harness_configs(self, user_id: int) -> dict[str, Any]:
-        configs = enabled_harness_configs(self.get_custom_servers(user_id))
+        parent = self._repo.get_by_user_kind(user_id, CUSTOM_MCP_KIND)
+        configs = enabled_harness_configs(
+            {
+                name: spec
+                for name, spec in self.get_custom_servers(user_id).items()
+                if parent is None or self.public_custom_enabled(parent.instance_id, name, spec)
+            }
+        )
         for parent in self._repo.list_by_kind(CUSTOM_MCP_KIND):
             if parent.user_id == user_id or not parent.has_credentials:
                 continue
             servers = extract_servers(self.decrypt(parent.instance_id))
             for name, spec in servers.items():
+                if not self.public_custom_enabled(parent.instance_id, name, spec):
+                    continue
                 if (
                     not isinstance(spec, dict)
                     or spec.get("shared") is not True
@@ -602,6 +661,8 @@ class ConnectorService:
     async def mcp_configs_for_user(self, user_id: int) -> dict[str, Any]:
         configs: dict[str, Any] = {}
         for inst in self._repo.list_visible(user_id):
+            if not self.public_instance_enabled(inst):
+                continue
             if inst.status != "active":
                 continue
             if is_custom_mcp_kind(inst.kind):
@@ -631,6 +692,9 @@ class ConnectorService:
         return configs
 
     def verify_internal_token(self, instance_id: str, token: str) -> dict[str, Any] | None:
+        instance = self._repo.get(instance_id)
+        if instance is None or not self.public_instance_enabled(instance):
+            return None
         creds = self.decrypt(instance_id)
         expected = str(creds.get("internal_token") or "")
         if not expected or expected != token:

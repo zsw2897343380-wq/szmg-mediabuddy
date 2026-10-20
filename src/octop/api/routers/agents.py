@@ -252,6 +252,10 @@ async def list_agents(
 
     owned = registry.list_agents(user.id)
     shared = server.services.agent_repo.list_shared(exclude_user_id=user.id)
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    public_policy = PublicResourcePolicy(server.services.settings_repo)
+    shared = [row for row in shared if public_policy.allows("shared_expert", row.agent_id)]
     rows = list({row.agent_id: row for row in [*shared, *owned]}.values())
     shared_owner_username_by_id: dict[int, str] = {}
     for row in shared:

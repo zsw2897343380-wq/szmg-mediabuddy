@@ -78,6 +78,7 @@ export const SIDEBAR_NAV_KEYS = [
   "workbench",
   "remote-desktop",
   "acp",
+  "admin-public-resources",
   "admin-users",
   "models",
   "admin-storage",
@@ -132,6 +133,7 @@ export const SIDEBAR_GROUPED_NAV_KEYS = [
   "workbench",
   "remote-desktop",
   "acp",
+  "admin-public-resources",
   "admin-users",
   "models",
   "admin-storage",
@@ -275,6 +277,14 @@ export function buildNavSections(
   }
 
   const adminItems: NavItem[] = [];
+  if (navAllowed(user, "admin-public-resources")) {
+    adminItems.push({
+      key: "admin-public-resources",
+      path: "/admin/public-resources",
+      icon: <Puzzle size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.publicResources",
+    });
+  }
   if (navAllowed(user, "admin-users")) {
     adminItems.push({
       key: "admin-users",

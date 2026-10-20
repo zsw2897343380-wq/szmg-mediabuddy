@@ -68,9 +68,10 @@ def _allocate_package_id(repo: SkillPackageRepo) -> str:
 class SkillPackageStore:
     """Persist skill package contents below a host-local root."""
 
-    def __init__(self, *, repo: SkillPackageRepo, root: Path) -> None:
+    def __init__(self, *, repo: SkillPackageRepo, root: Path, public_policy: Any = None) -> None:
         self.repo = repo
         self.root = root
+        self.public_policy = public_policy
 
     def create(
         self,
@@ -107,6 +108,10 @@ class SkillPackageStore:
 
         summaries: list[dict[str, Any]] = []
         for skill_dir in sorted(skills_dir.iterdir()):
+            if self.public_policy is not None and not self.public_policy.allows(
+                "package_skill", f"{pack_id}/{skill_dir.name}"
+            ):
+                continue
             if not skill_dir.is_dir() or skill_dir.is_symlink():
                 continue
             manifest = skill_dir / "SKILL.md"

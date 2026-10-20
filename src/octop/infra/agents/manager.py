@@ -91,6 +91,7 @@ from octop.infra.skills.workspace_catalog import (
     list_workspace_skill_summaries,
     repair_workspace_skill_manifests,
 )
+from octop.infra.users.public_resources import PublicResourcePolicy
 from octop.infra.utils.locale import Locale
 from octop.infra.utils.turn_failure import turn_model_scope
 from octop.infra.utils.ulid import new_short_id
@@ -638,6 +639,9 @@ class AgentManager:
                 self._harness_manager.team,
                 load_agent=self.get_row,
                 load_user=self._repos.user_repo.get,
+                public_available=lambda agent_id: self.public_resource_policy().allows(
+                    "shared_expert", agent_id
+                ),
             )
             self._harness_manager.set_security_policy(self._security.harness_policy())
 
@@ -2725,7 +2729,9 @@ class AgentManager:
     def _selected_package_skills(self, agent_id: str) -> dict[str, list[dict[str, Any]]]:
         """Resolve the actual skills, preserving existing package precedence."""
         store = SkillPackageStore(
-            repo=self._repos.skill_package_repo, root=self._paths.skill_packages_dir
+            repo=self._repos.skill_package_repo,
+            root=self._paths.skill_packages_dir,
+            public_policy=self.public_resource_policy(),
         )
         state = self._personal_skill_library_state(agent_id)
         legacy = skill_package_ids_list(self.get_config(agent_id))
@@ -2799,14 +2805,19 @@ class AgentManager:
     def _resolve_skill_package_dirs(self, agent_id: str) -> list[str]:
         """Mount full legacy packages or immutable roots of individually selected skills."""
         store = SkillPackageStore(
-            repo=self._repos.skill_package_repo, root=self._paths.skill_packages_dir
+            repo=self._repos.skill_package_repo,
+            root=self._paths.skill_packages_dir,
+            public_policy=self.public_resource_policy(),
         )
         state = self._personal_skill_library_state(agent_id)
         row = self._repos.agent_repo.get(agent_id)
         roots: list[str] = []
         for package_id, skills in self._selected_package_skills(agent_id).items():
             source = store.package_skills_dir(package_id)
-            if state is not None and package_id in state.skill_states:
+            if (state is not None and package_id in state.skill_states) or any(
+                key.startswith(f"{package_id}/")
+                for key in self.public_resource_policy().disabled("package_skill")
+            ):
                 if not skills or row is None or row.user_id is None:
                     continue
                 source = selected_skill_root(
@@ -3307,16 +3318,83 @@ class AgentManager:
             self.effective_skills_disabled(agent_id, disabled)
         )
 
+    def public_resource_policy(self) -> PublicResourcePolicy:
+
+        return PublicResourcePolicy(self._repos.settings_repo)
+
+    def _public_skill_keys(
+        self,
+        agent_id: str,
+        *,
+        extra_type: str = "",
+        extra_ids: tuple[str, ...] = (),
+        honor_private: bool = True,
+    ) -> set[str]:
+        from octop_harness.backends.workspace import BackendWorkspace
+
+        from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
+
+        policy = self.public_resource_policy()
+        builtin = policy.disabled("builtin_skill") | (
+            set(extra_ids) if extra_type == "builtin_skill" else set()
+        )
+        packages = policy.disabled("package_skill") | (
+            set(extra_ids) if extra_type == "package_skill" else set()
+        )
+        slugs = builtin | {key.split("/", 1)[1] for key in packages if "/" in key}
+        if not slugs:
+            return set()
+        workspace = self.workspace_for_agent(agent_id) if honor_private else None
+        if isinstance(workspace, BackendWorkspace):
+            slugs = {
+                slug
+                for slug in slugs
+                if not any(
+                    workspace.exists(f"{root}/{slug}/SKILL.md")
+                    for root in {"skills", workspace.system_rel("skills")}
+                )
+            }
+        return BuiltinSkillPreferences.keys_for_slugs(builtin & slugs) | slugs
+
     def effective_skills_disabled(self, agent_id: str, disabled: set[str]) -> set[str]:
-        """Merge private account preferences without changing the expert profile."""
+        """Platform withdrawal cannot be undone by a personal enable operation."""
         from octop.infra.skills.builtin_preferences import BuiltinSkillPreferences
 
         row = self._repos.agent_repo.get(agent_id)
-        if row is None or row.user_id is None:
-            return disabled
-        return disabled | BuiltinSkillPreferences(self._repos.settings_repo).filter_keys(
-            row.user_id
+        personal = (
+            BuiltinSkillPreferences(self._repos.settings_repo).filter_keys(row.user_id)
+            if row is not None and row.user_id is not None
+            else set()
         )
+        return disabled | personal | self._public_skill_keys(agent_id)
+
+    async def refresh_public_resources(self, resource_type: str, ids: list[str]) -> None:
+        rows = self.list_rows()
+        if resource_type in {"builtin_skill", "package_skill"}:
+
+            def sync() -> None:
+                for row in rows:
+                    try:
+                        agent = self.get_agent(row.agent_id)
+                    except OctopError:
+                        continue
+                    configured = skills_disabled_set(self.get_config(row.agent_id))
+                    public_keys = self._public_skill_keys(
+                        row.agent_id,
+                        extra_type=resource_type,
+                        extra_ids=tuple(ids),
+                        honor_private=False,
+                    )
+                    existing = set(agent.config.skills_disabled)
+                    self.sync_skills_disabled(row.agent_id, (existing - public_keys) | configured)
+
+            await asyncio.get_running_loop().run_in_executor(None, sync)
+            if resource_type == "package_skill":
+                for user_id in {row.user_id for row in rows if row.user_id is not None}:
+                    await self.refresh_user_skill_library(user_id)
+        elif resource_type in {"connector_catalog", "shared_connector"}:
+            for user_id in {row.user_id for row in rows if row.user_id is not None}:
+                await self.reload_connectors_for_user(user_id)
 
     async def refresh_user_builtin_skills(self, user_id: int) -> None:
         def refresh_owned() -> None:
@@ -3460,6 +3538,17 @@ class AgentManager:
                     init_workspace=seed_workspace,
                 )
                 await self._post_start_agent(row, entry.agent, cfg, user_display=user_display)
+                public_keys = await asyncio.get_running_loop().run_in_executor(
+                    None, lambda: self._public_skill_keys(row.agent_id, honor_private=False)
+                )
+                if public_keys:
+                    configured = skills_disabled_set(self.get_config(row.agent_id))
+                    await asyncio.get_running_loop().run_in_executor(
+                        None,
+                        self.sync_skills_disabled,
+                        row.agent_id,
+                        (set(cfg.skills_disabled) - public_keys) | configured,
+                    )
                 self._repos.agent_repo.set_state(row.agent_id, "running", error=None)
                 logger.info("Agent %s (%s) started", row.agent_id, row.name)
                 return entry.agent

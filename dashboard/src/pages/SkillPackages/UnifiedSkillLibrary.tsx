@@ -25,7 +25,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { authApi, type OctopUser } from "../../api/modules/auth";
 import { skillPackagesApi } from "../../api/modules/skillPackages";
 import type {
@@ -50,8 +50,6 @@ import { SkillImportModal } from "./SkillImportModal";
 import type { ParsedZipSkill } from "../Agent/Skills/components/parseSkillZip";
 import type { SkillHubSkill } from "../Agent/Skills/components/SkillHubDetailDrawer";
 import styles from "./UnifiedSkillLibrary.module.less";
-import BuiltinSkillsDrawer from "./BuiltinSkillsDrawer";
-import { PERM, userCanAny } from "../../utils/permissions";
 
 type LocalSkill = { skill: SkillPackageSkill; pkg: SkillPackageDetail };
 type Selection =
@@ -97,6 +95,7 @@ export default function UnifiedSkillLibrary({
   const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [packages, setPackages] = useState<SkillPackageDetail[]>([]);
   const [library, setLibrary] = useState<UserSkillLibrary>({
     installed_package_ids: [],
@@ -121,7 +120,6 @@ export default function UnifiedSkillLibrary({
   const [detailLoading, setDetailLoading] = useState(false);
   const [overviewQuery, setOverviewQuery] = useState("");
   const [importOpen, setImportOpen] = useState(false);
-  const [presetsOpen, setPresetsOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [skillForm] = Form.useForm<SkillFormValues>();
@@ -512,16 +510,14 @@ export default function UnifiedSkillLibrary({
 
   return (
     <PageShell embedded={embedded} title={t("nav.skills")} fill>
-      <BuiltinSkillsDrawer
-        open={presetsOpen}
-        onClose={() => setPresetsOpen(false)}
-      />
       <div className={styles.page}>
         <CapabilityHeaderActions resource="skills">
           <div className={styles.toolbarActions}>
-            {userCanAny(user, PERM.skills) && (
-              <Button onClick={() => setPresetsOpen(true)}>
-                {t("skillsCenter.presets")}
+            {user?.role === "admin" && (
+              <Button
+                onClick={() => navigate("/admin/public-resources?tab=skills")}
+              >
+                {t("nav.publicResources")}
               </Button>
             )}
             {!mine && (

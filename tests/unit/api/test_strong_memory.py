@@ -30,7 +30,10 @@ def _server(ws: BackendWorkspace) -> SimpleNamespace:
         await ws.awrite_text(filename, content, force=True)
 
     return SimpleNamespace(
-        services=SimpleNamespace(agent_repo=SimpleNamespace(get=MagicMock(return_value=row))),
+        services=SimpleNamespace(
+            agent_repo=SimpleNamespace(get=MagicMock(return_value=row)),
+            settings_repo=SimpleNamespace(get=MagicMock(return_value=None)),
+        ),
         app_runtime=SimpleNamespace(
             agent_registry=SimpleNamespace(
                 get_row=MagicMock(return_value=row),

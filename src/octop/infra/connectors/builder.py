@@ -558,6 +558,8 @@ def _iter_active_connectors(
     user_id: int,
 ) -> Any:
     for inst in connector_repo.list_visible(user_id):
+        if not svc.public_instance_enabled(inst):
+            continue
         if inst.status != "active":
             continue
         entry = get_catalog_entry(inst.kind)

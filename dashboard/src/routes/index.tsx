@@ -19,6 +19,10 @@ const RemoteDesktopPage = lazy(() => import("../pages/Control/RemoteDesktop"));
 // Lazy-loaded pages — Settings
 const ModelsPage = lazy(() => import("../pages/Settings/Models"));
 
+const PublicResourcesPage = lazy(
+  () => import("../pages/Admin/PublicResources"),
+);
+
 // Lazy-loaded pages — Admin
 const OctopAdminUsersPage = lazy(() => import("../pages/Admin/Users"));
 const AdminSecurityPage = lazy(() => import("../pages/Settings/Security"));
@@ -87,6 +91,7 @@ export const pathToKey: Record<string, string> = {
   // Admin
   "/admin/models": "models",
   // Admin
+  "/admin/public-resources": "admin-public-resources",
   "/admin/users": "admin-users",
   "/admin/backend": "admin-storage",
   "/admin/plugins": "admin-plugins",
@@ -289,6 +294,7 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/sessions", element: <Navigate to="/chat" replace /> },
   { path: "/cron-jobs", element: <Navigate to="/tasks" replace /> },
 
+  { path: "/admin/public-resources", element: <PublicResourcesPage /> },
   // Misc
   { path: "/pwa-debug", element: <PwaDebugPage /> },
   { path: "/", element: <Navigate to="/chat" replace /> },
