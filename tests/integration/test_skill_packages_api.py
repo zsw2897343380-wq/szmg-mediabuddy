@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import io
+import shutil
 import zipfile
 from typing import Any
 
@@ -15,6 +16,54 @@ description: Read PDF documents
 ---
 # PDF Reader
 """
+
+
+async def test_database_snapshot_recovers_list_detail_and_export_after_cache_loss(env: Any) -> None:
+    client, server, auth = env
+    created = await client.post("/api/skill-packages", headers=auth, json={"name": "Durable"})
+    package_id = created.json()["id"]
+    binary = b"\x89PNG\x00\xff"
+    files = [("SKILL.md", SAMPLE_SKILL.encode()), ("assets/icon.png", binary)]
+    imported = await client.post(
+        f"/api/skill-packages/{package_id}/skills",
+        headers=auth,
+        json={
+            "name": "pdf-reader",
+            "files": [
+                {"path": path, "content_base64": base64.b64encode(content).decode()}
+                for path, content in files
+            ],
+        },
+    )
+    assert imported.status_code == 200, imported.text
+    server.services.skill_package_repo.update(package_id, copy_policy="lock", allow_download=0)
+    installed = await client.put(
+        f"/api/skill-packages/library/{package_id}/skills/pdf-reader",
+        headers=auth,
+        json={"installed": True, "enabled": False},
+    )
+    assert installed.status_code == 200, installed.text
+    before = server.services.skill_package_repo.get(package_id)
+    for url in [
+        f"/api/skill-packages/{package_id}",
+        f"/api/skill-packages/{package_id}/skills/pdf-reader",
+        f"/api/skill-packages/{package_id}/export",
+    ]:
+        shutil.rmtree(server.paths.skill_packages_dir)
+        response = await client.get(url, headers=auth)
+        assert response.status_code == 200, response.text
+        if url.endswith("/export"):
+            with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+                for path, content in files:
+                    assert archive.read(f"pdf-reader/{path}") == content
+        elif url.endswith("/pdf-reader"):
+            assert response.json()["raw"] == SAMPLE_SKILL
+        else:
+            assert response.json()["skills"][0]["slug"] == "pdf-reader"
+    assert server.services.skill_package_repo.get(package_id) == before
+    assert (
+        await client.get("/api/skill-packages/library", headers=auth)
+    ).json() == installed.json()
 
 
 def _b64(text: str) -> str:

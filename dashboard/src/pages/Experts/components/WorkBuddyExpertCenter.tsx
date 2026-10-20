@@ -1,9 +1,20 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Alert, Button, Input, Modal, Spin } from "antd";
 import { ArrowRight, Search, UserRound, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { PublishedExpert } from "../../../api/modules/publishedExperts";
+import {
+  expertMarketApi,
+  type MarketExpert,
+} from "../../../api/modules/expertMarket";
 import { request } from "../../../api/request";
 import { useAgent, type OctopAgent } from "../../../context/AgentContext";
 import { pickLocale } from "../../../utils/localizedText";
@@ -11,6 +22,7 @@ import { apiErrorMessage } from "../../../utils/apiError";
 import Markdown from "../../../components/Markdown/LazyMarkdown";
 import { CapabilityHeaderActions } from "../../CapabilityCenter/HeaderActions";
 import { ExpertIcon } from "./iconForName";
+import type { ExpertSummary } from "./ExpertCard";
 import type { QuickPrompt } from "./welcomeManifest";
 import type { CreateFromTemplateSource } from "./CreateFromExpertDrawer";
 import {
@@ -24,6 +36,7 @@ import {
 import styles from "../index.module.less";
 
 interface Props {
+  experts: ExpertSummary[];
   publishedExperts: PublishedExpert[];
   agents: OctopAgent[];
   loading: boolean;
@@ -34,6 +47,7 @@ interface Props {
 }
 
 export default function WorkBuddyExpertCenter({
+  experts,
   publishedExperts,
   agents,
   loading,
@@ -45,15 +59,36 @@ export default function WorkBuddyExpertCenter({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setActiveAgent } = useAgent();
+  const [market, setMarket] = useState<MarketExpert[]>([]);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  const [section, setSection] = useState<"media" | "team">("media");
+  const [section, setSection] = useState<"expert" | "media" | "team">("media");
   const [sort, setSort] = useState<DiscoverySort>("reco");
   const [selected, setSelected] = useState<DiscoveryExpert | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
   const [detailBody, setDetailBody] = useState("");
   const generation = useRef(0);
+
+  const loadMarket = useCallback(async () => {
+    setMarketLoading(true);
+    try {
+      const response = await expertMarketApi.list("");
+      setMarket(response.items);
+      setMarketError("");
+    } catch (error) {
+      setMarketError(
+        apiErrorMessage(error, t("experts.marketDetailLoadFailed"), t),
+      );
+    } finally {
+      setMarketLoading(false);
+    }
+  }, [t]);
+  useEffect(() => {
+    if (section === "expert") void loadMarket();
+  }, [section, loadMarket]);
 
   useEffect(
     () => () => {
@@ -64,31 +99,61 @@ export default function WorkBuddyExpertCenter({
 
   // The restored WorkBuddy collection keeps its original publication slugs.
   const entries = useMemo(
-    () =>
-      publishedExperts
-        .filter((expert) => expert.slug?.startsWith("workbuddy-"))
+    () => [
+      ...(section === "expert"
+        ? [
+            ...experts.map((expert) =>
+              discoveryExpert({ kind: "builtin", expert }, agents, lang),
+            ),
+            ...market.map((expert) =>
+              discoveryExpert({ kind: "market", expert }, agents, lang),
+            ),
+          ]
+        : []),
+      ...publishedExperts
+        .filter((expert) =>
+          section === "expert"
+            ? !expert.slug?.startsWith("workbuddy-")
+            : expert.slug?.startsWith("workbuddy-"),
+        )
         .map((expert) =>
           discoveryExpert({ kind: "published", expert }, agents, lang),
         ),
-    [publishedExperts, agents, lang],
+    ],
+    [experts, publishedExperts, market, agents, lang, section],
   );
-  const categories = MEDIA_EXPERT_CATEGORIES;
+  const categories =
+    section === "expert"
+      ? Array.from(
+          new Set(entries.map((entry) => entry.category).filter(Boolean)),
+        )
+      : MEDIA_EXPERT_CATEGORIES;
   const visible = useMemo(
     () => filterDiscoveryExperts(entries, query, category, sort),
     [entries, query, category, sort],
   );
   const categoryLabel = (value: string) => {
     if (!value) return t("experts.sceneAll");
-    return t(`experts.mediaCategories.${value}`, { defaultValue: value });
+    return t(
+      `experts.${section === "media" ? "mediaCategories" : "scenes"}.${value}`,
+      { defaultValue: value },
+    );
   };
   const openDetail = async (entry: DiscoveryExpert) => {
-    if (entry.source.kind === "market") return;
     const current = ++generation.current;
     setSelected(entry);
     setDetailError("");
     setDetailBody("");
     setDetailLoading(true);
     try {
+      if (entry.source.kind === "market") {
+        const expert = await expertMarketApi.get(entry.source.expert.slug);
+        if (generation.current === current)
+          setSelected(
+            discoveryExpert({ kind: "market", expert }, agents, lang),
+          );
+        return;
+      }
       const path = `/experts/${
         entry.source.kind === "published" ? "published/" : ""
       }${encodeURIComponent(entry.source.expert.id)}`;
@@ -149,7 +214,10 @@ export default function WorkBuddyExpertCenter({
     } else onCreate(source, prompt);
   };
   const detailSource = selected?.source;
-  const detailContent = detailBody;
+  const detailContent =
+    detailSource?.kind === "market"
+      ? pickLocale(detailSource.expert.content, lang)
+      : detailBody;
   const quickPrompts = detailSource?.expert.quick_prompts ?? [];
   const examples =
     detailSource && "task_examples" in detailSource.expert
@@ -221,6 +289,17 @@ export default function WorkBuddyExpertCenter({
             <button
               type="button"
               role="tab"
+              aria-selected={section === "expert"}
+              onClick={() => {
+                setSection("expert");
+                setCategory("");
+              }}
+            >
+              {t("experts.workbuddy.experts")}
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={section === "media"}
               onClick={() => {
                 setSection("media");
@@ -284,7 +363,25 @@ export default function WorkBuddyExpertCenter({
                 </button>
               ))}
             </div>
-            {loading && entries.length === 0 ? (
+            {section === "expert" && marketError && (
+              <Alert
+                type="warning"
+                showIcon
+                message={t("experts.workbuddy.marketUnavailable")}
+                description={marketError}
+                action={
+                  <Button
+                    size="small"
+                    loading={marketLoading}
+                    onClick={() => void loadMarket()}
+                  >
+                    {t("common.retry")}
+                  </Button>
+                }
+              />
+            )}
+            {(loading || (section === "expert" && marketLoading)) &&
+            entries.length === 0 ? (
               <div className={styles.loadingState}>
                 <Spin />
               </div>

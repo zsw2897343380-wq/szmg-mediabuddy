@@ -332,7 +332,8 @@ async def _guard_package_only_skill_write(
         root=server.paths.skill_packages_dir,
     )
     for package_id in package_ids if package_ids is not None else skill_package_ids_list(config):
-        if any(skill["slug"] == slug for skill in store.list_skill_summaries(package_id)):
+        summaries = await asyncio.to_thread(store.list_skill_summaries, package_id)
+        if any(skill["slug"] == slug for skill in summaries):
             raise OctopError(
                 ErrorCode.FORBIDDEN,
                 f"skill {slug!r} is supplied by a mounted package",
@@ -647,7 +648,9 @@ async def list_skill_package_mounts(
                 "id": package.id,
                 "name": package.name,
                 "description": package.description,
-                "skills": store.list_skill_summaries(package_id, locale=locale),
+                "skills": await asyncio.to_thread(
+                    store.list_skill_summaries, package_id, locale=locale
+                ),
             }
         )
     return {"package_ids": package_ids, "packages": packages}

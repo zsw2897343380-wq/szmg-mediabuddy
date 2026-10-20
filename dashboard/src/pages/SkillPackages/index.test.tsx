@@ -135,6 +135,23 @@ beforeEach(() => {
     frontmatter: {},
   }));
   state.api.library.mockImplementation(async () => ({ ...state.library }));
+  state.api.hubRankings.mockResolvedValue({
+    rankings: {
+      recommended: {
+        skills: [
+          {
+            slug: "market-reader",
+            name: "Market Reader",
+            description: "Market recommendation",
+          },
+        ],
+      },
+      trending: { skills: [{ slug: "rising", name: "Rising Skill" }] },
+      hot: { skills: [{ slug: "popular", name: "Popular Skill" }] },
+      newest: { skills: [{ slug: "latest", name: "Latest Skill" }] },
+    },
+  });
+  state.api.hubSearch.mockResolvedValue([]);
   state.api.importSkill.mockResolvedValue({ slug: "reader" });
   state.api.create.mockResolvedValue({
     ...rows[0],
@@ -173,7 +190,7 @@ async function showLocal() {
 }
 
 describe("WorkBuddy unified skill center", () => {
-  it("recommends shared skills without fetching the old market recommendations", async () => {
+  it("keeps shared skills as recommendations and restores market ranking tabs", async () => {
     setup();
     expect(
       await screen.findByRole("button", { name: "Reader" }),
@@ -190,7 +207,7 @@ describe("WorkBuddy unified skill center", () => {
       "skills.rankingHot",
       "skills.rankingNewest",
     ]) {
-      expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
+      expect(screen.getByRole("tab", { name })).toBeInTheDocument();
     }
     fireEvent.change(
       screen.getByRole("textbox", { name: "skillsCenter.search" }),
@@ -201,6 +218,38 @@ describe("WorkBuddy unified skill center", () => {
       screen.queryByRole("button", { name: "Reader" }),
     ).not.toBeInTheDocument();
     expect(state.api.hubSearch).not.toHaveBeenCalled();
+  });
+
+  it("loads historic market recommendations and rankings separately from shared skills", async () => {
+    setup();
+    await screen.findByRole("button", { name: "Reader" });
+    const catalogs = [
+      ["skillsCenter.marketRecommended", "Market Reader"],
+      ["skills.rankingTrending", "Rising Skill"],
+      ["skills.rankingHot", "Popular Skill"],
+      ["skills.rankingNewest", "Latest Skill"],
+    ];
+    for (const [index, [tab, card]] of catalogs.entries()) {
+      fireEvent.click(screen.getByRole("tab", { name: tab }));
+      await waitFor(() =>
+        expect(state.api.hubRankings).toHaveBeenCalledTimes(index + 1),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: card })).toBeInTheDocument(),
+      );
+      expect(
+        screen.queryByRole("button", { name: "Reader" }),
+      ).not.toBeInTheDocument();
+    }
+    fireEvent.click(
+      screen.getByRole("tab", { name: "skills.rankingRecommended" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Reader" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Market Reader" }),
+    ).not.toBeInTheDocument();
   });
 
   it("installs one skill from a multi-skill package, then pauses and removes only that skill", async () => {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Sequence
 from typing import Any
 
@@ -162,18 +163,24 @@ async def copy_package_skills_to_workspace(
         raise SkillPackageError("at least one skill is required")
 
     stamp_locked = str(copy_policy).strip().lower() == "lock"
-    sources: dict[str, list[tuple[str, bytes]]] = {}
-    for slug in selected:
-        skill_dir = store.package_skills_dir(package_id) / slug
-        if not (skill_dir / "SKILL.md").is_file():
-            raise SkillTransferNotFound(slug)
-        files = read_skill_directory(skill_dir)
-        if stamp_locked:
-            files = [
-                (name, _stamp_locked_manifest(data, package_id) if name == "SKILL.md" else data)
-                for name, data in files
-            ]
-        sources[slug] = files
+
+    def load_sources() -> dict[str, list[tuple[str, bytes]]]:
+        root = store.package_skills_dir(package_id)
+        sources: dict[str, list[tuple[str, bytes]]] = {}
+        for slug in selected:
+            skill_dir = root / slug
+            if not (skill_dir / "SKILL.md").is_file():
+                raise SkillTransferNotFound(slug)
+            files = read_skill_directory(skill_dir)
+            if stamp_locked:
+                files = [
+                    (name, _stamp_locked_manifest(data, package_id) if name == "SKILL.md" else data)
+                    for name, data in files
+                ]
+            sources[slug] = files
+        return sources
+
+    sources = await asyncio.to_thread(load_sources)
 
     if not overwrite:
         for slug in selected:
@@ -215,8 +222,12 @@ async def copy_workspace_skill_to_package(
     """Copy a workspace skill into a writable global package."""
     safe_slug = validate_skill_slug(slug)
     files = await read_workspace_skill_files(workspace, safe_slug)
-    destination = store.package_skills_dir(package_id) / safe_slug / "SKILL.md"
-    if destination.is_file() and not overwrite:
-        raise SkillTransferConflict(safe_slug)
-    store.write_skill(package_id, safe_slug, files)
+
+    def persist() -> None:
+        destination = store.package_skills_dir(package_id) / safe_slug / "SKILL.md"
+        if destination.is_file() and not overwrite:
+            raise SkillTransferConflict(safe_slug)
+        store.write_skill(package_id, safe_slug, files)
+
+    await asyncio.to_thread(persist)
     return safe_slug

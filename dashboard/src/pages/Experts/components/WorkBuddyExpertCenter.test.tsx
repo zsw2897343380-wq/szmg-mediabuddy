@@ -56,6 +56,14 @@ const general = {
   description: "通用任务",
 } as PublishedExpert;
 const defaultProps = {
+  experts: [
+    {
+      id: "original-writer",
+      label: { zh: "原版写作专家" },
+      description: { zh: "原版能力" },
+      category: "article-production",
+    },
+  ],
   publishedExperts: [general, expert],
   agents: [],
   loading: false,
@@ -93,6 +101,7 @@ beforeEach(() => {
     file_contents: [{ name: "SOUL.md", content: "采访能力详情" }],
     quick_prompts: expert.quick_prompts,
   });
+  mocks.list.mockResolvedValue({ items: [], scenes: [] });
 });
 
 describe("WorkBuddy expert center", () => {
@@ -258,6 +267,7 @@ describe("WorkBuddy expert center", () => {
     );
     renderCenter({ publishedExperts });
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "experts.workbuddy.experts",
       "experts.workbuddy.mediaExperts",
       "experts.workbuddy.teams",
     ]);
@@ -294,6 +304,69 @@ describe("WorkBuddy expert center", () => {
     expect(
       screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
     ).toHaveLength(42);
+  });
+
+  it("restores original experts separately from the media collection", async () => {
+    renderCenter({
+      publishedExperts: [
+        expert,
+        { id: "custom-original", name: "原版发布专家" } as PublishedExpert,
+      ],
+    });
+    expect(screen.queryByText("原版写作专家")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.experts" }),
+    );
+    expect(screen.getAllByText("原版写作专家").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("原版发布专家").length).toBeGreaterThan(0);
+    expect(screen.queryByText("采访专家")).toBeNull();
+    const cards = screen.getAllByRole("button", { name: /原版写作专家/ });
+    fireEvent.click(cards[cards.length - 1]!);
+    await screen.findByRole("dialog");
+    await waitFor(() =>
+      expect(mocks.request).toHaveBeenCalledWith("/experts/original-writer"),
+    );
+  });
+
+  it("reconnects the cloud catalog, detail, and create flow without mixing media experts", async () => {
+    const cloud = {
+      id: "skillhub:cloud-writer",
+      slug: "cloud-writer",
+      label: { zh: "云端写作专家" },
+      description: { zh: "云端推荐" },
+      scene: "media",
+    };
+    const detail = {
+      ...cloud,
+      content: { zh: "云端完整说明" },
+      quick_prompts: expert.quick_prompts,
+    };
+    mocks.list.mockResolvedValue({ items: [cloud], scenes: ["media"] });
+    mocks.get.mockResolvedValue(detail);
+    renderCenter();
+    expect(mocks.list).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.experts" }),
+    );
+    const cards = await screen.findAllByRole("button", {
+      name: /云端写作专家/,
+    });
+    expect(mocks.list).toHaveBeenCalledWith("");
+    expect(screen.queryByText("采访专家")).toBeNull();
+    fireEvent.click(cards[cards.length - 1]!);
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("云端完整说明")).toBeTruthy();
+    expect(mocks.get).toHaveBeenCalledWith("cloud-writer");
+    fireEvent.click(within(dialog).getByRole("button", { name: "拟采访提纲" }));
+    expect(defaultProps.onCreate).toHaveBeenCalledWith(
+      { kind: "market", expert: detail },
+      "为我拟定采访提纲",
+    );
+    fireEvent.click(
+      screen.getByRole("tab", { name: "experts.workbuddy.mediaExperts" }),
+    );
+    expect(screen.queryByRole("button", { name: /云端写作专家/ })).toBeNull();
+    expect(screen.getAllByText("采访专家").length).toBeGreaterThan(0);
   });
 
   it("creates an uninstalled configured expert without changing its source", () => {

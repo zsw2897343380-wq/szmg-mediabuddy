@@ -7292,6 +7292,7 @@
     }
   },
   "skillsCenter": {
+    "marketRecommended": "Skill Market",
     "system": "System skills",
     "systemPolicy": "Superadministrators publish or withdraw system skills for all accounts. Independent or modified private copies are retained.",
     "systemToggle": "Publish or withdraw {{name}}",

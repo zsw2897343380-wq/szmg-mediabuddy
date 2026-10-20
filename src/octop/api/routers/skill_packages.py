@@ -449,7 +449,8 @@ async def create_skill_package(
     store = _store(server)
     name = _required(body.name, "name")
     try:
-        row = store.create(
+        row = await asyncio.to_thread(
+            store.create,
             name=name,
             description=body.description.strip(),
             created_by=str(user.id),
@@ -460,7 +461,7 @@ async def create_skill_package(
         if is_skill_package_name_conflict(exc):
             raise_skill_package_name_taken(name)
         raise
-    return _package_payload_with_creator(server, store, row)
+    return await asyncio.to_thread(_package_payload_with_creator, server, store, row)
 
 
 @router.post(
@@ -487,7 +488,7 @@ async def create_from_skillhub(
         )
     except (SkillHubMarketError, SkillHubDownloadError) as exc:
         raise _map_skillhub_error(exc) from exc
-    payload = _package_payload_with_creator(server, store, result.row)
+    payload = await asyncio.to_thread(_package_payload_with_creator, server, store, result.row)
     if result.skipped_slugs:
         payload["skipped_skills"] = list(result.skipped_slugs)
     return payload
@@ -503,7 +504,8 @@ async def get_skill_package(
     store = _store(server)
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     return {
-        **_package_payload_with_creator(
+        **await asyncio.to_thread(
+            _package_payload_with_creator,
             server,
             store,
             row,
@@ -545,7 +547,8 @@ async def update_skill_package(
             raise_skill_package_name_taken(name)
         raise
     updated = _package_or_404(store, package_id, locale=resolve_request_locale(request))
-    return _package_payload_with_creator(
+    return await asyncio.to_thread(
+        _package_payload_with_creator,
         server,
         store,
         updated,
@@ -565,7 +568,7 @@ async def delete_skill_package(
     store = _store(server)
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     store.assert_can_mutate(row, user)
-    store.delete_package(package_id)
+    await asyncio.to_thread(store.delete_package, package_id)
     if server.app_runtime is not None:
         await server.app_runtime.agent_registry.strip_skill_package_id(package_id)
 
@@ -579,7 +582,8 @@ async def list_package_skills(
 ) -> list[dict[str, Any]]:
     store = _store(server)
     _package_or_404(store, package_id, locale=resolve_request_locale(request))
-    return store.list_skill_summaries(
+    return await asyncio.to_thread(
+        store.list_skill_summaries,
         package_id,
         locale=resolve_request_locale(request),
     )
@@ -595,15 +599,19 @@ async def get_package_skill(
 ) -> dict[str, Any]:
     store = _store(server)
     _package_or_404(store, package_id, locale=resolve_request_locale(request))
-    skill = _package_skill_or_404(
-        store,
-        package_id,
-        slug,
-        locale=resolve_request_locale(request),
-    )
-    raw = (store.package_skills_dir(package_id) / slug / "SKILL.md").read_text(encoding="utf-8")
-    frontmatter, body = parse_frontmatter(raw)
-    return {**skill, "frontmatter": frontmatter, "body": body, "raw": raw}
+
+    def load_detail() -> dict[str, Any]:
+        skill = _package_skill_or_404(
+            store,
+            package_id,
+            slug,
+            locale=resolve_request_locale(request),
+        )
+        raw = (store.package_skills_dir(package_id) / slug / "SKILL.md").read_text(encoding="utf-8")
+        frontmatter, body = parse_frontmatter(raw)
+        return {**skill, "frontmatter": frontmatter, "body": body, "raw": raw}
+
+    return await asyncio.to_thread(load_detail)
 
 
 def _read_package_skill_files(
@@ -676,20 +684,24 @@ async def create_package_skill(
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     store.assert_can_mutate(row, user)
     slug = _required(body.name, "name")
-    if _package_skill_exists(store, package_id, slug) and not body.overwrite:
+    if (
+        await asyncio.to_thread(_package_skill_exists, store, package_id, slug)
+        and not body.overwrite
+    ):
         raise OctopError.localized(
             ErrorCode.SKILL_ALREADY_EXISTS,
             resolve_request_locale(request),
             name=slug,
         )
-    store.write_skill(
+    await asyncio.to_thread(
+        store.write_skill,
         package_id,
         slug,
         _files_from_package_skill_body(content=body.content, files=body.files),
     )
     if server.app_runtime is not None:
         await server.app_runtime.agent_registry.refresh_agents_for_package(package_id)
-    return _package_skill_or_404(store, package_id, slug)
+    return await asyncio.to_thread(_package_skill_or_404, store, package_id, slug)
 
 
 @router.put("/{package_id}/skills/{slug}", summary="Replace a global package skill")
@@ -704,15 +716,16 @@ async def update_package_skill(
     store = _store(server)
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     store.assert_can_mutate(row, user)
-    _package_skill_or_404(store, package_id, slug)
-    store.write_skill(
+    await asyncio.to_thread(_package_skill_or_404, store, package_id, slug)
+    await asyncio.to_thread(
+        store.write_skill,
         package_id,
         slug,
         _files_from_package_skill_body(content=body.content, files=body.files),
     )
     if server.app_runtime is not None:
         await server.app_runtime.agent_registry.refresh_agents_for_package(package_id)
-    return _package_skill_or_404(store, package_id, slug)
+    return await asyncio.to_thread(_package_skill_or_404, store, package_id, slug)
 
 
 @router.delete(
@@ -730,8 +743,8 @@ async def delete_package_skill(
     store = _store(server)
     row = _package_or_404(store, package_id, locale=resolve_request_locale(request))
     store.assert_can_mutate(row, user)
-    _package_skill_or_404(store, package_id, slug)
-    store.delete_skill(package_id, slug)
+    await asyncio.to_thread(_package_skill_or_404, store, package_id, slug)
+    await asyncio.to_thread(store.delete_skill, package_id, slug)
     if server.app_runtime is not None:
         await server.app_runtime.agent_registry.refresh_agents_for_package(package_id)
 
@@ -760,10 +773,10 @@ class _PackageInstallTarget:
         self._server = server
 
     async def skill_exists(self, slug: str) -> bool:
-        return _package_has_skill(self._store, self._package_id, slug)
+        return await asyncio.to_thread(_package_has_skill, self._store, self._package_id, slug)
 
     async def write_files(self, slug: str, files: list[tuple[str, bytes]]) -> None:
-        self._store.write_skill(self._package_id, slug, files)
+        await asyncio.to_thread(self._store.write_skill, self._package_id, slug, files)
 
     async def after_install(self, slug: str, *, enable: bool | None = None) -> None:
         del slug, enable
@@ -847,7 +860,7 @@ async def import_package_skill(
             reason=str(exc),
         ) from exc
 
-    return _package_skill_or_404(store, package_id, package.slug)
+    return await asyncio.to_thread(_package_skill_or_404, store, package_id, package.slug)
 
 
 @router.post(
@@ -962,5 +975,7 @@ async def hub_install_package_skill(
         "installed": True,
         "name": skill_name,
         "transport": transport,
-        "skill": _package_skill_or_404(store, package_id, skill_name, locale=locale),
+        "skill": await asyncio.to_thread(
+            _package_skill_or_404, store, package_id, skill_name, locale=locale
+        ),
     }

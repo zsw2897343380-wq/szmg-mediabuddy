@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 
 from octop.infra.db.pool import DatabasePool
 from octop.infra.db.repos._base import DbRow, map_rows, now_ts, partial_updates
@@ -138,3 +139,52 @@ class SkillPackageRepo:
                 "WHERE skill_package_id = ?",
                 (count, str(now_ts()), package_id),
             )
+
+    def get_snapshot_digest(self, package_id: str) -> str | None:
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT sha256 FROM skill_package_snapshots WHERE skill_package_id = ?",
+                (package_id,),
+            ).fetchone()
+        return str(row["sha256"]) if row else None
+
+    def get_snapshot_archive(self, package_id: str) -> bytes | None:
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT archive FROM skill_package_snapshots WHERE skill_package_id = ?",
+                (package_id,),
+            ).fetchone()
+        return bytes(row["archive"]) if row else None
+
+    def save_snapshot(
+        self,
+        package_id: str,
+        archive: bytes,
+        *,
+        expected_digest: str | None,
+        skill_count: int | None = None,
+    ) -> bool:
+        """Commit files and their count together, without overwriting a newer snapshot."""
+        digest = sha256(archive).hexdigest()
+        with self._db.transaction() as conn:
+            if expected_digest is None:
+                result = conn.execute(
+                    "INSERT INTO skill_package_snapshots(skill_package_id, archive, sha256) "
+                    "VALUES (?, ?, ?) ON CONFLICT(skill_package_id) DO NOTHING",
+                    (package_id, archive, digest),
+                )
+            else:
+                result = conn.execute(
+                    "UPDATE skill_package_snapshots SET archive = ?, sha256 = ? "
+                    "WHERE skill_package_id = ? AND sha256 = ?",
+                    (archive, digest, package_id, expected_digest),
+                )
+            if result.rowcount != 1:
+                return False
+            if skill_count is not None:
+                conn.execute(
+                    "UPDATE skill_packages SET skill_count = ?, updated_at = ? "
+                    "WHERE skill_package_id = ?",
+                    (skill_count, str(now_ts()), package_id),
+                )
+        return True

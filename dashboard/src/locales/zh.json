@@ -7292,6 +7292,7 @@
     }
   },
   "skillsCenter": {
+    "marketRecommended": "技能市场",
     "system": "系统技能",
     "systemPolicy": "系统技能由超管统一上下架，对所有账号生效。用户独立创建或修改的私有副本保留。",
     "systemToggle": "上架或下架 {{name}}",

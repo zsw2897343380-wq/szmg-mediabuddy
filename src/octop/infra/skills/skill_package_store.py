@@ -1,10 +1,12 @@
-"""Disk-backed content storage for global skill packages."""
+"""Database-backed content storage for global skill packages."""
 
 from __future__ import annotations
 
 import logging
 import shutil
 import sqlite3
+import tempfile
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +17,13 @@ except ImportError:  # pragma: no cover - optional PostgreSQL driver
 
 from octop.infra.db.repos.skill_packages import SkillPackageRepo, SkillPackageRow
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.skills.package_snapshots import (
+    CACHE_LOCK,
+    CACHE_MARKER,
+    package_skills_dir,
+    replace_directory,
+    snapshot_archive,
+)
 from octop.infra.skills.presentation import apply_skill_presentation
 from octop.infra.skills.skill_packages import (
     SkillPackageError,
@@ -66,7 +75,7 @@ def _allocate_package_id(repo: SkillPackageRepo) -> str:
 
 
 class SkillPackageStore:
-    """Persist skill package contents below a host-local root."""
+    """Persist complete skill packages in the database and materialize local files."""
 
     def __init__(self, *, repo: SkillPackageRepo, root: Path, public_policy: Any = None) -> None:
         self.repo = repo
@@ -94,7 +103,12 @@ class SkillPackageStore:
         return row
 
     def package_skills_dir(self, pack_id: str) -> Path:
-        return self.root / pack_id / "skills"
+        return package_skills_dir(self.repo, self.root, pack_id)
+
+    def initialize_snapshots(self) -> None:
+        """Adopt legacy files and rebuild caches before any agents mount skills."""
+        for row in self.repo.list_all():
+            package_skills_dir(self.repo, self.root, row.id, force=True)
 
     def list_skill_summaries(
         self,
@@ -102,7 +116,11 @@ class SkillPackageStore:
         *,
         locale: Locale | None = None,
     ) -> list[dict[str, Any]]:
-        skills_dir = self.package_skills_dir(pack_id)
+        return self._summaries_in(self.package_skills_dir(pack_id), pack_id, locale=locale)
+
+    def _summaries_in(
+        self, skills_dir: Path, pack_id: str, *, locale: Locale | None = None
+    ) -> list[dict[str, Any]]:
         if not skills_dir.is_dir():
             return []
 
@@ -169,28 +187,59 @@ class SkillPackageStore:
             normalized_files = normalize_skill_files(files)
         except SkillPackageError as exc:
             raise OctopError(ErrorCode.SLASH_BAD_ARGS, str(exc)) from exc
-        skill_dir = self.package_skills_dir(pack_id) / safe_slug
-
-        shutil.rmtree(skill_dir, ignore_errors=True)
-        skill_dir.mkdir(parents=True, exist_ok=True)
-        for relative_path, content in normalized_files:
-            path = skill_dir / relative_path
-            if relative_path.endswith("/"):
-                # Empty directory marker ("ai/"): recreate the folder, write nothing.
-                path.mkdir(parents=True, exist_ok=True)
-                continue
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(content)
-        self._update_skill_count(pack_id)
+        self._mutate_skill(pack_id, safe_slug, normalized_files)
 
     def delete_skill(self, pack_id: str, slug: str) -> None:
         try:
             safe_slug = validate_skill_slug(slug)
         except SkillPackageError as exc:
             raise OctopError(ErrorCode.SLASH_BAD_ARGS, str(exc)) from exc
-        skill_dir = self.package_skills_dir(pack_id) / safe_slug
-        shutil.rmtree(skill_dir, ignore_errors=True)
-        self._update_skill_count(pack_id)
+        self._mutate_skill(pack_id, safe_slug, None)
+
+    def _mutate_skill(
+        self, pack_id: str, slug: str, files: tuple[tuple[str, bytes], ...] | None
+    ) -> None:
+        with CACHE_LOCK:
+            # A second process can update another skill in this same package.
+            # Retry from its committed version instead of dropping that update.
+            for _ in range(3):
+                current = self.package_skills_dir(pack_id)
+                marker = current / CACHE_MARKER
+                expected = marker.read_text(encoding="ascii") if marker.is_file() else None
+                current.parent.mkdir(parents=True, exist_ok=True)
+                staging = Path(tempfile.mkdtemp(prefix=".skills-update-", dir=current.parent))
+                try:
+                    if current.is_dir():
+                        shutil.copytree(current, staging, dirs_exist_ok=True, symlinks=True)
+                    skill_dir = staging / slug
+                    if skill_dir.is_symlink():
+                        skill_dir.unlink()
+                    else:
+                        shutil.rmtree(skill_dir, ignore_errors=True)
+                    if files is not None:
+                        skill_dir.mkdir(parents=True, exist_ok=True)
+                        for relative_path, content in files:
+                            target = skill_dir / relative_path
+                            if relative_path.endswith("/"):
+                                target.mkdir(parents=True, exist_ok=True)
+                            else:
+                                target.parent.mkdir(parents=True, exist_ok=True)
+                                target.write_bytes(content)
+                    count = len(self._summaries_in(staging, pack_id))
+                    archive = snapshot_archive(staging)
+                    if not self.repo.save_snapshot(
+                        pack_id, archive, expected_digest=expected, skill_count=count
+                    ):
+                        continue
+                    (staging / CACHE_MARKER).write_text(
+                        sha256(archive).hexdigest(), encoding="ascii"
+                    )
+                    replace_directory(staging, current)
+                    return
+                finally:
+                    if staging.exists():
+                        shutil.rmtree(staging)
+        raise OctopError(ErrorCode.INTERNAL_ERROR, "Concurrent skill package update; retry")
 
     def delete_package(self, pack_id: str) -> None:
         self.repo.delete(pack_id)
@@ -229,6 +278,3 @@ class SkillPackageStore:
 
     def can_mutate(self, row: SkillPackageRow, user: User) -> bool:
         return user.is_admin or str(user.id) == row.created_by
-
-    def _update_skill_count(self, pack_id: str) -> None:
-        self.repo.update_skill_count(pack_id, len(self.list_skill_summaries(pack_id)))

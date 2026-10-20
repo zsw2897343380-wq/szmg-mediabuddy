@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from typing import Any
 
 PACKAGE_SKILL = """---
@@ -79,6 +80,24 @@ async def test_mount_package_lists_skills_and_allows_disabling(env_with_agent: A
     skills = await client.get(f"/api/agents/{agent_id}/skills", headers=auth)
     package_skill = next(skill for skill in skills.json() if skill["slug"] == "pdf-reader")
     assert package_skill["enabled"] is False
+
+
+async def test_mount_recovers_package_files_after_cache_loss(env_with_agent: Any) -> None:
+    client, server, auth, agent_id = env_with_agent
+    package_id = await _create_package_with_skill(client, auth)
+    mounted = await client.put(
+        f"/api/agents/{agent_id}/skill-packages",
+        headers=auth,
+        json={"package_ids": [package_id]},
+    )
+    assert mounted.status_code == 200, mounted.text
+    shutil.rmtree(server.paths.skill_packages_dir)
+    restored = await client.get(f"/api/agents/{agent_id}/skill-packages", headers=auth)
+    assert restored.status_code == 200, restored.text
+    assert restored.json()["packages"][0]["skills"][0]["slug"] == "pdf-reader"
+    assert (server.paths.skill_packages_dir / package_id / "skills/pdf-reader/SKILL.md").read_text(
+        encoding="utf-8"
+    ) == PACKAGE_SKILL
 
 
 async def test_package_only_skill_rejects_workspace_writes(env_with_agent: Any) -> None:

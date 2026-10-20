@@ -491,6 +491,13 @@ class OctopServer:
 
         await asyncio.to_thread(initialize_published_snapshots, self.services)
 
+        from octop.infra.skills.skill_package_store import SkillPackageStore
+
+        skill_store = SkillPackageStore(
+            repo=self.services.skill_package_repo, root=self.paths.skill_packages_dir
+        )
+        await asyncio.to_thread(skill_store.initialize_snapshots)
+
         from octop.infra.utils.browser_media import (  # noqa: PLC0415
             configure_browser_idle_timeout,
         )

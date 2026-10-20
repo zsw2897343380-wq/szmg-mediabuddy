@@ -877,6 +877,7 @@ export default function ExpertsPage({
     >
       {showCenter ? (
         <WorkBuddyExpertCenter
+          experts={experts}
           publishedExperts={publishedExperts}
           agents={ownedAgents}
           loading={expertLoading || publishedExpertLoading}
