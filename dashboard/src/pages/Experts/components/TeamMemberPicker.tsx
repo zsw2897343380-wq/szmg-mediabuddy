@@ -4,6 +4,7 @@ import { Input } from "antd";
 import { Check } from "lucide-react";
 import { isOwnedExpert } from "../../../utils/sharedExpert";
 import { isBridgeAgentId } from "../../../utils/remoteExpert";
+import { isDefaultChatAgent } from "../../../utils/defaultChat";
 import { ExpertIcon } from "./iconForName";
 import styles from "../index.module.less";
 
@@ -15,6 +16,9 @@ export interface TeamMemberOption {
   icon_name?: string | null;
   icon_url?: string | null;
   kind?: string;
+  state?: string;
+  template_name?: string | null;
+  config?: Record<string, unknown>;
   is_shared?: boolean;
   is_owner?: boolean;
   bridge?: boolean | null;
@@ -27,6 +31,11 @@ interface TeamMemberPickerProps {
 }
 
 export function isPickableExpert(item: TeamMemberOption): boolean {
+  if (
+    item.state !== "running" ||
+    isDefaultChatAgent({ ...item, bridge: Boolean(item.bridge) })
+  )
+    return false;
   if (item.kind === "team") return false;
   if (item.bridge || isBridgeAgentId(item.agent_id)) return false;
   return isOwnedExpert(item) || Boolean(item.is_shared);

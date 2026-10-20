@@ -899,7 +899,7 @@
       "membersSearch": "Search experts",
       "membersEmpty": "No experts available",
       "membersSelected": "{{count}} selected",
-      "membersHint": "Only local experts can join a team on this instance — peer experts cannot. Save applies the current selection as the full roster. At least two members.",
+      "membersHint": "Only enabled local experts can join a team. Closed experts and unavailable shared experts are hidden; peer experts cannot join. Save applies the current selection as the full roster. At least two members.",
       "memberAvatars": "Members",
       "memberMore": "+{{count}}",
       "memoryBtn": "Team memory",

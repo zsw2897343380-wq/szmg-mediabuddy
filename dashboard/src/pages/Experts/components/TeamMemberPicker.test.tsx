@@ -1,29 +1,77 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import TeamMemberPicker, { selectedRosterIds } from "./TeamMemberPicker";
+import TeamMemberPicker, {
+  mergeTeamPickerExperts,
+  selectedRosterIds,
+} from "./TeamMemberPicker";
 
 const experts = [
   {
     agent_id: "a",
     name: "Alpha",
+    state: "running",
     kind: "expert",
     is_owner: true,
   },
   {
     agent_id: "b",
     name: "Beta",
+    state: "running",
     kind: "expert",
     is_owner: true,
   },
   {
     agent_id: "c",
     name: "Gamma",
+    state: "running",
     kind: "expert",
     is_owner: true,
   },
 ];
 
 describe("TeamMemberPicker", () => {
+  it("hides closed experts and removes them from the submitted roster", () => {
+    const candidates = [
+      experts[0],
+      { ...experts[1], state: "stopped" },
+      { ...experts[2], state: "failed" },
+    ];
+    const { rerender } = render(
+      <TeamMemberPicker value={["a", "b"]} experts={candidates} />,
+    );
+    expect(screen.getByRole("button", { name: /Alpha/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Beta|Gamma/ })).toBeNull();
+    expect(selectedRosterIds(["a", "b", "c"], candidates)).toEqual(["a"]);
+    rerender(
+      <TeamMemberPicker
+        value={["a", "b"]}
+        experts={candidates.map((item) => ({ ...item, state: "stopped" }))}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /Alpha|Beta|Gamma/ }),
+    ).toBeNull();
+  });
+
+  it("does not restore a stopped member through cached edit-roster extras", () => {
+    const candidates = mergeTeamPickerExperts(
+      [{ ...experts[0], state: "stopped" }],
+      [experts[0], { ...experts[1], state: "stopped" }],
+    );
+    expect(selectedRosterIds(["a", "b"], candidates)).toEqual([]);
+  });
+
+  it("does not offer the private general chat runtime as a specialist", () => {
+    const general = {
+      ...experts[0],
+      agent_id: "main",
+      config: { general_chat: true },
+    };
+    expect(selectedRosterIds(["main", "b"], [general, experts[1]])).toEqual([
+      "b",
+    ]);
+  });
+
   it("adds and removes members like create", () => {
     const onChange = vi.fn();
     const { rerender } = render(

@@ -88,6 +88,22 @@ async def test_withdrawn_shared_expert_is_hidden_and_direct_chat_is_blocked(
         await client.get(f"/api/agents/{agent_id}/chat/welcome", headers=user)
     ).status_code == 404
     assert (await client.get(f"/api/agents/{agent_id}", headers=admin)).status_code == 200
+    blocked_team = await client.post(
+        "/api/teams", headers=user, json={"name": "Blocked team", "member_ids": [agent_id]}
+    )
+    assert blocked_team.status_code == 400
+    assert blocked_team.json()["error"]["code"] == "TEAM_MEMBER_INVALID"
+
+
+async def test_stopped_expert_cannot_be_submitted_as_a_team_member(env_with_agent: Any) -> None:
+    client, _server, admin, agent_id = env_with_agent
+    stopped = await client.post(f"/api/agents/{agent_id}/stop", headers=admin)
+    assert stopped.status_code == 204, stopped.text
+    blocked_team = await client.post(
+        "/api/teams", headers=admin, json={"name": "Blocked team", "member_ids": [agent_id]}
+    )
+    assert blocked_team.status_code == 400
+    assert blocked_team.json()["error"]["code"] == "TEAM_MEMBER_INVALID"
 
 
 async def test_public_builtin_withdrawal_cannot_be_undone_personally_and_private_copy_survives(

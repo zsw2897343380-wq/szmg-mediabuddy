@@ -95,6 +95,7 @@ export default function TeamDrawer({
               color: member.color,
               icon_name: member.icon_name,
               icon_url: member.icon_url,
+              state: member.state,
               kind: "expert",
               is_shared: member.is_shared,
               is_owner: true,

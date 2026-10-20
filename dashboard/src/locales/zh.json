@@ -899,7 +899,7 @@
       "membersSearch": "搜索专家",
       "membersEmpty": "没有可加入的专家",
       "membersSelected": "已选 {{count}} 人",
-      "membersHint": "只能选择本机专家，对端专家不能编入本机团队。保存时按当前勾选一次性设置成员，至少两名。",
+      "membersHint": "只能选择已启用的本机专家；已关闭或不可用的公共专家不会显示，对端专家不能编入本机团队。保存时按当前勾选一次性设置成员，至少两名。",
       "memberAvatars": "成员",
       "memberMore": "+{{count}}",
       "memoryBtn": "团队记忆",

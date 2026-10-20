@@ -21,6 +21,7 @@ from octop.infra.db.repos.agents import AgentRepo
 from octop.infra.db.repos.users import UserRepo
 from octop.infra.db.services import RepoBundle
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.public_resources import PublicResourcePolicy
 
 
 class _PathWorkspace:
@@ -53,6 +54,8 @@ def team_env(tmp_path: Path) -> dict[str, object]:
     agents.create(agent_id="b", user_id=1, name="Beta")
     agents.create(agent_id="c", user_id=1, name="Gamma")
     agents.create(agent_id="other-team", user_id=1, name="Nested", kind="team")
+    for agent_id in ("a", "b", "c"):
+        agents.set_state(agent_id, "running")
     repos = RepoBundle.from_pool(db)
     jobs = TeamJobTracker()
     workspaces = tmp_path / "workspaces"
@@ -94,6 +97,85 @@ def test_validate_members_rejects_unusable(team_env: dict[str, object]) -> None:
         teams.validate_member_ids(user, ["a"])
     assert exc.value.code is ErrorCode.TEAM_MEMBERS_TOO_FEW
     assert teams.validate_member_ids(user, ["a", "b"]) == ["a", "b"]
+
+
+@pytest.mark.parametrize("state", ["stopped", "failed", "starting", "stopping"])
+def test_closed_members_are_not_usable(team_env: dict[str, object], state: str) -> None:
+    teams = team_env["teams"]
+    agents = team_env["agents"]
+    assert isinstance(teams, TeamService)
+    assert isinstance(agents, AgentRepo)
+    teams.replace_members("host", ["a", "b"])
+    agents.set_state("b", state)
+    with pytest.raises(OctopError) as exc:
+        teams.validate_member_ids(team_env["user"], ["a", "b"])
+    assert exc.value.code is ErrorCode.TEAM_MEMBER_INVALID
+    assert teams.visible_member_ids("host") == ["a"]
+    assert teams.member_ids("host") == ["a", "b"]
+    agents.set_state("b", "running")
+    assert teams.visible_member_ids("host") == ["a", "b"]
+
+
+def test_withdrawn_shared_members_cannot_be_added_or_restored(
+    team_env: dict[str, object],
+) -> None:
+    teams = team_env["teams"]
+    repos = team_env["repos"]
+    assert isinstance(teams, TeamService)
+    assert isinstance(repos, RepoBundle)
+    repos.user_repo.create(username="publisher", password_hash="h", role="user")
+    repos.agent_repo.create(agent_id="shared", user_id=2, name="Shared")
+    repos.agent_repo.set_state("shared", "running")
+    repos.agent_repo.set_shared("shared", True)
+    teams.replace_members("host", ["a", "shared"])
+    assert teams.validate_member_ids(team_env["user"], ["a", "shared"]) == ["a", "shared"]
+    policy = PublicResourcePolicy(repos.settings_repo)
+    policy.update("shared_expert", ["shared"], enabled=False)
+    with pytest.raises(OctopError) as exc:
+        teams.validate_member_ids(team_env["user"], ["a", "shared"])
+    assert exc.value.code is ErrorCode.TEAM_MEMBER_INVALID
+    assert teams.visible_member_ids("host") == ["a"]
+    assert teams.member_ids("host") == ["a", "shared"]
+    policy.update("shared_expert", ["shared"], enabled=True)
+    assert teams.visible_member_ids("host") == ["a", "shared"]
+
+
+def test_withdrawing_templates_preserves_owned_private_team_members(
+    team_env: dict[str, object],
+) -> None:
+    teams = team_env["teams"]
+    repos = team_env["repos"]
+    assert isinstance(teams, TeamService)
+    assert isinstance(repos, RepoBundle)
+    policy = PublicResourcePolicy(repos.settings_repo)
+    policy.update("expert_template", ["general-assistant"], enabled=False)
+    policy.update("shared_expert", ["a"], enabled=False)
+    assert teams.validate_member_ids(team_env["user"], ["a", "b"]) == ["a", "b"]
+
+
+def test_general_chat_runtime_cannot_be_a_team_member(team_env: dict[str, object]) -> None:
+    teams = team_env["teams"]
+    agents = team_env["agents"]
+    assert isinstance(teams, TeamService)
+    assert isinstance(agents, AgentRepo)
+    agents.create(
+        agent_id="general", user_id=1, name="General", config_json='{"general_chat": true}'
+    )
+    agents.set_state("general", "running")
+    with pytest.raises(OctopError) as exc:
+        teams.validate_member_ids(team_env["user"], ["a", "general"])
+    assert exc.value.code is ErrorCode.TEAM_MEMBER_INVALID
+
+
+def test_disabled_running_record_cannot_be_a_team_member(team_env: dict[str, object]) -> None:
+    teams = team_env["teams"]
+    agents = team_env["agents"]
+    assert isinstance(teams, TeamService)
+    assert isinstance(agents, AgentRepo)
+    agents.set_enabled("b", False)
+    with pytest.raises(OctopError) as exc:
+        teams.validate_member_ids(team_env["user"], ["a", "b"])
+    assert exc.value.code is ErrorCode.TEAM_MEMBER_INVALID
 
 
 def test_roster_lock_blocks_remove_and_delete(team_env: dict[str, object]) -> None:

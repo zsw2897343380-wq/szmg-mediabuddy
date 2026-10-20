@@ -7,11 +7,13 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from octop.infra.agents.settings.profile import parse_config_json
 from octop.infra.agents.settings.tool_catalog import BUILTIN_TOOL_CATALOG
 from octop.infra.agents.teams.jobs import TeamJobTracker
 from octop.infra.db.repos.agents import AgentRow
 from octop.infra.db.services import RepoBundle
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.public_resources import PublicResourcePolicy
 
 TEAM_KIND = "team"
 EXPERT_KIND = "expert"
@@ -170,12 +172,27 @@ class TeamService:
     def member_ids(self, team_agent_id: str) -> list[str]:
         return _member_ids_from_manifest(self._read_manifest(team_agent_id))
 
+    def _member_available(self, row: AgentRow, owner_id: int | None) -> bool:
+        if not row.enabled or row.last_state != "running" or is_team_agent(row):
+            return False
+        config = parse_config_json(row.config_json)
+        if config.get("general_chat") is True or (
+            row.agent_id == "main" and row.template_name == "general-assistant"
+        ):
+            return False
+        if row.user_id != owner_id and row.is_shared:
+            return PublicResourcePolicy(self._repos.settings_repo).allows(
+                "shared_expert", row.agent_id
+            )
+        return True
+
     def visible_member_ids(self, team_agent_id: str) -> list[str]:
-        """Persisted roster minus deleted / team-host ids. Does not rewrite disk."""
+        """Currently usable roster; stopping or withdrawal does not rewrite disk."""
+        host = self._repos.agent_repo.get(team_agent_id)
         out: list[str] = []
         for member_id in self.member_ids(team_agent_id):
             row = self._repos.agent_repo.get(member_id)
-            if row is None or is_team_agent(row):
+            if row is None or not self._member_available(row, host.user_id if host else None):
                 continue
             out.append(member_id)
         return out
@@ -195,7 +212,11 @@ class TeamService:
                 continue
             seen.add(member_id)
             row = self._repos.agent_repo.get(member_id)
-            if row is None or is_team_agent(row) or not _user_may_use_member(row, user):
+            if (
+                row is None
+                or not self._member_available(row, getattr(user, "id", None))
+                or not _user_may_use_member(row, user)
+            ):
                 invalid.append(member_id)
                 continue
             out.append(member_id)
