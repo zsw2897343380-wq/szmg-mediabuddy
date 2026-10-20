@@ -5,6 +5,7 @@ export interface PublishedExpert {
   slug: string;
   name: string;
   description: string;
+  category?: string | null;
   created_by: string;
   creator_username: string | null;
   source_agent_id: string | null;

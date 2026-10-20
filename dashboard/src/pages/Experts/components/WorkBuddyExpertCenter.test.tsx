@@ -184,7 +184,7 @@ describe("WorkBuddy expert center", () => {
     expect(screen.getByRole("button", { name: /通用助手/ })).toBeTruthy();
   });
 
-  it("does not fetch external listings or merge publications and preserves personal/team management", () => {
+  it("includes public snapshots without fetching external listings and preserves personal/team management", () => {
     renderCenter({
       publishedExperts: [
         {
@@ -196,13 +196,43 @@ describe("WorkBuddy expert center", () => {
     });
     expect(mocks.list).not.toHaveBeenCalled();
     expect(mocks.get).not.toHaveBeenCalled();
-    expect(screen.queryByText("我的发布专家")).toBeNull();
+    expect(screen.getByText("我的发布专家")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "experts.myExperts" }));
     expect(defaultProps.onManage).toHaveBeenCalledOnce();
     fireEvent.click(
       screen.getByRole("tab", { name: "experts.workbuddy.teams" }),
     );
     expect(screen.getByText("Teams management")).toBeTruthy();
+  });
+
+  it("filters an imported public expert and opens its prompt and install flow", async () => {
+    const published = {
+      id: "workbuddy-import",
+      name: "导入的选题专家",
+      description: "公共选题模板",
+      category: "topic-planning",
+    } as PublishedExpert;
+    renderCenter({ experts: [], publishedExperts: [published] });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "experts.mediaCategories.topic-planning",
+      }),
+    );
+    const cards = screen.getAllByRole("button", { name: /导入的选题专家/ });
+    fireEvent.click(cards[cards.length - 1]!);
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("采访能力详情")).toBeTruthy();
+    expect(mocks.request).toHaveBeenCalledWith(
+      "/experts/published/workbuddy-import",
+    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "拟采访提纲" }));
+    expect(defaultProps.onCreate).toHaveBeenCalledWith(
+      {
+        kind: "published",
+        expert: { ...published, quick_prompts: expert.quick_prompts },
+      },
+      "为我拟定采访提纲",
+    );
   });
 
   it("creates an uninstalled configured expert without changing its source", () => {

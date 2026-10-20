@@ -60,7 +60,7 @@ export function discoveryExpert(
         ? source.expert.category || ""
         : source.kind === "market"
         ? source.expert.scene || ""
-        : "",
+        : source.expert.category || "",
     source,
     installedCount: agents.filter((agent) =>
       matchesInstalledSource(agent, source),

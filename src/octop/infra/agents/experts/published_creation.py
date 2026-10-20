@@ -180,6 +180,12 @@ def snapshot_welcome_payload(snapshot_dir: Path) -> dict[str, Any]:
     return welcome_payload_from_manifest_data(_read_snapshot_manifest(snapshot_dir))
 
 
+def snapshot_category(snapshot_dir: Path) -> str | None:
+    """Read the discovery category carried by an imported public snapshot."""
+    category = _read_snapshot_manifest(snapshot_dir).get("category")
+    return category if isinstance(category, str) else None
+
+
 async def publish_agent_expert(
     *,
     services: Any,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from typing import Any
 
@@ -12,6 +13,60 @@ from tests.support.auth import create_user
 posix_only = pytest.mark.skipif(
     os.name != "posix", reason="local_shell backend workspace file ops unsupported on Windows"
 )
+
+
+async def test_imported_public_snapshot_discovery_detail_and_withdrawal(
+    env: tuple[Any, Any, dict[str, str]],
+) -> None:
+    from octop.infra.users.public_resources import PublicResourcePolicy
+
+    client, server, auth = env
+    row = server.services.published_expert_repo.create(
+        id="imported-workbuddy", slug="workbuddy-news", name="Imported news expert", created_by="1"
+    )
+    snapshot = server.services.paths.published_experts_dir / row.id
+    snapshot.mkdir(parents=True)
+    (snapshot / "SOUL.md").write_text("Imported expert persona", encoding="utf-8")
+    prompts = [{"title": {"zh": "选题"}, "prompt": {"zh": "推荐新闻选题"}}]
+    (snapshot / "manifest.json").write_text(
+        json.dumps(
+            {"category": "topic-planning", "prompt_files": ["SOUL.md"], "quick_prompts": prompts}
+        ),
+        encoding="utf-8",
+    )
+    listing = await client.get("/api/experts/published", headers=auth)
+    assert listing.status_code == 200
+    assert (
+        next(item for item in listing.json() if item["id"] == row.id)["category"]
+        == "topic-planning"
+    )
+    detail = await client.get(f"/api/experts/published/{row.id}", headers=auth)
+    assert detail.status_code == 200
+    assert detail.json()["quick_prompts"][0]["prompt"]["zh"] == "推荐新闻选题"
+    assert {item["name"]: item["content"] for item in detail.json()["file_contents"]}[
+        "SOUL.md"
+    ] == "Imported expert persona"
+    installed = await client.post(
+        f"/api/experts/published/{row.id}/install",
+        headers=auth,
+        json={"name": "Private imported fork"},
+    )
+    assert installed.status_code == 201, installed.text
+    policy = PublicResourcePolicy(server.services.settings_repo)
+    policy.update("published_expert", [row.id], enabled=False)
+    assert all(
+        item["id"] != row.id
+        for item in (await client.get("/api/experts/published", headers=auth)).json()
+    )
+    assert (await client.get(f"/api/experts/published/{row.id}", headers=auth)).status_code == 404
+    assert (
+        await client.post(
+            f"/api/experts/published/{row.id}/install", headers=auth, json={"name": "Blocked"}
+        )
+    ).status_code == 404
+    assert (
+        await client.get(f"/api/agents/{installed.json()['agent_id']}", headers=auth)
+    ).status_code == 200
 
 
 async def _owner_and_peer(

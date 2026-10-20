@@ -52,6 +52,7 @@ from octop.infra.agents.experts.market_creation import (
 from octop.infra.agents.experts.published_creation import (
     PublishedExpertInstallOptions,
     require_published_expert,
+    snapshot_category,
     snapshot_welcome_payload,
 )
 from octop.infra.agents.experts.published_creation import (
@@ -458,6 +459,7 @@ def _published_summary_dict(row: Any, server: Any) -> dict[str, Any]:
     return {
         "id": row.id,
         "slug": row.slug,
+        "category": snapshot_category(snapshot_dir),
         "name": row.name,
         "description": row.description,
         "created_by": row.created_by,

@@ -37,6 +37,7 @@ interface Props {
 
 export default function WorkBuddyExpertCenter({
   experts,
+  publishedExperts,
   agents,
   loading,
   lang,
@@ -65,11 +66,15 @@ export default function WorkBuddyExpertCenter({
   );
 
   const entries = useMemo(
-    () =>
-      experts.map((expert) =>
+    () => [
+      ...experts.map((expert) =>
         discoveryExpert({ kind: "builtin", expert }, agents, lang),
       ),
-    [experts, agents, lang],
+      ...publishedExperts.map((expert) =>
+        discoveryExpert({ kind: "published", expert }, agents, lang),
+      ),
+    ],
+    [experts, publishedExperts, agents, lang],
   );
   const categories = MEDIA_EXPERT_CATEGORIES;
   const visible = useMemo(
@@ -81,14 +86,16 @@ export default function WorkBuddyExpertCenter({
     return t(`experts.mediaCategories.${value}`, { defaultValue: value });
   };
   const openDetail = async (entry: DiscoveryExpert) => {
-    if (entry.source.kind !== "builtin") return;
+    if (entry.source.kind === "market") return;
     const current = ++generation.current;
     setSelected(entry);
     setDetailError("");
     setDetailBody("");
     setDetailLoading(true);
     try {
-      const path = `/experts/${encodeURIComponent(entry.source.expert.id)}`;
+      const path = `/experts/${
+        entry.source.kind === "published" ? "published/" : ""
+      }${encodeURIComponent(entry.source.expert.id)}`;
       const detail = await request<{
         file_contents?: { name: string; content: string }[];
         quick_prompts?: QuickPrompt[];
@@ -98,14 +105,24 @@ export default function WorkBuddyExpertCenter({
           detail.file_contents?.find((file) => file.name === "SOUL.md")
             ?.content ?? "",
         );
-        const source = {
-          kind: "builtin" as const,
-          expert: {
-            ...entry.source.expert,
-            quick_prompts:
-              detail.quick_prompts ?? entry.source.expert.quick_prompts,
-          },
-        };
+        const source: CreateFromTemplateSource =
+          entry.source.kind === "published"
+            ? {
+                kind: "published",
+                expert: {
+                  ...entry.source.expert,
+                  quick_prompts:
+                    detail.quick_prompts ?? entry.source.expert.quick_prompts,
+                },
+              }
+            : {
+                kind: "builtin",
+                expert: {
+                  ...entry.source.expert,
+                  quick_prompts:
+                    detail.quick_prompts ?? entry.source.expert.quick_prompts,
+                },
+              };
         setSelected(discoveryExpert(source, agents, lang));
       }
     } catch (error) {
