@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 
 from octop.infra.db.pool import DatabasePool
 from octop.infra.db.repos._base import DbRow, map_rows, now_ts
@@ -84,6 +85,7 @@ class PublishedExpertRepo:
         source_agent_id: str | None = None,
         icon_name: str = "",
         color: str = "",
+        snapshot_archive: bytes | None = None,
     ) -> PublishedExpertRow:
         ts = now_ts()
         with self._db.transaction() as conn:
@@ -105,6 +107,12 @@ class PublishedExpertRepo:
                     ts,
                 ),
             )
+            if snapshot_archive is not None:
+                conn.execute(
+                    "INSERT INTO published_expert_snapshots(published_expert_id, archive, sha256) "
+                    "VALUES (?, ?, ?)",
+                    (id, snapshot_archive, sha256(snapshot_archive).hexdigest()),
+                )
         row = self.get(id)
         if row is None:
             raise RuntimeError(f"published expert insert failed: {id}")
@@ -118,6 +126,7 @@ class PublishedExpertRepo:
         color: str | None = None,
         description: str | None = None,
         name: str | None = None,
+        snapshot_archive: bytes | None = None,
     ) -> PublishedExpertRow:
         """Refresh listing metadata and bump ``updated_at`` after a snapshot rewrite."""
         fields: list[str] = ["updated_at = ?"]
@@ -140,10 +149,42 @@ class PublishedExpertRepo:
                 f"UPDATE published_experts SET {', '.join(fields)} WHERE published_expert_id = ?",
                 tuple(values),
             )
+            if snapshot_archive is not None:
+                conn.execute(
+                    "INSERT INTO published_expert_snapshots(published_expert_id, archive, sha256) "
+                    "VALUES (?, ?, ?) ON CONFLICT(published_expert_id) DO UPDATE SET "
+                    "archive = excluded.archive, sha256 = excluded.sha256",
+                    (expert_id, snapshot_archive, sha256(snapshot_archive).hexdigest()),
+                )
         row = self.get(expert_id)
         if row is None:
             raise RuntimeError(f"published expert update failed: {expert_id}")
         return row
+
+    def get_snapshot_digest(self, expert_id: str) -> str | None:
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT sha256 FROM published_expert_snapshots WHERE published_expert_id = ?",
+                (expert_id,),
+            ).fetchone()
+        return str(row["sha256"]) if row else None
+
+    def get_snapshot_archive(self, expert_id: str) -> bytes | None:
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT archive FROM published_expert_snapshots WHERE published_expert_id = ?",
+                (expert_id,),
+            ).fetchone()
+        return bytes(row["archive"]) if row else None
+
+    def backfill_snapshot_archive(self, expert_id: str, archive: bytes) -> None:
+        """Adopt a legacy file snapshot without replacing an already stored version."""
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO published_expert_snapshots(published_expert_id, archive, sha256) "
+                "VALUES (?, ?, ?) ON CONFLICT(published_expert_id) DO NOTHING",
+                (expert_id, archive, sha256(archive).hexdigest()),
+            )
 
     def delete(self, expert_id: str) -> None:
         with self._db.transaction() as conn:

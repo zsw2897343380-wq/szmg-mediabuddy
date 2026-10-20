@@ -27,7 +27,7 @@ def test_published_experts_table_exists(db: SqlitePool) -> None:
         v = conn.execute("SELECT version FROM _schema_version").fetchone()[0]
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(published_experts)").fetchall()}
     assert "published_experts" in names
-    assert v == 21
+    assert v == 22
     assert "published_expert_id" in cols
 
 
@@ -82,6 +82,29 @@ def test_published_expert_repo_unique_slug(db: SqlitePool) -> None:
             name="Second",
             created_by="user-2",
         )
+
+
+def test_snapshot_archive_is_atomic_with_metadata_and_deleted_with_expert(db: SqlitePool) -> None:
+    repo = PublishedExpertRepo(db)
+    row = repo.create(
+        id="snapshot", slug="snapshot", name="Snapshot", created_by="1", snapshot_archive=b"first"
+    )
+    assert repo.get_snapshot_archive(row.id) == b"first"
+    first_digest = repo.get_snapshot_digest(row.id)
+    repo.backfill_snapshot_archive(row.id, b"stale")
+    assert repo.get_snapshot_archive(row.id) == b"first"
+    repo.update_snapshot_meta(row.id, name="Refreshed", snapshot_archive=b"second")
+    assert repo.get_snapshot_archive(row.id) == b"second"
+    assert repo.get_snapshot_digest(row.id) != first_digest
+    repo.delete(row.id)
+    assert repo.get_snapshot_archive(row.id) is None
+
+
+def test_invalid_snapshot_parent_rolls_back_metadata_update(db: SqlitePool) -> None:
+    repo = PublishedExpertRepo(db)
+    with pytest.raises(sqlite3.IntegrityError):
+        repo.update_snapshot_meta("missing", snapshot_archive=b"orphan")
+    assert repo.get_snapshot_archive("missing") is None
 
 
 def test_published_expert_repo_get_by_source_and_update_meta(db: SqlitePool) -> None:

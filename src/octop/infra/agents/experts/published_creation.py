@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from sqlite3 import IntegrityError as SqliteIntegrityError
@@ -34,6 +35,7 @@ from octop.infra.agents.experts.publish import (
     export_agent_workspace_to_dir,
     resolve_published_expert_slug,
 )
+from octop.infra.agents.experts.snapshot_store import published_snapshot_dir, snapshot_archive
 from octop.infra.agents.manager import AgentCreateSpec
 from octop.infra.db.repos.published_experts import PublishedExpertRow
 from octop.infra.errors import ErrorCode, OctopError
@@ -250,6 +252,7 @@ async def publish_agent_expert(
                 source_agent_id=source.agent_id,
                 icon_name=icon_name,
                 color=color,
+                snapshot_archive=await asyncio.to_thread(snapshot_archive, snapshot_dir),
             ),
         )
     except _DB_INTEGRITY_ERRORS as exc:
@@ -288,7 +291,7 @@ async def refresh_published_expert(
     color = _agent_color(registry, source.agent_id) or ""
     icon_name = getattr(source, "icon_name", None) or source.icon or ""
     source_icon_url = public_portrait_icon_url(getattr(source, "icon_url", None))
-    snapshot_dir = _snapshot_dir(services, row.id)
+    snapshot_dir = await asyncio.to_thread(published_snapshot_dir, services, row.id)
     existing_manifest = await asyncio.to_thread(_read_snapshot_manifest, snapshot_dir)
     existing_welcome_zh, existing_welcome_en = _manifest_welcome(existing_manifest)
     existing_quick_prompts = _manifest_quick_prompts(existing_manifest)
@@ -310,32 +313,39 @@ async def refresh_published_expert(
         resolved_task_examples = (
             workspace_examples if workspace_examples is not None else existing_task_examples
         )
-    await export_agent_workspace_to_dir(
-        workspace=workspace,
-        dest=snapshot_dir,
-        metadata=_snapshot_meta(
-            source,
-            name=resolved_name,
-            description=resolved_description,
-            color=color or None,
-            welcome_message_zh=resolved_welcome_zh,
-            welcome_message_en=resolved_welcome_en,
-            quick_prompts=resolved_quick_prompts,
-            task_examples=resolved_task_examples,
-            icon_url=source_icon_url,
-        ),
-        manifest_id=row.slug,
-    )
-    return cast(
-        PublishedExpertRow,
-        services.published_expert_repo.update_snapshot_meta(
+    # Build away from the live cache: readers may restore the old DB version
+    # until the new archive and listing metadata commit together.
+    staging = Path(await asyncio.to_thread(tempfile.mkdtemp))
+    try:
+        await export_agent_workspace_to_dir(
+            workspace=workspace,
+            dest=staging,
+            metadata=_snapshot_meta(
+                source,
+                name=resolved_name,
+                description=resolved_description,
+                color=color or None,
+                welcome_message_zh=resolved_welcome_zh,
+                welcome_message_en=resolved_welcome_en,
+                quick_prompts=resolved_quick_prompts,
+                task_examples=resolved_task_examples,
+                icon_url=source_icon_url,
+            ),
+            manifest_id=row.slug,
+        )
+        updated = await asyncio.to_thread(
+            services.published_expert_repo.update_snapshot_meta,
             row.id,
             icon_name=icon_name,
             color=color,
             name=resolved_name,
             description=resolved_description,
-        ),
-    )
+            snapshot_archive=await asyncio.to_thread(snapshot_archive, staging),
+        )
+        await asyncio.to_thread(published_snapshot_dir, services, row.id)
+        return cast(PublishedExpertRow, updated)
+    finally:
+        await asyncio.to_thread(shutil.rmtree, staging, ignore_errors=True)
 
 
 async def unpublish_expert(*, services: Any, user: User, expert_id: str) -> None:
@@ -361,7 +371,7 @@ async def install_published_expert(
     may pass their own lists on this request.
     """
     row = require_published_expert(services, expert_id)
-    snapshot_dir = _snapshot_dir(services, row.id)
+    snapshot_dir = await asyncio.to_thread(published_snapshot_dir, services, row.id)
     if not snapshot_dir.is_dir():
         raise OctopError(ErrorCode.NOT_FOUND, f"published expert {expert_id!r} snapshot not found")
 

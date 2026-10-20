@@ -73,6 +73,7 @@ from octop.infra.agents.experts.skillhub_market import (
     browse_skillsets,
     fetch_skillset,
 )
+from octop.infra.agents.experts.snapshot_store import published_snapshot_dir
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.history.trajectory.settings import apply_enable_trajectory
 from octop.infra.utils.locale import resolve_user_locale
@@ -427,7 +428,7 @@ def _map_skillhub_error(exc: SkillHubMarketError) -> OctopError:
 
 
 def _published_snapshot_dir(server: Any, expert_id: str) -> Any:
-    return server.services.paths.published_experts_dir / expert_id
+    return published_snapshot_dir(server.services, expert_id)
 
 
 def _published_creator_username(server: Any, created_by: str) -> str | None:
@@ -497,7 +498,7 @@ async def list_published_experts(
 ) -> list[dict[str, Any]]:
     """List expert snapshots published by users and available for private installation."""
     return [
-        _published_summary_dict(row, server)
+        await asyncio.to_thread(_published_summary_dict, row, server)
         for row in server.services.published_expert_repo.list_all()
         if _public_policy(server).allows("published_expert", row.id)
     ]
@@ -514,7 +515,8 @@ async def get_published_expert_avatar(
 ) -> Response:
     """Return the avatar bytes baked into the published snapshot, if any."""
     row = _require_published_expert(server, expert_id)
-    found = read_snapshot_avatar(_published_snapshot_dir(server, row.id))
+    snapshot_dir = await asyncio.to_thread(_published_snapshot_dir, server, row.id)
+    found = await asyncio.to_thread(read_snapshot_avatar, snapshot_dir)
     if found is None:
         raise OctopError(ErrorCode.NOT_FOUND, "avatar not uploaded")
     data, media_type = found
@@ -529,14 +531,14 @@ async def get_published_expert(
 ) -> dict[str, Any]:
     """Return published-expert metadata and a previewable snapshot file inventory."""
     row = _require_published_expert(server, expert_id)
-    snapshot_dir = _published_snapshot_dir(server, row.id)
+    snapshot_dir = await asyncio.to_thread(_published_snapshot_dir, server, row.id)
     preview_paths = await asyncio.to_thread(preview_paths_from_expert_dir, snapshot_dir)
     files = await asyncio.to_thread(discover_seed_paths, snapshot_dir)
     if (snapshot_dir / MANIFEST_FILENAME).is_file():
         files.insert(0, MANIFEST_FILENAME)
     welcome_payload = await asyncio.to_thread(snapshot_welcome_payload, snapshot_dir)
     return {
-        **_published_summary_dict(row, server),
+        **(await asyncio.to_thread(_published_summary_dict, row, server)),
         "welcome_message": welcome_payload["welcome_message"],
         "quick_prompts": welcome_payload["quick_prompts"],
         "files": files,
@@ -582,7 +584,7 @@ async def publish_agent_expert(
         welcome_message_en=welcome_en,
         quick_prompts=tuple(_quick_prompt_body_dict(p) for p in (body.quick_prompts or [])),
     )
-    return _published_summary_dict(row, server)
+    return await asyncio.to_thread(_published_summary_dict, row, server)
 
 
 @router.post(
@@ -626,7 +628,7 @@ async def refresh_published_expert(
         welcome_message_en=welcome_en,
         quick_prompts=quick_prompts,
     )
-    return _published_summary_dict(updated, server)
+    return await asyncio.to_thread(_published_summary_dict, updated, server)
 
 
 @router.delete(

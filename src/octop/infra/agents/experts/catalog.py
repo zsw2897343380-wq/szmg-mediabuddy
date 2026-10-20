@@ -158,7 +158,7 @@ def discover_seed_paths(expert_dir: Path) -> list[str]:
         if not fpath.is_file():
             continue
         rel = fpath.relative_to(expert_dir)
-        if rel.as_posix() == MANIFEST_FILENAME:
+        if rel.as_posix() in {MANIFEST_FILENAME, ".snapshot-sha256"}:
             continue
         paths.append(rel.as_posix())
     return paths

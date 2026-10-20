@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from typing import Any
 
 import pytest
@@ -40,12 +41,22 @@ async def test_imported_public_snapshot_discovery_detail_and_withdrawal(
         next(item for item in listing.json() if item["id"] == row.id)["category"]
         == "topic-planning"
     )
+    assert server.services.published_expert_repo.get_snapshot_archive(row.id) is not None
+    # Simulate a replacement container: its local snapshot cache starts empty.
+    shutil.rmtree(server.services.paths.published_experts_dir)
+    listing = await client.get("/api/experts/published", headers=auth)
+    assert next(item for item in listing.json() if item["id"] == row.id)["category"] == (
+        "topic-planning"
+    )
+    shutil.rmtree(server.services.paths.published_experts_dir)
     detail = await client.get(f"/api/experts/published/{row.id}", headers=auth)
     assert detail.status_code == 200
+    assert ".snapshot-sha256" not in detail.json()["files"]
     assert detail.json()["quick_prompts"][0]["prompt"]["zh"] == "推荐新闻选题"
     assert {item["name"]: item["content"] for item in detail.json()["file_contents"]}[
         "SOUL.md"
     ] == "Imported expert persona"
+    shutil.rmtree(server.services.paths.published_experts_dir)
     installed = await client.post(
         f"/api/experts/published/{row.id}/install",
         headers=auth,
@@ -87,7 +98,7 @@ async def _owner_and_peer(
 async def test_publish_list_install_and_unpublish_preserves_installed_fork(
     env: tuple[Any, Any, dict[str, str]],
 ) -> None:
-    client, _server, owner_auth, peer_auth, source_agent_id = await _owner_and_peer(env)
+    client, server, owner_auth, peer_auth, source_agent_id = await _owner_and_peer(env)
 
     published = await client.post(
         f"/api/agents/{source_agent_id}/publish-expert",
@@ -98,6 +109,8 @@ async def test_publish_list_install_and_unpublish_preserves_installed_fork(
     expert = published.json()
     expert_id = expert["id"]
     assert expert["creator_username"] == "publish_owner"
+    assert server.services.published_expert_repo.get_snapshot_archive(expert_id) is not None
+    shutil.rmtree(server.services.paths.published_experts_dir)
 
     listed = await client.get("/api/experts/published", headers=peer_auth)
     assert listed.status_code == 200, listed.text
@@ -370,7 +383,7 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
 async def test_published_list_exposes_snapshot_avatar(
     env: tuple[Any, Any, dict[str, str]],
 ) -> None:
-    client, _server, owner_auth, peer_auth, source_agent_id = await _owner_and_peer(env)
+    client, server, owner_auth, peer_auth, source_agent_id = await _owner_and_peer(env)
 
     uploaded = await client.post(
         f"/api/agents/{source_agent_id}/avatar",
@@ -396,6 +409,7 @@ async def test_published_list_exposes_snapshot_avatar(
     row = next(item for item in listed.json() if item["id"] == expert_id)
     assert row["icon_url"] == icon_url
 
+    shutil.rmtree(server.services.paths.published_experts_dir)
     got = await client.get(icon_url, headers=peer_auth)
     assert got.status_code == 200, got.text
     assert got.content == PNG

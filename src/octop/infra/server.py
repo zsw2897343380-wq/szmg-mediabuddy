@@ -487,6 +487,10 @@ class OctopServer:
         assert self.expert_catalog is not None
         assert self.plugin_manager is not None
 
+        from octop.infra.agents.experts.snapshot_store import initialize_published_snapshots
+
+        await asyncio.to_thread(initialize_published_snapshots, self.services)
+
         from octop.infra.utils.browser_media import (  # noqa: PLC0415
             configure_browser_idle_timeout,
         )
