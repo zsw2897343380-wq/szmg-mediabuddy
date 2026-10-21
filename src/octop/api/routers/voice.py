@@ -24,13 +24,13 @@ from pydantic import BaseModel, Field
 from starlette.websockets import WebSocketState
 
 from octop.api.deps import (
-    current_user,
     get_server,
     require_permission,
     resolve_user_from_token,
 )
 from octop.i18n.domains.voice import realtime_error_message
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import user_has_permission
 from octop.infra.utils.locale import Locale, normalize_locale, resolve_request_locale
 from octop.infra.voice import realtime
 from octop.infra.voice.manager import VoiceManager
@@ -58,15 +58,24 @@ def _active_payload(mgr: VoiceManager) -> dict[str, Any]:
     return active
 
 
-def _row_to_dict(r: Any) -> dict[str, Any]:
+def _row_to_dict(r: Any, *, include_secrets: bool = True) -> dict[str, Any]:
+    extra = r.get_extra()
+    configured = bool(r.api_key or extra.get("secret_key"))
+    if not include_secrets:
+        extra = {
+            key: value
+            for key, value in extra.items()
+            if key not in {"secret_id", "secret_key", "api_key", "access_token", "password"}
+        }
     return {
         "id": r.id,
         "name": r.name,
         "kind": r.kind,
         "capability": r.capability,
         "base_url": r.base_url,
-        "api_key": r.api_key,
-        "extra": r.get_extra(),
+        "api_key": r.api_key if include_secrets else None,
+        "api_key_set": configured,
+        "extra": extra,
         "note": r.note,
         "enabled": bool(r.enabled),
     }
@@ -113,21 +122,26 @@ class VoiceConfigurationTestBody(VoiceProviderCreateBody):
 
 
 @router.get("/presets")
-async def list_voice_presets(_: Any = Depends(current_user)) -> list[dict[str, Any]]:
+async def list_voice_presets(
+    _: Any = Depends(require_permission("voice.view")),
+) -> list[dict[str, Any]]:
     return load_voice_presets()
 
 
 @router.get("/providers")
 async def list_voice_providers(
-    _: Any = Depends(current_user),
+    actor: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
-    return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
+    return [
+        _row_to_dict(r, include_secrets=user_has_permission(actor, "voice.edit"))
+        for r in server.services.voice_provider_repo.list_all()
+    ]
 
 
 @router.get("/active")
 async def get_active_voice(
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return _active_payload(_voice_manager(server))
@@ -136,7 +150,7 @@ async def get_active_voice(
 @router.put("/active")
 async def set_active_voice(
     body: ActiveVoiceBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _voice_manager(server)
@@ -149,7 +163,7 @@ async def transcribe_audio(
     audio: UploadFile = File(...),
     language: str = Form(default="zh-CN"),
     provider: str | None = Form(default=None),
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     data = await audio.read()
@@ -168,7 +182,7 @@ async def transcribe_audio(
 @router.post("/tts")
 async def synthesize_speech(
     body: TTSBody,
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     mgr = _voice_manager(server)
@@ -334,16 +348,19 @@ async def stream_transcription(
 
 @admin_router.get("")
 async def admin_list_voice_providers(
-    _: Any = Depends(require_permission("voice")),
+    actor: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
-    return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
+    return [
+        _row_to_dict(r, include_secrets=user_has_permission(actor, "voice.edit"))
+        for r in server.services.voice_provider_repo.list_all()
+    ]
 
 
 @admin_router.post("", status_code=201)
 async def admin_create_voice_provider(
     body: VoiceProviderCreateBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     repo = server.services.voice_provider_repo
@@ -369,7 +386,7 @@ async def admin_create_voice_provider(
 async def admin_patch_voice_provider(
     provider_id: int,
     body: VoiceProviderPatchBody,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     repo = server.services.voice_provider_repo
@@ -394,7 +411,7 @@ async def admin_patch_voice_provider(
 @admin_router.delete("/{provider_id}", status_code=204)
 async def admin_delete_voice_provider(
     provider_id: int,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> None:
     repo = server.services.voice_provider_repo
@@ -415,7 +432,7 @@ async def admin_test_voice_provider(
     provider_id: int,
     body: VoiceTestBody,
     request: Request,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return await _voice_manager(server).test_provider(
@@ -427,7 +444,7 @@ async def admin_test_voice_provider(
 async def admin_test_voice_configuration(
     body: VoiceConfigurationTestBody,
     request: Request,
-    _: Any = Depends(require_permission("voice")),
+    _: Any = Depends(require_permission("voice.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return await _voice_manager(server).test_configuration(

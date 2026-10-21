@@ -14,6 +14,7 @@ from octop.api.deps import current_user, get_server
 from octop.infra.agent_mcp.protocol import handle_agent_mcp_request
 from octop.infra.agent_mcp.service import AgentMcpGatewayService
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.public_resources import PublicResourcePolicy
 
 router = APIRouter()
 
@@ -27,6 +28,7 @@ def _service(server: Any) -> AgentMcpGatewayService:
     return AgentMcpGatewayService(
         agent_manager=server.app_runtime.agent_registry,
         gateway=server.app_runtime.gateway,
+        resource_policy=PublicResourcePolicy(server.services.settings_repo),
     )
 
 

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_owner
-from octop.api.deps import current_user, get_server
+from octop.api.deps import get_server, require_permission
 from octop.infra.agents.manager import AgentCreateSpec
 from octop.infra.agents.teams import (
     TEAM_KIND,
@@ -60,7 +60,7 @@ def _require_owned_team(server: Any, user: Any, team_id: str) -> Any:
 
 @router.get("/teams", summary="List my expert teams")
 async def list_teams(
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("experts.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], _teams(server).list_for_user(user.id))
@@ -69,7 +69,7 @@ async def list_teams(
 @router.post("/teams", summary="Create an expert team")
 async def create_team(
     body: TeamCreateBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("experts.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     teams = _teams(server)
@@ -99,7 +99,7 @@ async def create_team(
 
 @router.get("/teams/template", summary="Preview default team workspace files")
 async def team_template_files(
-    _user: Any = Depends(current_user),
+    _user: Any = Depends(require_permission("experts.view")),
 ) -> list[dict[str, str]]:
     files: list[dict[str, str]] = []
     if TEMPLATE_DIR.is_dir():
@@ -117,7 +117,7 @@ async def team_template_files(
 @router.get("/teams/{team_id}", summary="Get an expert team")
 async def get_team(
     team_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("experts.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     row = _require_owned_team(server, user, team_id)
@@ -128,7 +128,7 @@ async def get_team(
 async def patch_team(
     team_id: str,
     body: TeamPatchBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("experts.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     _require_owned_team(server, user, team_id)
@@ -166,7 +166,7 @@ async def patch_team(
 @router.delete("/teams/{team_id}", status_code=204, summary="Delete an expert team")
 async def delete_team(
     team_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("experts.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     _require_owned_team(server, user, team_id)

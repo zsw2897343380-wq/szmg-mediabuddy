@@ -10,6 +10,7 @@ import {
   type PublicResource,
 } from "../../../api/modules/publicResources";
 import { apiErrorMessage } from "../../../utils/apiError";
+import { userCan } from "../../../utils/permissions";
 
 export default function PublicResourcesPage() {
   const user = useCurrentUser();
@@ -33,9 +34,10 @@ export default function PublicResourcesPage() {
     }
   }, []);
   useEffect(() => {
-    if (user?.role === "admin") void refresh();
-  }, [user?.role, refresh]);
-  if (user?.role !== "admin") return <ForbiddenPage />;
+    if (userCan(user, "public_resources.view")) void refresh();
+  }, [user, refresh]);
+  if (!userCan(user, "public_resources.view")) return <ForbiddenPage />;
+  const canPublish = userCan(user, `public_resources.${tab}`);
   const visible = rows.filter(
     (row) =>
       row.category === tab &&
@@ -93,7 +95,7 @@ export default function PublicResourcesPage() {
           {t("common.refresh")}
         </Button>
         <Button
-          disabled={busy || !visible.some((row) => row.enabled)}
+          disabled={!canPublish || busy || !visible.some((row) => row.enabled)}
           onClick={() =>
             void update(
               visible.filter((row) => row.enabled),
@@ -104,7 +106,7 @@ export default function PublicResourcesPage() {
           {t("publicResources.disableVisible")}
         </Button>
         <Button
-          disabled={busy || !visible.some((row) => !row.enabled)}
+          disabled={!canPublish || busy || !visible.some((row) => !row.enabled)}
           onClick={() =>
             void update(
               visible.filter((row) => !row.enabled),
@@ -154,7 +156,9 @@ export default function PublicResourcesPage() {
             render: (_, row) => (
               <Switch
                 aria-label={t("publicResources.toggle", { name: row.name })}
-                disabled={busy}
+                disabled={
+                  busy || !userCan(user, `public_resources.${row.category}`)
+                }
                 checked={row.enabled}
                 checkedChildren={t("publicResources.published")}
                 unCheckedChildren={t("publicResources.withdrawn")}

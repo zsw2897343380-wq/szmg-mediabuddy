@@ -9,6 +9,7 @@ export default function SidebarMinimalPaneToggle({
   minimalPane,
   collapsed,
   onSelect,
+  recordsAllowed = true,
 }: {
   /** Name of the first navigation group. */
   settingsLabel: string;
@@ -16,8 +17,10 @@ export default function SidebarMinimalPaneToggle({
   /** Icon-only control when the rail is collapsed (desktop). */
   collapsed: boolean;
   onSelect: (pane: MinimalNavPane, opts?: { expand?: boolean }) => void;
+  recordsAllowed?: boolean;
 }) {
   const { t } = useTranslation();
+  if (!recordsAllowed) return null;
   const nextPane: MinimalNavPane =
     minimalPane === "records" ? "settings" : "records";
   const nextLabel =

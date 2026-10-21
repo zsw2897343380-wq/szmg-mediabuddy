@@ -321,7 +321,7 @@ function ConnectorConfigDrawer({
 }) {
   const { t } = useTranslation();
   const user = useCurrentUser();
-  const canInstallCli = userCan(user, "connectors");
+  const canInstallCli = userCan(user, "plugins.create");
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [probing, setProbing] = useState(false);

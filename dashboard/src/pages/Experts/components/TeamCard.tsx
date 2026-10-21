@@ -1,3 +1,5 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -103,6 +105,16 @@ export const TeamCard = memo(function TeamCard({
   onStateChange,
 }: TeamCardProps) {
   const { t } = useTranslation();
+  const permissionUser = useCurrentUser();
+  const canUse =
+    userCan(permissionUser, "experts.use") ||
+    userCan(permissionUser, "assistants.use");
+  const canEdit =
+    userCan(permissionUser, "experts.edit") ||
+    userCan(permissionUser, "assistants.edit");
+  const canDelete =
+    userCan(permissionUser, "experts.delete") ||
+    userCan(permissionUser, "assistants.delete");
   const navigate = useNavigate();
   const { setActiveAgent, refresh: refreshAgents } = useAgent();
 
@@ -259,6 +271,7 @@ export const TeamCard = memo(function TeamCard({
               size="small"
               checked={switchChecked}
               loading={isTransient || actionLoading}
+              disabled={!canUse}
               onChange={(checked) => void handleToggle(checked)}
               className={styles.agentCard2Switch}
             />
@@ -353,7 +366,7 @@ export const TeamCard = memo(function TeamCard({
             <button
               type="button"
               className={styles.agentCard2EditBtn}
-              disabled={isTransient || actionLoading}
+              disabled={!canUse || isTransient || actionLoading}
               onClick={() => void handleReload()}
               aria-label={t("experts.reloadAgent")}
             >
@@ -365,6 +378,7 @@ export const TeamCard = memo(function TeamCard({
             <button
               type="button"
               className={styles.agentCard2EditBtn}
+              disabled={!canEdit}
               onClick={() => onEdit(agent.agent_id)}
               aria-label={t("common.edit", "Edit")}
             >
@@ -379,6 +393,7 @@ export const TeamCard = memo(function TeamCard({
               onConfirm={() => void handleDelete()}
               okText={t("common.delete", "Delete")}
               cancelText={t("common.cancel")}
+              disabled={!canDelete}
               okButtonProps={{ danger: true }}
             >
               <Tooltip
@@ -388,6 +403,7 @@ export const TeamCard = memo(function TeamCard({
                 <button
                   type="button"
                   className={styles.agentCard2DelBtn}
+                  disabled={!canDelete}
                   aria-label={t("common.delete", "Delete")}
                 >
                   <Trash2 size={13} />
@@ -431,6 +447,7 @@ export const TeamCard = memo(function TeamCard({
             <button
               type="button"
               className={`${styles.agentCard2ChatBtn} ${styles.teamCardChatBtn}`}
+              disabled={!canUse}
               onClick={handleOpenChat}
             >
               <MessageSquare size={13} />
@@ -443,7 +460,7 @@ export const TeamCard = memo(function TeamCard({
             <button
               type="button"
               className={`${styles.agentCard2ChatBtn} ${styles.teamCardChatBtn}`}
-              disabled={isTransient || actionLoading}
+              disabled={!canUse || isTransient || actionLoading}
               onClick={() => void handleToggle(true)}
             >
               {localState === "failed"

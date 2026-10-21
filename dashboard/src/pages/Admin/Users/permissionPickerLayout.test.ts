@@ -79,8 +79,7 @@ describe("buildPermissionPickerGroups", () => {
         blocks: [
           {
             kind: "chips",
-            keys: ["chat", "experts", "tasks", "token_usage"],
-            fixed: ["chat"],
+            keys: ["experts", "tasks", "token_usage"],
           },
         ],
       },
@@ -201,8 +200,7 @@ describe("buildPermissionPickerGroups", () => {
     expect(groups[0]?.blocks).toEqual([
       {
         kind: "chips",
-        keys: ["chat", "experts", "tasks", "token_usage"],
-        fixed: ["chat"],
+        keys: ["experts", "tasks", "token_usage"],
       },
     ]);
     expect(groups[1]?.blocks).toEqual([{ kind: "chips", keys: ["channels"] }]);

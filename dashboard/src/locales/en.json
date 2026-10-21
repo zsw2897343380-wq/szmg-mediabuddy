@@ -6120,7 +6120,7 @@
     "roleEmpty": "No roles yet",
     "roleBuiltin": "Built-in",
     "roleAdminLocked": "The administrator role has every permission and no resource limits. You can rename it. You cannot delete it or change its permissions or policies.",
-    "roleTemplateHint": "A role only supplies defaults for create, edit, and invite. Changing a role does not rewrite existing users.",
+    "roleTemplateHint": "Role permission changes update accounts still following the previous template. Custom grants and account limits are preserved. Sign in again to refresh the page permissions.",
     "roleCustomHint": "A custom role supplies permissions and resource policy. Set the account type on the user.",
     "roleColName": "Role name",
     "roleColId": "Role ID",
@@ -6204,7 +6204,8 @@
       "delete": "Delete",
       "set_token_quota": "Set token limit",
       "set_max_agents": "Set expert limit"
-    }
+    },
+    "permGroupBusiness": "Business features"
   },
   "adminSso": {
     "panelTitle": "Single sign-on",

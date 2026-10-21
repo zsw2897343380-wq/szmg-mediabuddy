@@ -118,7 +118,7 @@ def _verify_browser_binary(exe: str) -> tuple[bool, str]:
 
 
 @router.post("/browser/install")
-async def install(_: Any = Depends(require_permission("browser"))) -> StreamingResponse:
+async def install(_: Any = Depends(require_permission("browser.edit"))) -> StreamingResponse:
     """Stream Chromium install progress as SSE.
 
     Each event is a JSON line conforming to ``octop_browser.InstallEvent``:

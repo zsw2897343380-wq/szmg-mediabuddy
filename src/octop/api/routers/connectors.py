@@ -69,6 +69,7 @@ from octop.infra.connectors.probe import (
 from octop.infra.connectors.service import ConnectorNameTakenError, ConnectorService
 from octop.infra.db.repos.connectors import ConnectorRepo
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import assert_permission
 from octop.infra.users.public_resources import PublicResourcePolicy
 from octop.infra.utils.locale import resolve_request_locale
 from octop.infra.utils.ulid import new_ulid
@@ -546,7 +547,7 @@ async def get_catalog(
 
 @router.get("/connectors/weknora/detect-local", summary="Detect local WeKnora")
 async def detect_weknora_on_octop_host(
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
 ) -> dict[str, Any]:
     """Check WeKnora's fixed default loopback health endpoint (no persistence)."""
     del user
@@ -584,11 +585,19 @@ async def get_custom_mcp(
 @router.put("/connectors/custom-mcp", summary="Save custom MCP servers")
 async def put_custom_mcp(
     body: CustomMcpPutBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Replace the user's custom MCP servers document and reload agents."""
     svc = _connector_service(server)
+    if any(
+        spec.get("shared") is True for spec in body.servers.values() if isinstance(spec, dict)
+    ) or any(
+        spec.get("shared") is True
+        for spec in svc.get_custom_servers(user.id).values()
+        if isinstance(spec, dict)
+    ):
+        assert_permission(user, "connectors.publish")
     try:
         servers = svc.put_custom_servers(user.id, body.servers)
     except ConnectorNameTakenError as exc:
@@ -618,10 +627,12 @@ async def put_custom_mcp(
 async def patch_custom_mcp_server(
     server_name: str,
     body: CustomMcpServerPatchBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Update ``enabled`` and/or ``default_open`` for one custom MCP server."""
+    if body.shared is not None:
+        assert_permission(user, "connectors.publish")
     svc = _connector_service(server)
     try:
         servers = svc.patch_custom_server(
@@ -644,7 +655,7 @@ async def patch_custom_mcp_server(
 @router.post("/connectors/custom-mcp/test", summary="Probe a custom MCP server")
 async def test_custom_mcp(
     body: CustomMcpTestBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Probe connectivity for one custom MCP server (saved name or inline spec)."""
@@ -680,7 +691,7 @@ async def test_custom_mcp(
 @router.get("/connector-instances/{instance_id}", summary="Get connector instance")
 async def get_instance(
     instance_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return one connector instance with config and a redacted credentials preview."""
@@ -716,10 +727,12 @@ async def get_instance(
 async def create_instance(
     body: CreateInstanceBody,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Connect a third-party account as a new named instance."""
+    if body.shared:
+        assert_permission(user, "connectors.publish")
     PublicResourcePolicy(server.services.settings_repo).require("connector_catalog", body.kind)
     if is_custom_mcp_kind(body.kind):
         raise OctopError(
@@ -796,10 +809,12 @@ async def create_instance(
 async def patch_instance(
     instance_id: str,
     body: PatchInstanceBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Edit a connector instance without replacing its identity."""
+    if body.shared is not None:
+        assert_permission(user, "connectors.publish")
     custom_target = _resolve_custom_target(instance_id, user=user, server=server)
     if custom_target is not None:
         custom_user_id, synthetic_name = custom_target
@@ -924,7 +939,7 @@ async def patch_instance(
 async def delete_instance(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     """Disconnect and delete stored credentials for a connector instance."""
@@ -1003,7 +1018,7 @@ async def delete_instance(
 async def test_instance(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Probe the connector with stored credentials and return success or error details."""
@@ -1050,7 +1065,7 @@ async def test_instance(
 async def test_credentials(
     body: TestCredentialsBody,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Validate credentials before creating an instance (no persistence)."""
@@ -1092,7 +1107,7 @@ async def test_credentials(
 )
 async def connector_cli_status(
     kind: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
 ) -> dict[str, Any]:
     """Report whether the host binary is on PATH (no side effects)."""
     del user
@@ -1113,7 +1128,7 @@ async def connector_cli_status(
 )
 async def connector_install_cli(
     kind: str,
-    _: Any = Depends(require_permission("connectors")),
+    _: Any = Depends(require_permission("connectors.edit")),
 ) -> dict[str, Any]:
     """Run ``npm install -g`` for the connector CLI on the Octop host (admin only).
 
@@ -1134,7 +1149,7 @@ async def connector_install_cli(
 )
 async def feishu_cli_user_auth_start(
     body: FeishuUserAuthStartBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Begin OAuth device-code login (no local HTTPS callback required)."""
@@ -1161,7 +1176,7 @@ async def feishu_cli_user_auth_start(
 )
 async def feishu_cli_user_auth_complete(
     body: FeishuUserAuthCompleteBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Finish device-code login and switch default identity to user."""
@@ -1199,7 +1214,7 @@ class FeishuUserAuthInstanceCompleteBody(BaseModel):
 async def agently_auth_start(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> AgentlyAuthResponse:
     result = await _connector_service(server).agently_auth_for_instance(
@@ -1220,7 +1235,7 @@ async def agently_auth_start(
 async def agently_auth_status(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
     server: Any = Depends(get_server),
 ) -> AgentlyAuthResponse:
     result = await _connector_service(server).agently_auth_for_instance(
@@ -1244,7 +1259,7 @@ async def agently_auth_status(
 async def agently_auth_logout(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> AgentlyAuthResponse:
     result = await _connector_service(server).agently_auth_for_instance(
@@ -1267,7 +1282,7 @@ async def agently_auth_logout(
 async def agently_auth_refresh(
     instance_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> AgentlyAuthResponse:
     result = await _connector_service(server).agently_auth_for_instance(
@@ -1282,7 +1297,7 @@ async def agently_auth_refresh(
 )
 async def feishu_cli_user_auth_start_instance(
     instance_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Same as start, but App Secret is read from the stored instance."""
@@ -1304,7 +1319,7 @@ async def feishu_cli_user_auth_start_instance(
 async def feishu_cli_user_auth_complete_instance(
     instance_id: str,
     body: FeishuUserAuthInstanceCompleteBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     svc = _connector_service(server)
@@ -1328,7 +1343,7 @@ async def feishu_cli_user_auth_complete_instance(
 @router.post("/connector-instances/{instance_id}/refresh", summary="Refresh OAuth tokens")
 async def refresh_instance(
     instance_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Refresh expiring OAuth tokens for a connector instance."""
@@ -1347,7 +1362,7 @@ async def refresh_instance(
 async def auth_info(
     kind: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, str | None]:
     """Return auth flow metadata (OAuth URLs, required fields) for a connector kind."""
@@ -1363,7 +1378,7 @@ async def auth_info(
 @router.get("/connectors/auth/{kind}/authorize-url", summary="OAuth authorize URL")
 async def auth_authorize_url(
     kind: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, str | None]:
     """Build the provider authorization URL for manual or embedded OAuth."""
@@ -1378,7 +1393,7 @@ async def auth_authorize_url(
 async def auth_exchange_code(
     kind: str,
     body: ExchangeAuthCodeBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Exchange a pasted authorization code for connector credentials (device/OOB flow)."""
@@ -1409,7 +1424,7 @@ async def auth_exchange_code(
 async def oauth_start_unified(
     body: OAuthStartBody,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Begin browser OAuth for a catalog connector or custom MCP server."""
@@ -1429,7 +1444,7 @@ async def oauth_start_legacy(
     kind: str,
     body: OAuthStartLegacyBody,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Legacy catalog-only alias for :func:`oauth_start_unified`."""
@@ -1567,7 +1582,7 @@ async def oauth_callback(
 @router.get("/connectors/oauth/pending/{state_id}", summary="Poll OAuth result")
 async def oauth_pending(
     state_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("connectors.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Poll after OAuth redirect until credentials are ready for instance creation."""

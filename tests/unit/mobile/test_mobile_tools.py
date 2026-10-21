@@ -59,9 +59,10 @@ def test_build_mobile_tools_registers_when_adb_present() -> None:
 
 
 @pytest.mark.asyncio
-async def test_mobile_tap_requires_permission() -> None:
+@pytest.mark.parametrize("permissions", [["browser.view"], ["mobile.view"], ["mobile"]])
+async def test_mobile_tap_requires_permission(permissions: list[str]) -> None:
     user_repo = MagicMock()
-    user_repo.get.return_value = SimpleNamespace(is_admin=False, permissions=["browser"])
+    user_repo.get.return_value = SimpleNamespace(is_admin=False, permissions=permissions)
     with patch("octop.infra.mobile.tools.find_adb", return_value="/adb"):
         tools = build_mobile_tools(_enabled_config(), user_repo=user_repo)
     tap_tool = _tool_by_name(tools, "mobile_tap")
@@ -82,7 +83,7 @@ async def test_mobile_tap_success() -> None:
 
     set_mobile_agent_control(enabled=True, device="emulator-5554")
     user_repo = MagicMock()
-    user_repo.get.return_value = SimpleNamespace(is_admin=False, permissions=["mobile"])
+    user_repo.get.return_value = SimpleNamespace(is_admin=False, permissions=["mobile.use"])
     with patch("octop.infra.mobile.tools.find_adb", return_value="/adb"):
         tools = build_mobile_tools(_enabled_config(), user_repo=user_repo)
     tap_tool = _tool_by_name(tools, "mobile_tap")

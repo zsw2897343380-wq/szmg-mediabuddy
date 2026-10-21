@@ -1,3 +1,5 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 import { useMemo, useState } from "react";
 import { Alert, Button, Dropdown, Empty, Input, Spin } from "antd";
 import { ArrowLeft, MoreHorizontal, Plus, Search } from "lucide-react";
@@ -37,6 +39,7 @@ export default function WorkBuddyMyExperts({
   onPublishedChange,
 }: Props) {
   const { t } = useTranslation();
+  const canCreate = userCan(useCurrentUser(), "experts.create");
   const [tab, setTab] = useState<"created" | "recent">("created");
   const [query, setQuery] = useState("");
   const soloExperts = useMemo(
@@ -72,6 +75,7 @@ export default function WorkBuddyMyExperts({
             type="primary"
             icon={<Plus size={16} />}
             loading={creating}
+            disabled={!canCreate}
             onClick={onCreate}
           >
             {t("experts.workbuddy.createExpert")}
@@ -84,6 +88,7 @@ export default function WorkBuddyMyExperts({
                   key: "team-create",
                   label: t("experts.workbuddy.createTeam"),
                   onClick: onCreateTeam,
+                  disabled: !canCreate,
                 },
                 { type: "divider" },
                 {
@@ -179,7 +184,7 @@ export default function WorkBuddyMyExperts({
                 type="button"
                 className={styles.myExpertCreateCard}
                 onClick={onCreate}
-                disabled={creating}
+                disabled={!canCreate || creating}
               >
                 <Plus size={28} strokeWidth={1.4} />
                 <span>{t("experts.workbuddy.createExpert")}</span>

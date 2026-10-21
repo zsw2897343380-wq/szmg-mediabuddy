@@ -22,13 +22,13 @@ from octop.api.common.agent import require_agent_owner_row
 from octop.api.common.agent_workspace import resolve_agent_workspace_dir
 from octop.api.common.content_disposition import content_disposition
 from octop.api.common.memory_client import memory_db_path_for_cfg, memory_namespace
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import get_server, require_permission
 from octop.infra.agents.memory.backend import open_memory_kwargs
 from octop.infra.errors import ErrorCode, OctopError
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(dependencies=[Depends(require_permission("memory"))])
+router = APIRouter(dependencies=[Depends(require_permission("memory.view"))])
 
 
 def _agent_config_dict(server: Any, agent_id: str) -> dict[str, Any]:
@@ -97,7 +97,7 @@ class _AdoptRequest(BaseModel):
 
 @router.get("/memory/portable/sources")
 async def list_portable_sources(
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
 ) -> JSONResponse:
     """List all migratable memory stores on this host."""
@@ -123,7 +123,7 @@ async def list_portable_sources(
 @router.post("/agents/{agent_id}/memory/portable/pack")
 async def pack_agent_memory(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
     as_user: int | None = Query(default=None),
 ) -> StreamingResponse:
@@ -204,7 +204,7 @@ async def adopt_agent_memory(
     on_conflict: str = Form(default="skip"),
     host_rewrite: str = Form(default="keep"),
     dry_run: bool = Form(default=False),
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.edit")),
     server: Any = Depends(get_server),
     as_user: int | None = Query(default=None),
 ) -> JSONResponse:
@@ -255,7 +255,7 @@ async def doctor_agent_memory(
     agent_id: str,
     host_spec: str = Form(default="agent", description="目标宿主，格式：host 或 host:namespace"),
     compare_pkg: UploadFile | None = File(default=None, description="可选的 .hmpkg 文件用于比对"),
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
     as_user: int | None = Query(default=None),
 ) -> JSONResponse:

@@ -38,7 +38,7 @@ def _agent_control_payload() -> dict[str, object]:
 async def get_mobile_status(
     request: Request,
     server: Any = Depends(get_server),
-    _user: User = Depends(require_permission("mobile")),
+    _user: User = Depends(require_permission("mobile.view")),
 ) -> dict[str, object]:
     locale = resolve_request_locale(request)
     status = mobile_status(server.services.config, locale=locale)
@@ -73,7 +73,7 @@ async def get_mobile_status(
 )
 async def get_mobile_device_info(
     device: str,
-    _user: User = Depends(require_permission("mobile")),
+    _user: User = Depends(require_permission("mobile.view")),
 ) -> dict[str, object]:
     serial = device.strip()
     if not serial:
@@ -89,7 +89,7 @@ async def get_mobile_device_info(
 
 @router.get("/mobile/agent-control", summary="Get agent mobile-device binding")
 async def get_agent_control(
-    _user: User = Depends(require_permission("mobile")),
+    _user: User = Depends(require_permission("mobile.view")),
 ) -> dict[str, object]:
     return _agent_control_payload()
 
@@ -97,7 +97,7 @@ async def get_agent_control(
 @router.put("/mobile/agent-control", summary="Set agent mobile-device binding")
 async def put_agent_control(
     body: MobileAgentControlBody,
-    _user: User = Depends(require_permission("mobile")),
+    _user: User = Depends(require_permission("mobile.edit")),
 ) -> dict[str, object]:
     if body.enabled:
         devices = list_devices()

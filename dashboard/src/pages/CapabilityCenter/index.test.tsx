@@ -149,7 +149,7 @@ describe("combined capability center", () => {
   });
 
   it("hides restricted resources for a user without their permissions", async () => {
-    state.user = { role: "user", permissions: ["skills"] };
+    state.user = { role: "user", permissions: ["skills.view"] };
     setup("/skills");
     expect(await screen.findByText("skills-agent-one")).toBeVisible();
     expect(
@@ -161,7 +161,7 @@ describe("combined capability center", () => {
   });
 
   it("opens the unified library for package-only users without an expert", async () => {
-    state.user = { role: "user", permissions: ["skill_packages"] };
+    state.user = { role: "user", permissions: ["skill_packages.view"] };
     setup("/skills");
     expect(
       await screen.findByRole("textbox", { name: "library-draft" }),
@@ -171,7 +171,7 @@ describe("combined capability center", () => {
   });
 
   it("does not mount skills or experts for connector-only users", async () => {
-    state.user = { role: "user", permissions: ["connectors"] };
+    state.user = { role: "user", permissions: ["connectors.view"] };
     setup("/connectors");
     await screen.findByRole("textbox", { name: "connector-draft" });
     expect(

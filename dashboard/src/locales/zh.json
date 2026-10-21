@@ -6120,7 +6120,7 @@
     "roleEmpty": "暂无角色",
     "roleBuiltin": "内置",
     "roleAdminLocked": "管理员角色拥有全部权限，且不启用资源限制。可以修改名称，不能删除，也不能改权限或策略。",
-    "roleTemplateHint": "角色只提供创建、编辑和邀请时的默认值。修改角色不会改写已经创建的用户。",
+    "roleTemplateHint": "修改角色权限会同步仍跟随原模板的用户，保留单独定制的权限和账号资源限制。用户重新登录后刷新页面权限。",
     "roleCustomHint": "自定义角色只提供权限和资源策略。账号类型在用户上单独设置。",
     "roleColName": "角色名称",
     "roleColId": "角色 ID",
@@ -6204,7 +6204,8 @@
       "delete": "删除",
       "set_token_quota": "设置 Token 上限",
       "set_max_agents": "设置专家上限"
-    }
+    },
+    "permGroupBusiness": "业务功能"
   },
   "adminSso": {
     "panelTitle": "单点登录",

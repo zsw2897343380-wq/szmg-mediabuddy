@@ -35,4 +35,4 @@ async def test_dependency_denies_without_permission() -> None:
 async def test_dependency_allows_admin_and_holder() -> None:
     dep = require_permission("browser")
     assert await dep(_user(True)) is not None
-    assert await dep(_user(False, ["browser"])) is not None
+    assert await dep(_user(False, ["browser.view", "browser.use", "browser.edit"])) is not None

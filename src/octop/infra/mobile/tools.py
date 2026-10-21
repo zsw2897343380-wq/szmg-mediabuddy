@@ -43,7 +43,7 @@ def _require_mobile_access(config: OctopConfig, ctx: dict[str, Any], user_repo: 
     if ctx.get("user_is_admin"):
         return
     row = user_repo.get(int(user_raw))
-    if row is None or not user_has_permission(row, "mobile"):
+    if row is None or not user_has_permission(row, "mobile.use"):
         raise ValueError("mobile permission required")
 
 

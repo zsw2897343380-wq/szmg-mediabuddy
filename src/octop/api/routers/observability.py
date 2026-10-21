@@ -50,7 +50,7 @@ def _to_response(cfg: Any) -> LangfuseConfigResponse:
 
 @router.get("/langfuse", summary="Get Langfuse observability config")
 async def get_langfuse_config(
-    _: Any = Depends(require_permission("observability")),
+    _: Any = Depends(require_permission("observability.view")),
     server: Any = Depends(get_server),
 ) -> LangfuseConfigResponse:
     return _to_response(server.app_runtime.agent_registry.langfuse.load())
@@ -59,7 +59,7 @@ async def get_langfuse_config(
 @router.put("/langfuse", summary="Update Langfuse observability config")
 async def put_langfuse_config(
     body: LangfuseConfigBody,
-    _: Any = Depends(require_permission("observability")),
+    _: Any = Depends(require_permission("observability.edit")),
     server: Any = Depends(get_server),
 ) -> LangfuseConfigResponse:
     cfg = server.app_runtime.agent_registry.save_langfuse(
@@ -74,7 +74,7 @@ async def put_langfuse_config(
 @router.post("/langfuse/test", summary="Test Langfuse connection")
 async def test_langfuse_connection(
     body: LangfuseTestBody,
-    _: Any = Depends(require_permission("observability")),
+    _: Any = Depends(require_permission("observability.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(

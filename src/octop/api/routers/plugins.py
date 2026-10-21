@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_owner as _assert_agent_owner
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import current_user, get_server, require_any_permission, require_permission
 from octop.infra.agents.plugins.manager import PluginManager
 from octop.infra.agents.plugins.plugin_tool_defaults import (
     agent_plugin_enabled,
@@ -99,7 +99,7 @@ def _plugin_manager(server: OctopServer) -> PluginManager:
 @router.get("", summary="List installed plugins")
 async def list_plugins(
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(current_user),
+    _user: Any = Depends(require_any_permission("plugins.view", "agent_plugins.view")),
 ) -> list[dict[str, Any]]:
     return _plugin_manager(server).list_installed()
 
@@ -107,7 +107,7 @@ async def list_plugins(
 @router.post("/reload", summary="Reload plugins from disk (admin)")
 async def reload_plugins(
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.edit")),
 ) -> dict[str, Any]:
     """Re-read ``~/.octop/plugins`` into the process registry and reload agents.
 
@@ -136,7 +136,7 @@ async def reload_plugins(
 async def install_plugin(
     body: PluginInstallBody,
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.create")),
 ) -> dict[str, Any]:
     mgr = _plugin_manager(server)
     try:
@@ -166,7 +166,7 @@ async def upload_plugin(
     file: UploadFile = File(...),
     force: bool = Form(default=False),
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.create")),
 ) -> dict[str, Any]:
     """Install a plugin from a locally-uploaded ZIP archive.
 
@@ -207,7 +207,7 @@ async def upload_plugin(
 @router.get("/market", summary="List marketplace catalog plugins")
 async def list_market_plugins(
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(current_user),
+    _user: Any = Depends(require_any_permission("plugins.view", "agent_plugins.view")),
 ) -> list[dict[str, Any]]:
     """Return the in-tree marketplace catalog (future: remote index API)."""
     return _plugin_manager(server).list_market()
@@ -221,7 +221,7 @@ async def install_market_plugin(
     plugin_id: str,
     force: bool = False,
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.create")),
 ) -> dict[str, Any]:
     """Copy a catalog plugin into ``~/.octop/plugins`` (future: download ZIP)."""
     mgr = _plugin_manager(server)
@@ -283,7 +283,7 @@ async def patch_plugin(
     plugin_id: str,
     body: PluginPatchBody,
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.edit")),
 ) -> dict[str, Any]:
     """Enable or disable an installed plugin server-wide.
 
@@ -302,7 +302,7 @@ async def patch_plugin(
 async def uninstall_plugin(
     plugin_id: str,
     server: OctopServer = Depends(get_server),
-    _user: Any = Depends(require_permission("plugins")),
+    _user: Any = Depends(require_permission("plugins.delete")),
 ) -> dict[str, str]:
     _plugin_manager(server).uninstall(plugin_id)
     if server.app_runtime is not None:
@@ -408,7 +408,7 @@ async def patch_agent_plugins(
     agent_id: str,
     body: AgentPluginsPatch,
     server: OctopServer = Depends(get_server),
-    user: Any = Depends(require_permission("agent_plugins")),
+    user: Any = Depends(require_permission("agent_plugins.edit")),
 ) -> AgentPluginsResponse:
     """Merge plugin switches, preserve tool settings, and reload only this agent."""
     _, cfg = _agent_row_and_config(server, agent_id, user)
@@ -489,7 +489,7 @@ async def patch_agent_plugin_tools(
     agent_id: str,
     body: AgentPluginToolsPatch,
     server: OctopServer = Depends(get_server),
-    user: Any = Depends(require_permission("tools")),
+    user: Any = Depends(require_permission("agent_plugins.edit")),
 ) -> dict[str, str]:
     """Persist per-agent plugin tool enable flags and hot-sync the denylist.
 

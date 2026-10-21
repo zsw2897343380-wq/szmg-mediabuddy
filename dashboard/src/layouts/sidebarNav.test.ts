@@ -62,7 +62,11 @@ describe("sidebarNav", () => {
   ])(
     "opens the permitted center resource for %s-only users",
     (permission, path) => {
-      const user = { ...adminUser, role: "user", permissions: [permission] };
+      const user = {
+        ...adminUser,
+        role: "user",
+        permissions: [`${permission}.view`],
+      };
       const items = buildNavSections(user).flatMap((section) => section.items);
       expect(items.find((item) => item.key === "experts")?.path).toBe(path);
       expect(items.some((item) => item.key === "personalization")).toBe(false);

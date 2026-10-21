@@ -13,8 +13,34 @@ async def test_install_and_pause_are_private_to_the_authenticated_user(env: Any)
     client, _server, admin = env
     created = await client.post("/api/skill-packages", headers=admin, json={"name": "Office"})
     package_id = created.json()["id"]
-    alice = await create_user(client, admin, username="alice", permissions=["skill_packages"])
-    bob = await create_user(client, admin, username="bob", permissions=["skill_packages"])
+    alice = await create_user(
+        client,
+        admin,
+        username="alice",
+        permissions=[
+            "skill_packages.view",
+            "skill_packages.use",
+            "skill_packages.create",
+            "skill_packages.edit",
+            "skill_packages.delete",
+            "skill_packages.export",
+            "skill_packages.publish",
+        ],
+    )
+    bob = await create_user(
+        client,
+        admin,
+        username="bob",
+        permissions=[
+            "skill_packages.view",
+            "skill_packages.use",
+            "skill_packages.create",
+            "skill_packages.edit",
+            "skill_packages.delete",
+            "skill_packages.export",
+            "skill_packages.publish",
+        ],
+    )
     installed = await client.put(
         f"/api/skill-packages/library/{package_id}", headers=alice, json={"installed": True}
     )
@@ -52,7 +78,19 @@ async def test_install_and_pause_are_private_to_the_authenticated_user(env: Any)
 
 async def test_library_requires_package_permission_and_rejects_unknown_packages(env: Any) -> None:
     client, _server, admin = env
-    restricted = await create_user(client, admin, username="restricted", permissions=["skills"])
+    restricted = await create_user(
+        client,
+        admin,
+        username="restricted",
+        permissions=[
+            "skills.view",
+            "skills.use",
+            "skills.create",
+            "skills.edit",
+            "skills.delete",
+            "skills.export",
+        ],
+    )
     response = await client.get("/api/skill-packages/library", headers=restricted)
     assert response.status_code == 403
     response = await client.put(
@@ -139,7 +177,20 @@ async def test_single_skill_preferences_are_private_and_control_chat_without_sib
             },
         )
         assert result.status_code == 200, result.text
-    bob = await create_user(client, auth, username="skill-bob", permissions=["skill_packages"])
+    bob = await create_user(
+        client,
+        auth,
+        username="skill-bob",
+        permissions=[
+            "skill_packages.view",
+            "skill_packages.use",
+            "skill_packages.create",
+            "skill_packages.edit",
+            "skill_packages.delete",
+            "skill_packages.export",
+            "skill_packages.publish",
+        ],
+    )
     path = f"/api/skill-packages/library/{package_id}/skills/reader"
     response = await client.put(path, headers=auth, json={"installed": True})
     assert response.status_code == 200, response.text
@@ -208,7 +259,19 @@ async def test_individual_preference_permission_and_missing_skill(env: Any) -> N
     package_id = (
         await client.post("/api/skill-packages", headers=admin, json={"name": "Empty"})
     ).json()["id"]
-    restricted = await create_user(client, admin, username="limited-single", permissions=["skills"])
+    restricted = await create_user(
+        client,
+        admin,
+        username="limited-single",
+        permissions=[
+            "skills.view",
+            "skills.use",
+            "skills.create",
+            "skills.edit",
+            "skills.delete",
+            "skills.export",
+        ],
+    )
     path = f"/api/skill-packages/library/{package_id}/skills/absent"
     assert (await client.put(path, headers=restricted, json={"installed": True})).status_code == 403
     assert (await client.put(path, headers=admin, json={"installed": True})).status_code == 404
@@ -230,7 +293,20 @@ async def test_single_skill_export_preserves_download_permissions_and_excludes_s
             headers=admin,
             json={"name": slug, "content": f"---\nname: {slug}\n---\nInstructions"},
         )
-    bob = await create_user(client, admin, username="export-reader", permissions=["skill_packages"])
+    bob = await create_user(
+        client,
+        admin,
+        username="export-reader",
+        permissions=[
+            "skill_packages.view",
+            "skill_packages.use",
+            "skill_packages.create",
+            "skill_packages.edit",
+            "skill_packages.delete",
+            "skill_packages.export",
+            "skill_packages.publish",
+        ],
+    )
     path = f"/api/skill-packages/{package_id}/export?skill_slug=reader"
     response = await client.get(path, headers=bob)
     assert response.status_code == 200, response.text

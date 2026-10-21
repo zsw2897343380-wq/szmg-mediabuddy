@@ -114,7 +114,18 @@ async def test_knowledge_onnx_test_uses_knowledge_settings_permission(
         client,
         admin_auth,
         username="kb_probe_admin",
-        permissions=["knowledge_bases", "knowledge_settings"],
+        permissions=[
+            "knowledge_bases.view",
+            "knowledge_bases.use",
+            "knowledge_bases.create",
+            "knowledge_bases.upload",
+            "knowledge_bases.edit",
+            "knowledge_bases.delete",
+            "knowledge_bases.export",
+            "knowledge_bases.publish",
+            "knowledge_settings.view",
+            "knowledge_settings.edit",
+        ],
     )
 
     denied = await client.post("/api/onnx-models/test", headers=kb_admin, json={"model": MODEL})

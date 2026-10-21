@@ -15,7 +15,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
     assert by_id["admin"]["policies"] == []
     assert by_id["admin"]["system_role"] == "admin"
     assert by_id["user"]["deletable"] is False
-    assert "channels" in by_id["user"]["permissions"]
+    assert "channels.view" in by_id["user"]["permissions"]
     assert by_id["user"]["policies"] == []
 
     denied = await c.delete("/api/users/roles/admin", headers=auth)
@@ -29,7 +29,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
         json={
             "user_role_name": "分析师",
             "description": "只读分析工作",
-            "permissions": ["browser"],
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
             "policies": [{"name": "token_quota", "value": "1000"}],
         },
     )
@@ -47,7 +47,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
             "username": "carol",
             "password": "TestPass12",
             "role": role["user_role_id"],
-            "permissions": ["browser"],
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
             "role_name": "分析师",
             "token_quota": 1000,
         },
@@ -63,14 +63,14 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
         headers=auth,
         json={
             "user_role_name": "分析",
-            "permissions": ["desktop"],
+            "permissions": ["desktop.view", "desktop.use", "desktop.edit"],
             "policies": [{"name": "token_quota", "value": "5"}],
         },
     )
     assert renamed.status_code == 200, renamed.text
     kept = await c.get(f"/api/users/{uid}", headers=auth)
     assert kept.json()["role_name"] == "分析师"
-    assert kept.json()["permissions"] == ["browser"]
+    assert kept.json()["permissions"] == ["desktop.view", "desktop.use", "desktop.edit"]
     assert kept.json()["token_quota"] == 1000
 
     # Still assigned — delete must be refused.
@@ -105,7 +105,10 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
     patched = await c.patch(
         "/api/users/roles/user",
         headers=auth,
-        json={"user_role_name": "普通用户", "permissions": ["browser"]},
+        json={
+            "user_role_name": "普通用户",
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
+        },
     )
     assert patched.status_code == 200, patched.text
 
@@ -119,13 +122,13 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
     )
     assert redeem.status_code == 200, redeem.text
     assert redeem.json()["user"]["role"] == "user"
-    assert redeem.json()["user"]["permissions"] == ["browser"]
+    assert redeem.json()["user"]["permissions"] == ["browser.view", "browser.use", "browser.edit"]
 
     invited = await c.get("/api/users", headers=auth)
     row = next(item for item in invited.json() if item["username"] == "invited_one")
     assert row["role"] == "user"
     assert row["role_name"] == "普通用户"
-    assert row["permissions"] == ["browser"]
+    assert row["permissions"] == ["browser.view", "browser.use", "browser.edit"]
 
     me = await c.get("/api/auth/me", headers=auth)
     admin_id = me.json()["id"]
@@ -141,7 +144,7 @@ async def test_role_patch_without_policies_keeps_existing_policies(env):
         headers=auth,
         json={
             "user_role_name": "限额",
-            "permissions": ["browser"],
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
             "policies": [
                 {"name": "token_quota", "value": "1000"},
                 {"name": "max_agents", "value": "3"},
@@ -154,7 +157,7 @@ async def test_role_patch_without_policies_keeps_existing_policies(env):
     patched = await c.patch(
         f"/api/users/roles/{role_id}",
         headers=auth,
-        json={"permissions": ["desktop"]},
+        json={"permissions": ["desktop.view", "desktop.use", "desktop.edit"]},
     )
     assert patched.status_code == 200, patched.text
     names = {item["name"]: item["value"] for item in patched.json()["policies"]}
@@ -166,7 +169,10 @@ async def test_redeem_fails_when_named_role_is_gone(env):
     created = await c.post(
         "/api/users/roles",
         headers=auth,
-        json={"user_role_name": "临时", "permissions": ["browser"]},
+        json={
+            "user_role_name": "临时",
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
+        },
     )
     assert created.status_code == 201, created.text
     role_id = created.json()["user_role_id"]
@@ -202,7 +208,15 @@ async def test_non_admin_cannot_grant_administrator(env):
             "username": "clerk",
             "password": TEST_PASSWORD,
             "role": "user",
-            "permissions": ["users"],
+            "permissions": [
+                "users.view",
+                "users.create",
+                "users.edit",
+                "users.delete",
+                "users.reset_password",
+                "users.permissions",
+                "users.roles",
+            ],
         },
     )
     assert created.status_code == 201, created.text
@@ -258,7 +272,10 @@ async def test_user_and_role_avatars_roundtrip(env):
     role = await c.post(
         "/api/users/roles",
         headers=auth,
-        json={"user_role_name": "带头像", "permissions": ["browser"]},
+        json={
+            "user_role_name": "带头像",
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
+        },
     )
     assert role.status_code == 201, role.text
     role_id = role.json()["user_role_id"]
@@ -312,7 +329,7 @@ async def test_create_role_accepts_caller_role_id(env):
         json={
             "user_role_id": "data_analyst",
             "user_role_name": "分析师",
-            "permissions": ["browser"],
+            "permissions": ["browser.view", "browser.use", "browser.edit"],
         },
     )
     assert created.status_code == 201, created.text

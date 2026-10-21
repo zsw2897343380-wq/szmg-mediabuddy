@@ -140,7 +140,7 @@ async def test_sso_create_then_updates_same_subject(manager: UserManager):
     )
 
     assert user.role == Role.USER
-    assert "channels" in user.permissions
+    assert "channels.view" in user.permissions
     row = manager.get_row(user.id)
     assert row is not None
     assert row.role_name == "用户"

@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/desktop/install")
 async def install_desktop(
     request: Request,
-    _user: User = Depends(require_permission("desktop")),
+    _user: User = Depends(require_permission("desktop.edit")),
 ) -> StreamingResponse:
     """Stream virtual desktop installation progress as SSE (admin only).
 

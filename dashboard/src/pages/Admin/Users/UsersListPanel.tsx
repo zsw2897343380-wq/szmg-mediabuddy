@@ -41,7 +41,6 @@ import { ResizableTable } from "@/components/ResizableTable";
 
 import {
   Bot,
-  Check,
   CircleHelp,
   Coins,
   IdCard,
@@ -73,11 +72,14 @@ import {
   type UserRole,
 } from "../../../api/modules/userRoles";
 import { authApi } from "../../../api/modules/auth";
-import { preferencesApi } from "../../../api/modules/preferences";
-import type { SidebarNavLayout } from "../../../layouts/sidebarNavLayout";
-import { buildPermissionPickerGroups } from "./permissionPickerLayout";
+import { userCan } from "../../../utils/permissions";
+import { PermissionCheckboxPicker } from "./PermissionTreePicker";
+export { PermissionCheckboxPicker } from "./PermissionTreePicker";
 import { useCardTableView } from "../../../hooks/useCardTableView";
-import { useSetCurrentUser } from "../../../hooks/useCurrentUser";
+import {
+  useCurrentUser,
+  useSetCurrentUser,
+} from "../../../hooks/useCurrentUser";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { useServerTimezone } from "../../../hooks/useServerTimezone";
 import { apiErrorMessage } from "../../../utils/apiError";
@@ -732,210 +734,6 @@ export function ResourcePolicyFields({
   );
 }
 
-interface PermissionCheckboxPickerProps {
-  value?: string[];
-  onChange?: (value: string[]) => void;
-  catalog: PermissionCatalogItem[];
-  disabled?: boolean;
-}
-
-export function PermissionCheckboxPicker({
-  value,
-  onChange,
-  catalog,
-  disabled,
-}: PermissionCheckboxPickerProps) {
-  const { t } = useTranslation();
-  const selected = value ?? [];
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
-  const [navLayout, setNavLayout] = useState<SidebarNavLayout | null>(null);
-  const [navReady, setNavReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void preferencesApi
-      .get()
-      .then((prefs) => {
-        if (!cancelled) setNavLayout(prefs.sidebar_nav ?? null);
-      })
-      .catch(() => {
-        // Keep the default groups when preferences cannot be loaded.
-      })
-      .finally(() => {
-        if (!cancelled) setNavReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const groups = useMemo(
-    () => buildPermissionPickerGroups(catalog, navLayout, t),
-    [catalog, navLayout, t],
-  );
-
-  const toggle = (key: string, checked: boolean) => {
-    if (disabled) return;
-    if (checked) {
-      onChange?.([...selected, key]);
-      return;
-    }
-    onChange?.(selected.filter((k) => k !== key));
-  };
-
-  const setGroup = (keys: string[], checked: boolean) => {
-    if (disabled) return;
-    if (checked) {
-      const next = new Set(selected);
-      for (const k of keys) next.add(k);
-      onChange?.(Array.from(next));
-      return;
-    }
-    const drop = new Set(keys);
-    onChange?.(selected.filter((k) => !drop.has(k)));
-  };
-
-  if (catalog.length === 0) {
-    return (
-      <div className={styles.permEmpty}>
-        <Text type="secondary">{t("adminUsers.permCatalogEmpty")}</Text>
-      </div>
-    );
-  }
-
-  if (!navReady) return null;
-
-  return (
-    <div
-      className={`${styles.permPicker} ${
-        disabled ? styles.permPickerDisabled : ""
-      }`}
-    >
-      {groups.map((group) => {
-        const keys = group.blocks.flatMap((block) =>
-          block.kind === "page"
-            ? block.items.map((item) => item.key)
-            : block.items.flatMap((chip) =>
-                chip.kind === "permission" ? [chip.item.key] : [],
-              ),
-        );
-        const checkedCount = keys.filter((k) => selectedSet.has(k)).length;
-        const allChecked = checkedCount === keys.length && keys.length > 0;
-        const indeterminate = checkedCount > 0 && !allChecked;
-        const renderChips = (
-          items: (
-            | { kind: "permission"; item: PermissionCatalogItem }
-            | { kind: "always"; key: string; label: string }
-          )[],
-        ) => (
-          <div className={styles.permGrid} role="group">
-            {items.map((chip) => {
-              if (chip.kind === "always") {
-                return (
-                  <div
-                    key={chip.key}
-                    className={`${styles.permChip} ${styles.permChipAlways}`}
-                    title={t("adminUsers.permAlwaysOn")}
-                  >
-                    <span className={styles.permChipLabel}>{chip.label}</span>
-                    <span className={styles.permChipAlwaysTag}>
-                      {t("adminUsers.permAlwaysOn")}
-                    </span>
-                  </div>
-                );
-              }
-              const item = chip.item;
-              const checked = selectedSet.has(item.key);
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  disabled={disabled}
-                  aria-pressed={checked}
-                  className={`${styles.permChip} ${
-                    checked ? styles.permChipSelected : ""
-                  }`}
-                  onClick={() => toggle(item.key, !checked)}
-                >
-                  <span className={styles.permChipCheck} aria-hidden>
-                    {checked ? <Check size={12} strokeWidth={2.5} /> : null}
-                  </span>
-                  <span className={styles.permChipLabel}>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-        return (
-          <section key={group.id} className={styles.permGroup}>
-            <div className={styles.permGroupHeader}>
-              {keys.length > 0 ? (
-                <Checkbox
-                  checked={allChecked}
-                  indeterminate={indeterminate}
-                  disabled={disabled}
-                  onChange={(e) => setGroup(keys, e.target.checked)}
-                >
-                  <span className={styles.permGroupTitle}>{group.label}</span>
-                </Checkbox>
-              ) : (
-                <span className={styles.permGroupTitle}>{group.label}</span>
-              )}
-              {keys.length > 0 ? (
-                <span className={styles.permGroupCount}>
-                  {checkedCount}/{keys.length}
-                </span>
-              ) : null}
-            </div>
-            {group.blocks.map((block) => {
-              if (block.kind === "chips") {
-                const chipKey = block.items
-                  .map((chip) =>
-                    chip.kind === "always" ? chip.key : chip.item.key,
-                  )
-                  .join(",");
-                return <div key={chipKey}>{renderChips(block.items)}</div>;
-              }
-              const pageKeys = block.items.map((item) => item.key);
-              const pageChecked = pageKeys.filter((k) =>
-                selectedSet.has(k),
-              ).length;
-              const pageAll =
-                pageChecked === pageKeys.length && pageKeys.length > 0;
-              const pageIndeterminate = pageChecked > 0 && !pageAll;
-              return (
-                <div key={block.id} className={styles.permPage}>
-                  <div className={styles.permPageHeader}>
-                    <Checkbox
-                      checked={pageAll}
-                      indeterminate={pageIndeterminate}
-                      disabled={disabled}
-                      onChange={(e) => setGroup(pageKeys, e.target.checked)}
-                    >
-                      <span className={styles.permPageTitle}>
-                        {block.title}
-                      </span>
-                    </Checkbox>
-                    <span className={styles.permGroupCount}>
-                      {pageChecked}/{pageKeys.length}
-                    </span>
-                  </div>
-                  {renderChips(
-                    block.items.map((item) => ({
-                      kind: "permission" as const,
-                      item,
-                    })),
-                  )}
-                </div>
-              );
-            })}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
 function PermissionSummary({
   row,
   permLabelByKey,
@@ -1265,7 +1063,12 @@ export default function UsersListPanel() {
   const [resetSubmitting, setResetSubmitting] = useState(false);
   const [resetForm] = Form.useForm<ResetValues>();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [actorIsAdmin, setActorIsAdmin] = useState(true);
+  const currentActor = useCurrentUser();
+  const canEditProfile = userCan(currentActor, "users.edit");
+  const canAssignPermissions = userCan(currentActor, "users.permissions");
+  const [actorIsAdmin, setActorIsAdmin] = useState(
+    currentActor?.role === "admin",
+  );
   const [agentDrawerUser, setAgentDrawerUser] = useState<UserRow | null>(null);
   const [editAgent, setEditAgent] = useState<OctopAgent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1285,6 +1088,8 @@ export default function UsersListPanel() {
     const map = new Map<string, string>();
     for (const item of permCatalog) {
       map.set(item.key, permFullLabel(item));
+      const module = item.key.split(".")[0]!;
+      if (!map.has(module)) map.set(module, item.label.split(" · ")[0]!);
     }
     return map;
   }, [permCatalog]);
@@ -1555,7 +1360,9 @@ export default function UsersListPanel() {
   const refreshAgents = useCallback(async () => {
     setAgentsLoading(true);
     try {
-      const data = await request<OctopAgent[]>("/agents?scope=all");
+      const data = await request<OctopAgent[]>(
+        actorIsAdmin ? "/agents?scope=all" : "/agents",
+      );
       setAgents(data);
     } catch (err) {
       message.error(
@@ -1565,7 +1372,7 @@ export default function UsersListPanel() {
     } finally {
       setAgentsLoading(false);
     }
-  }, [t]);
+  }, [actorIsAdmin, t]);
 
   const patchAgent = useCallback(
     (agentId: string, patch: Partial<OctopAgent>) => {
@@ -1786,12 +1593,21 @@ export default function UsersListPanel() {
       await request(`/users/${editTarget.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          display_name: values.display_name?.trim() || null,
-          email: values.email?.trim() || null,
-          role: values.role,
-          permissions: values.role === "admin" ? [] : values.permissions ?? [],
-          role_name: values.role_name?.trim() || null,
-          ...policyPayload(values, { workspaceRootAllowed }),
+          ...(canEditProfile
+            ? {
+                display_name: values.display_name?.trim() || null,
+                email: values.email?.trim() || null,
+              }
+            : {}),
+          ...(canAssignPermissions
+            ? {
+                role: values.role,
+                permissions:
+                  values.role === "admin" ? [] : values.permissions ?? [],
+                role_name: values.role_name?.trim() || null,
+                ...policyPayload(values, { workspaceRootAllowed }),
+              }
+            : {}),
         }),
       });
       setEditTarget(null);
@@ -2521,6 +2337,7 @@ export default function UsersListPanel() {
               <ProfileAvatarPicker
                 kind="user"
                 avatarUrl={editTarget.avatar_url}
+                disabled={!canEditProfile}
                 icon={editTarget.avatar_icon}
                 onSelectIcon={async (icon) => {
                   try {
@@ -2582,7 +2399,10 @@ export default function UsersListPanel() {
               label={t("adminUsers.formDisplayName")}
               name="display_name"
             >
-              <Input prefix={<IdCard {...FIELD_ICON_PROPS} />} />
+              <Input
+                disabled={!canEditProfile}
+                prefix={<IdCard {...FIELD_ICON_PROPS} />}
+              />
             </Form.Item>
             <Form.Item
               label={t("adminUsers.formEmail")}
@@ -2595,6 +2415,7 @@ export default function UsersListPanel() {
               ]}
             >
               <Input
+                disabled={!canEditProfile}
                 prefix={<Mail {...FIELD_ICON_PROPS} />}
                 type="email"
                 autoComplete="email"
@@ -2617,7 +2438,10 @@ export default function UsersListPanel() {
               workspaceRootAllowed={workspaceRootAllowed}
               confirmOverwrite
               actorIsAdmin={actorIsAdmin}
-              disabled={Boolean(editTarget && isSelfAdmin(editTarget))}
+              disabled={
+                !canAssignPermissions ||
+                Boolean(editTarget && isSelfAdmin(editTarget))
+              }
               diverged={
                 Boolean(editTarget) &&
                 userRoleDrift(editTarget as UserRow, userRoles) === "changed"
@@ -2659,17 +2483,22 @@ export default function UsersListPanel() {
                     name="permissions"
                     className={styles.createUserPermItem}
                   >
-                    <PermissionCheckboxPicker catalog={permCatalog} />
+                    <PermissionCheckboxPicker
+                      catalog={permCatalog}
+                      disabled={!canAssignPermissions}
+                    />
                   </Form.Item>
                 );
               }}
             </Form.Item>
           </div>
 
-          <ResourcePolicyFields
-            fsTreeRoots={fsTreeRoots}
-            workspaceRootAllowed={workspaceRootAllowed}
-          />
+          {canAssignPermissions && (
+            <ResourcePolicyFields
+              fsTreeRoots={fsTreeRoots}
+              workspaceRootAllowed={workspaceRootAllowed}
+            />
+          )}
         </Form>
       </Drawer>
 

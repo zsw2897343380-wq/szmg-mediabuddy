@@ -3,6 +3,12 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { ResolvedModel } from "../../../api/types";
 import ChatInputActionsRow from "./ChatInputActionsRow";
+const auth = vi.hoisted(() => ({
+  user: { role: "admin", permissions: [] as string[] },
+}));
+vi.mock("../../../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => auth.user,
+}));
 
 // `isSttAvailable()` runs at module load, so the browser APIs it probes must
 // exist before this module graph is imported.
@@ -56,6 +62,28 @@ const baseProps = {
 };
 
 describe("ChatInputActionsRow plus menu", () => {
+  it("disables sending and uploading for a read-only chat grant", async () => {
+    auth.user = { role: "user", permissions: ["chat.view"] };
+    try {
+      render(
+        <MemoryRouter>
+          <ChatInputActionsRow
+            {...baseProps}
+            taskLayout
+            canSend
+            text="read only"
+          />
+        </MemoryRouter>,
+      );
+      expect(screen.getByTitle(/^(Send|chat\.send)$/)).toBeDisabled();
+      fireEvent.click(screen.getByTestId("composer-plus"));
+      expect(
+        await screen.findByRole("button", { name: /^(Files|upload\.files)$/ }),
+      ).toBeDisabled();
+    } finally {
+      auth.user = { role: "admin", permissions: [] };
+    }
+  });
   it("shows the active expert in the menu and still mentions other experts", async () => {
     const onInsertExpertMention = vi.fn();
     const other = { agent_id: "other", name: "Other expert" };

@@ -217,10 +217,30 @@ class UserManager:
         return self._users.get(username)
 
     def get_by_id(self, user_id: int) -> User | None:
-        for u in self._users.values():
-            if u.id == user_id:
-                return u
-        return None
+        # Authorization must observe DB updates made by another worker/process.
+        row = self._services.user_repo.get(user_id)
+        if row is None or row.disabled:
+            for name, cached in list(self._users.items()):
+                if cached.id == user_id:
+                    self._users.pop(name, None)
+            return None
+        user = self._users.get(row.username)
+        if user is None:
+            user = User(
+                id=row.id,
+                username=row.username,
+                role=str(row.role),
+                display_name=row.display_name,
+                locale=normalize_locale(row.locale),
+                permissions=list(row.permissions),
+            )
+            self._users[row.username] = user
+        else:
+            user.role = str(row.role)
+            user.permissions = list(row.permissions)
+            user.display_name = row.display_name
+            user.locale = normalize_locale(row.locale)
+        return user
 
     def get_row(self, user_id: int) -> Any:
         """Return the raw UserRow (includes disabled flag) for admin read operations."""
@@ -414,18 +434,9 @@ class UserManager:
         return self._services.user_repo.list_sso_identities(user_id)
 
     def _cached_or_row_user(self, row: Any) -> User:
-        cached = self._users.get(row.username)
-        if cached is not None:
-            return cached
-        user = User(
-            id=row.id,
-            username=row.username,
-            role=str(row.role),
-            display_name=row.display_name,
-            locale=normalize_locale(row.locale),
-            permissions=list(row.permissions),
-        )
-        self._users[row.username] = user
+        user = self.get_by_id(row.id)
+        if user is None:
+            raise OctopError(ErrorCode.USER_DISABLED, "user not active")
         return user
 
     def raise_if_login_locked(self, username: str) -> None:
@@ -494,17 +505,7 @@ class UserManager:
                 )
             return None
         self._services.user_repo.clear_login_lockout(row.id)
-        user = self._users.get(row.username)
-        if user is None:
-            user = User(
-                id=row.id,
-                username=row.username,
-                role=str(row.role),
-                display_name=row.display_name,
-                locale=normalize_locale(row.locale),
-                permissions=list(row.permissions),
-            )
-            self._users[row.username] = user
+        user = self.get_by_id(row.id)
         self._services.audit_repo.write(actor=row.username, action="auth.login")
         return user
 
@@ -559,6 +560,17 @@ class UserManager:
             target=username,
             payload=",".join(keys),
         )
+
+    async def sync_role_permissions(
+        self, role_id: str, previous: builtins.list[str], permissions: builtins.list[str]
+    ) -> None:
+        """Update accounts still following a template; preserve custom grants."""
+        from octop.infra.users.permissions import expand_permissions
+
+        expected = expand_permissions(previous)
+        for row in self._services.user_repo.list(include_disabled=True):
+            if str(row.role) == role_id and expand_permissions(row.permissions) == expected:
+                await self.set_permissions(row.username, permissions)
 
     async def set_resource_policy(
         self,

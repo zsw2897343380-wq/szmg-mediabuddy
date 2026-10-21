@@ -9,8 +9,32 @@ from tests.support.auth import create_user
 
 async def test_builtin_preferences_without_an_expert_are_private_and_validated(env: Any) -> None:
     client, _server, admin = env
-    alice = await create_user(client, admin, username="presets-alice", permissions=["skills"])
-    bob = await create_user(client, admin, username="presets-bob", permissions=["skills"])
+    alice = await create_user(
+        client,
+        admin,
+        username="presets-alice",
+        permissions=[
+            "skills.view",
+            "skills.use",
+            "skills.create",
+            "skills.edit",
+            "skills.delete",
+            "skills.export",
+        ],
+    )
+    bob = await create_user(
+        client,
+        admin,
+        username="presets-bob",
+        permissions=[
+            "skills.view",
+            "skills.use",
+            "skills.create",
+            "skills.edit",
+            "skills.delete",
+            "skills.export",
+        ],
+    )
     response = await client.get("/api/skills/builtin", headers={**alice, "Accept-Language": "zh"})
     assert response.status_code == 200, response.text
     rows = response.json()
@@ -40,7 +64,18 @@ async def test_builtin_preferences_require_auth_and_skill_permission(env: Any, m
     kwargs = {"json": {"slugs": ["apple-notes"], "enabled": False}} if method == "PUT" else {}
     assert (await client.request(method, "/api/skills/builtin", **kwargs)).status_code == 401
     restricted = await create_user(
-        client, admin, username="presets-denied", permissions=["skill_packages"]
+        client,
+        admin,
+        username="presets-denied",
+        permissions=[
+            "skill_packages.view",
+            "skill_packages.use",
+            "skill_packages.create",
+            "skill_packages.edit",
+            "skill_packages.delete",
+            "skill_packages.export",
+            "skill_packages.publish",
+        ],
     )
     response = await client.request(method, "/api/skills/builtin", headers=restricted, **kwargs)
     assert response.status_code == 403

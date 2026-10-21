@@ -22,7 +22,18 @@ async def test_feature_toggle_requires_knowledge_settings(env: Any) -> None:
         client,
         admin_auth,
         username="kb_settings_user",
-        permissions=["knowledge_bases", "knowledge_settings"],
+        permissions=[
+            "knowledge_bases.view",
+            "knowledge_bases.use",
+            "knowledge_bases.create",
+            "knowledge_bases.upload",
+            "knowledge_bases.edit",
+            "knowledge_bases.delete",
+            "knowledge_bases.export",
+            "knowledge_bases.publish",
+            "knowledge_settings.view",
+            "knowledge_settings.edit",
+        ],
     )
     allowed = await client.put(
         "/api/knowledge-bases/feature",
@@ -43,7 +54,7 @@ async def test_embedding_options_require_knowledge_settings(env: Any) -> None:
         client,
         admin_auth,
         username="kb_options_admin",
-        permissions=["knowledge_settings"],
+        permissions=["knowledge_settings.view", "knowledge_settings.edit"],
     )
     allowed = await client.get("/api/knowledge-bases/embedding-options", headers=settings_auth)
     assert allowed.status_code == 200, allowed.text

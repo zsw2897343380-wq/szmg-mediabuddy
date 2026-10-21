@@ -137,6 +137,10 @@ def build_app(server: OctopServer) -> FastAPI:
     install_jwt_auth(app, server)
     install_setup_lockdown(app, server)
 
+    from octop.api.middleware.live_authorization import LiveAuthorizationMiddleware
+
+    app.add_middleware(LiveAuthorizationMiddleware, server=server)
+
     if server.app_runtime is not None and server.app_runtime.bridge_manager is not None:
         from octop.api.bridge_peer import prepare_peer_dashboard_turn
         from octop.api.routers.browser.stream import run_browser_stream_session

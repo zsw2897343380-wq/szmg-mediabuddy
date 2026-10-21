@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel, Field
 
-from octop.api.deps import get_server, require_permission
+from octop.api.deps import get_server, require_any_permission, require_permission
 from octop.api.routers.users import _assert_can_assign
 from octop.infra.db.repos.user_roles import (
     BUILTIN_USER_ROLE_IDS,
@@ -219,7 +219,9 @@ def _name_taken(exc: ValueError) -> None:
 
 @router.get("", summary="List role templates")
 async def list_user_roles(
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(
+        require_any_permission("users.roles", "users.view", "users.create", "users.permissions")
+    ),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     return [_public(server, row) for row in _repo(server).list_all()]
@@ -228,7 +230,7 @@ async def list_user_roles(
 @router.post("", status_code=201, summary="Create a role template")
 async def create_user_role(
     body: UserRoleBody,
-    actor: User = Depends(require_permission("users")),
+    actor: User = Depends(require_permission("users.roles")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     try:
@@ -260,12 +262,14 @@ async def create_user_role(
 async def patch_user_role(
     user_role_id: str,
     body: UserRolePatchBody,
-    actor: User = Depends(require_permission("users")),
+    actor: User = Depends(require_permission("users.roles")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     current = _repo(server).get(user_role_id)
     if current is None:
         raise OctopError(ErrorCode.NOT_FOUND, "role not found")
+    if current.is_admin and not actor.is_admin:
+        raise OctopError(ErrorCode.FORBIDDEN, "administrator role requires administrator")
     name = _clean_name(body.user_role_name) if body.user_role_name is not None else None
     description: str | None | object = ...
     if "description" in body.model_fields_set:
@@ -317,6 +321,10 @@ async def patch_user_role(
         _name_taken(exc)
         raise
     assert updated is not None
+    if permissions is not None:
+        await server.user_manager.sync_role_permissions(
+            user_role_id, list(current.permissions), permissions
+        )
     server.services.audit_repo.write(
         actor=actor.username,
         action="user_role.update",
@@ -328,7 +336,7 @@ async def patch_user_role(
 @router.delete("/{user_role_id}", status_code=204, summary="Delete a role template")
 async def delete_user_role(
     user_role_id: str,
-    actor: User = Depends(require_permission("users")),
+    actor: User = Depends(require_permission("users.roles")),
     server: Any = Depends(get_server),
 ) -> None:
     current = _repo(server).get(user_role_id)
@@ -357,7 +365,7 @@ async def delete_user_role(
 async def upload_role_avatar(
     user_role_id: str,
     file: UploadFile = File(...),  # noqa: B008
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.roles")),
     server: Any = Depends(get_server),
 ) -> dict[str, str | None]:
     row = _repo(server).get(user_role_id)
@@ -376,7 +384,7 @@ async def upload_role_avatar(
 @router.get("/{user_role_id}/avatar")
 async def get_role_avatar(
     user_role_id: str,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.view")),
     server: Any = Depends(get_server),
 ) -> Any:
     from octop.infra.users.profile_avatar import avatar_response
@@ -389,7 +397,7 @@ async def get_role_avatar(
 @router.delete("/{user_role_id}/avatar", status_code=204)
 async def delete_role_avatar(
     user_role_id: str,
-    _: Any = Depends(require_permission("users")),
+    _: Any = Depends(require_permission("users.roles")),
     server: Any = Depends(get_server),
 ) -> None:
     if _repo(server).get(user_role_id) is None:

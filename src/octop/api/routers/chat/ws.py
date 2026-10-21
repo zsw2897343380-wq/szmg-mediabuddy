@@ -28,6 +28,7 @@ from octop.infra.errors import OctopError
 from octop.infra.gateway.steer import SteerAdmitOk, SteerAdmitReject, SteerCoordinator
 from octop.infra.gateway.steer.types import preview_text
 from octop.infra.gateway.ws import WS_CHANNEL_ID
+from octop.infra.users.permissions import user_has_permission
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +53,14 @@ async def dashboard_chat_ws(
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return
 
+    if not any(user_has_permission(user, key) for key in ("chat.view", "records.view")):
+        await websocket.close(code=4003, reason="permission required")
+        return
     bridge_ref = parse_bridge_agent_id(agent_id)
     if bridge_ref is not None:
+        if not user_has_permission(user, "bridge.use") or not user_has_permission(user, "chat.use"):
+            await websocket.close(code=4003, reason="permission required")
+            return
         await _bridge_chat_ws(websocket, server=server, user=user, ref=bridge_ref)
         return
 
@@ -145,6 +152,10 @@ async def dashboard_chat_ws(
                     )
                 for frame in gateway.steer.snapshot_frames(thread_id):
                     await send_frame({**frame, "thread_id": thread_id})
+                continue
+
+            if msg_type in ("cancel", "steer_remove") and not user_has_permission(user, "chat.use"):
+                await send_frame({"type": "error", "message": "permission required"})
                 continue
 
             if msg_type == "cancel":

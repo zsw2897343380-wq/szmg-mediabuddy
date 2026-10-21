@@ -4,7 +4,7 @@ import { builtinNavGroupLabelKey } from "../../../layouts/sidebarNav";
 /**
  * Sidebar item → permission chips, in tab order.
  * One chip stays flat; several sit under that nav item.
- * Chat stays visible and is not a permission. Experts, tasks, and token usage are.
+ * Chat, assistant management and history are independently assignable.
  * `knowledge_settings` belongs with Knowledge, matching the page gate.
  */
 const NAV_PERMISSION_CHIPS: readonly {
@@ -14,7 +14,13 @@ const NAV_PERMISSION_CHIPS: readonly {
   /** Stay in the parent nav group as chips, beside siblings such as Channels. */
   inline?: boolean;
 }[] = [
-  { key: "chat", labelKey: "nav.chat", permissions: [] },
+  {
+    key: "chat",
+    labelKey: "nav.assistant",
+    permissions: ["assistants"],
+  },
+  { key: "new-chat", labelKey: "chatWelcome.newChat", permissions: ["chat"] },
+  { key: "records", labelKey: "nav.paneRecords", permissions: ["records"] },
   { key: "experts", labelKey: "nav.experts", permissions: ["experts"] },
   { key: "tasks", labelKey: "nav.tasks", permissions: ["tasks"] },
   {
@@ -54,7 +60,14 @@ const NAV_PERMISSION_CHIPS: readonly {
   {
     key: "workbench",
     labelKey: "nav.workbench",
-    permissions: ["terminal", "browser"],
+    permissions: ["workspace", "terminal", "browser"],
+  },
+  { key: "bridge", labelKey: "nav.bridge", permissions: ["bridge"] },
+  { key: "acp", labelKey: "nav.acp", permissions: ["acp"] },
+  {
+    key: "admin-public-resources",
+    labelKey: "nav.publicResources",
+    permissions: ["public_resources"],
   },
   {
     key: "remote-desktop",
@@ -106,7 +119,14 @@ const NAV_PERMISSION_CHIPS: readonly {
   },
 ];
 
-const DEFAULT_UNGROUPED = ["chat", "experts", "tasks", "token-usage"] as const;
+const DEFAULT_UNGROUPED = [
+  "new-chat",
+  "chat",
+  "experts",
+  "tasks",
+  "records",
+  "token-usage",
+] as const;
 
 const DEFAULT_GROUPS: readonly { id: string; items: readonly string[] }[] = [
   {
@@ -117,13 +137,15 @@ const DEFAULT_GROUPS: readonly { id: string; items: readonly string[] }[] = [
       "connectors",
       "skill-packages",
       "knowledge-bases",
+      "bridge",
     ],
   },
-  { id: "control", items: ["workbench", "remote-desktop"] },
+  { id: "control", items: ["workbench", "remote-desktop", "acp"] },
   {
     id: "admin",
     items: [
       "admin-users",
+      "admin-public-resources",
       "models",
       "admin-storage",
       "admin-plugins",
@@ -242,7 +264,11 @@ export function buildPermissionPickerGroups<T extends { key: string }>(
         continue;
       }
       const items = nav.permissions
-        .map((key) => byPerm.get(key))
+        .flatMap((key) =>
+          Array.from(byPerm.values()).filter(
+            (item) => item.key === key || item.key.startsWith(`${key}.`),
+          ),
+        )
         .filter((item): item is T => Boolean(item));
       if (items.length === 0) continue;
       const only = items[0];
@@ -302,7 +328,7 @@ export function buildPermissionPickerGroups<T extends { key: string }>(
   );
   const orphans = catalog.filter(
     (item, index) =>
-      !covered.has(item.key) &&
+      !covered.has(item.key.split(".")[0]!) &&
       catalog.findIndex((other) => other.key === item.key) === index,
   );
   if (orphans.length > 0) {

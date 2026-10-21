@@ -12,8 +12,9 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from starlette.websockets import WebSocketState
 
-from octop.api.deps import current_user, get_server, resolve_user_from_token
+from octop.api.deps import get_server, require_permission, resolve_user_from_token
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import assert_permission, user_has_permission
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ def _bridge(server: Any) -> Any:
 @router.post("/bridge/probe", summary="Probe a remote Octop (login + list experts)")
 async def probe_peer(
     body: BridgeProbeBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Validate remote credentials and return that account's expert list.
@@ -90,7 +91,7 @@ async def probe_peer(
 async def probe_connection(
     connection_id: str,
     body: BridgeConnectionProbeBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Login with the form URL/user; reuse the stored password when the field is blank."""
@@ -109,7 +110,7 @@ async def probe_connection(
 
 @router.get("/bridge/connections", summary="List bridge connections")
 async def list_connections(
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     mgr = _bridge(server)
@@ -120,9 +121,11 @@ async def list_connections(
 @router.post("/bridge/connections", status_code=201, summary="Add a bridge connection")
 async def create_connection(
     body: BridgeCreateBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    if body.connect:
+        assert_permission(user, "bridge.use")
     mgr = _bridge(server)
     row = await mgr.create_connection(
         owner_user_id=user.id,
@@ -140,7 +143,7 @@ async def create_connection(
 @router.get("/bridge/connections/{connection_id}", summary="Get a bridge connection")
 async def get_connection(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _bridge(server)
@@ -154,7 +157,7 @@ async def get_connection(
 )
 async def connect_connection(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _bridge(server)
@@ -168,7 +171,7 @@ async def connect_connection(
 )
 async def disconnect_connection(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _bridge(server)
@@ -222,11 +225,30 @@ class BridgePatchBody(BaseModel):
 async def patch_connection(
     connection_id: str,
     body: BridgePatchBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.edit")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     mgr = _bridge(server)
     fields_set = body.model_fields_set
+    if body.auto_reconnect is True:
+        assert_permission(user, "bridge.use")
+    if fields_set & {"peer_base_url", "peer_username", "password"}:
+        current = mgr.get_owned(connection_id, user.id)
+        credentials_changed = (
+            (
+                body.peer_base_url is not None
+                and body.peer_base_url.strip().rstrip("/") != current.peer_base_url.rstrip("/")
+            )
+            or (
+                body.peer_username is not None
+                and body.peer_username.strip() != current.peer_username
+            )
+            or bool(body.password and body.password.strip())
+        )
+        if credentials_changed and (
+            current.auto_reconnect or current.status in ("connected", "connecting")
+        ):
+            assert_permission(user, "bridge.use")
     row = None
     meta_keys = {
         "display_name",
@@ -266,7 +288,7 @@ async def patch_connection(
 )
 async def delete_connection(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.delete")),
     server: Any = Depends(get_server),
 ) -> None:
     mgr = _bridge(server)
@@ -279,7 +301,7 @@ async def delete_connection(
 )
 async def list_remote_agents(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     mgr = _bridge(server)
@@ -293,7 +315,7 @@ async def list_remote_agents(
 )
 async def list_remote_resolved_models(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """Read-only: peer ``GET /api/providers/resolved`` for remote chat model picker."""
@@ -308,7 +330,7 @@ async def list_remote_resolved_models(
 )
 async def get_remote_active_model(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read-only: peer ``GET /api/providers/active-model``."""
@@ -325,7 +347,7 @@ async def get_remote_active_model(
 )
 async def list_remote_knowledge_bases(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """Read-only: peer ``GET /api/knowledge-bases`` for remote chat KB picker."""
@@ -340,7 +362,7 @@ async def list_remote_knowledge_bases(
 )
 async def get_remote_knowledge_capability(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read-only: peer ``GET /api/knowledge-bases/capability``."""
@@ -357,7 +379,7 @@ async def get_remote_knowledge_capability(
 )
 async def get_remote_browser_env_status(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read-only: peer ``GET /api/browser/env-status`` for remote chat dock."""
@@ -374,7 +396,7 @@ async def get_remote_browser_env_status(
 )
 async def get_remote_browser_sessions(
     connection_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.view")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read-only: peer ``GET /api/browser/harness-sessions``."""
@@ -398,7 +420,7 @@ async def post_remote_browser_handoff(
     connection_id: str,
     session_id: str,
     body: BridgeBrowserHandoffBody,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("bridge.use")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Proxy peer ``POST /api/browser/sessions/{id}/handoff``."""
@@ -429,6 +451,10 @@ async def bridge_browser_stream_ws(
         user = resolve_user_from_token(server, raw_token)
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
+        return
+
+    if not user_has_permission(user, "bridge.use"):
+        await websocket.close(code=4003, reason="permission required")
         return
 
     mgr = getattr(getattr(server, "app_runtime", None), "bridge_manager", None)
@@ -523,6 +549,10 @@ async def bridge_inbound_ws(
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return
+    if not user_has_permission(user, "bridge.use"):
+        await websocket.close(code=4003, reason="permission required")
+        return
+
     mgr = getattr(getattr(server, "app_runtime", None), "bridge_manager", None)
     if mgr is None:
         await websocket.close(code=1011, reason="bridge not ready")

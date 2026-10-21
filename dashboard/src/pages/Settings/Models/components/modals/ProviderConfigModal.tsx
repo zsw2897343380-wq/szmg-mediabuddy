@@ -98,7 +98,8 @@ export function ProviderConfigModal({
   const [form] = Form.useForm<ProviderConfigForm>();
   const [draftModels, setDraftModels] = useState<ProviderModel[]>([]);
 
-  const hasApiKey = !!provider.api_key && provider.api_key.length > 0;
+  const hasApiKey =
+    provider.api_key_set ?? (!!provider.api_key && provider.api_key.length > 0);
   const isOllama = looksLikeOllamaProvider(provider);
   const isOnnx = isOnnxProviderRow(provider);
   const [downloadedIds, setDownloadedIds] = useState<string[]>([]);

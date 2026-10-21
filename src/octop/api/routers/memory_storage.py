@@ -8,12 +8,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import require_agent_owner_row
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import get_server, require_permission
 from octop.infra.utils.locale import resolve_request_locale
 
 router = APIRouter(
     prefix="/agents/{agent_id}/memory/storage",
-    dependencies=[Depends(require_permission("memory"))],
+    dependencies=[Depends(require_permission("memory.view"))],
 )
 
 
@@ -136,7 +136,7 @@ class StorageBackupSelection(BaseModel):
 async def backups(
     agent_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
 ) -> Any:
     require_agent_owner_row(agent_id, user=user, as_user=None, server=server)
@@ -158,7 +158,7 @@ async def delete_backup(
     agent_id: str,
     body: StorageBackupSelection,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.edit")),
     server: Any = Depends(get_server),
 ) -> Response:
     row = require_agent_owner_row(agent_id, user=user, as_user=None, server=server)
@@ -182,7 +182,7 @@ async def restore(
     agent_id: str,
     body: StorageBackupSelection,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.edit")),
     server: Any = Depends(get_server),
 ) -> Any:
     from octop.api.common.memory_client import invalidate_cached_memory
@@ -206,7 +206,7 @@ async def restore(
 async def check_storage(
     agent_id: str,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
 ) -> Any:
     require_agent_owner_row(agent_id, user=user, as_user=None, server=server)
@@ -225,7 +225,7 @@ async def check_storage(
 )
 async def maintenance_status(
     agent_id: str,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.view")),
     server: Any = Depends(get_server),
 ) -> Any:
     require_agent_owner_row(agent_id, user=user, as_user=None, server=server)
@@ -242,7 +242,7 @@ async def start_maintenance(
     agent_id: str,
     body: StartStorageMaintenance,
     request: Request,
-    user: Any = Depends(current_user),
+    user: Any = Depends(require_permission("memory.edit")),
     server: Any = Depends(get_server),
 ) -> Any:
     row = require_agent_owner_row(agent_id, user=user, as_user=None, server=server)

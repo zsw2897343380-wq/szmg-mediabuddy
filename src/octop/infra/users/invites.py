@@ -116,6 +116,37 @@ class InviteService:
     def list_all(self) -> list[dict[str, object]]:
         return [invite_status_payload(row) for row in self._repo.list_all()]
 
+    def list_visible(self, actor: User) -> list[dict[str, object]]:
+        from octop.infra.users.permissions import expand_permissions, user_has_permission
+
+        if actor.is_admin:
+            return self.list_all()
+        if not all(
+            user_has_permission(actor, key) for key in ("users.create", "users.permissions")
+        ):
+            return []
+        allowed = expand_permissions(actor.permissions)
+        result = []
+        for row in self._repo.list_all():
+            if row.created_by != actor.id:
+                continue
+            try:
+                role_id, grants, _policies, _name = _role_defaults_for_invite(
+                    self._services.db, row
+                )
+            except OctopError:
+                # Removed templates make old invitations unusable.
+                continue
+            if role_id != Role.ADMIN and expand_permissions(grants) <= allowed:
+                result.append(invite_status_payload(row))
+        return result
+
+    def assert_revoke_allowed(self, actor: User, invite_id: int) -> None:
+        if actor.is_admin:
+            return
+        if not any(row["id"] == invite_id for row in self.list_visible(actor)):
+            raise OctopError(ErrorCode.FORBIDDEN, "invite is not manageable by user")
+
     def revoke(self, invite_id: int, *, actor_username: str) -> dict[str, object]:
         before = self._repo.get(invite_id)
         if before is None:
@@ -249,7 +280,7 @@ def _role_defaults_for_invite(
         role_id = None
     role_name = getattr(invite, "role_name", None)
     from octop.infra.db.repos.user_roles import UserRoleRepo
-    from octop.infra.users.permissions import PERMISSIONS
+    from octop.infra.users.permissions import ALL_PERMISSION_KEYS
 
     repo = UserRoleRepo(db)
     if role_id is not None:
@@ -266,7 +297,7 @@ def _role_defaults_for_invite(
         )
     if role.is_admin:
         return role.user_role_id, [], [], role.user_role_name
-    permissions = [key for key in role.permissions if key in PERMISSIONS]
+    permissions = [key for key in role.permissions if key in ALL_PERMISSION_KEYS]
     return (
         role.user_role_id,
         permissions,

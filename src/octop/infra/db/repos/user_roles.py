@@ -257,12 +257,12 @@ def role_assignment_for(
     running build knows, so a template saved by a newer build cannot smuggle in
     unknown keys.
     """
-    from octop.infra.users.permissions import PERMISSIONS
+    from octop.infra.users.permissions import ALL_PERMISSION_KEYS
 
     role = UserRoleRepo(db).get(user_role_id)
     if role is None:
         return None
-    permissions = [key for key in role.permissions if key in PERMISSIONS]
+    permissions = [key for key in role.permissions if key in ALL_PERMISSION_KEYS]
     return role.user_role_id, role.user_role_name, permissions, list(role.policies)
 
 
