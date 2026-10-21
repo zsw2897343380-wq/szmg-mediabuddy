@@ -9,8 +9,6 @@ import {
   History,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCurrentUser } from "../../../../hooks/useCurrentUser";
-import { userCan } from "../../../../utils/permissions";
 import type { CronJobSpecOutput } from "../../../../api/types";
 import styles from "../index.module.less";
 import { extractPromptFromJob, formatCronTimestamp } from "../cronDisplay";
@@ -42,7 +40,6 @@ export function CronJobCard({
   onDelete,
 }: CronJobCardProps) {
   const { t } = useTranslation();
-  const user = useCurrentUser();
   const meta = job.meta ?? {};
   const status =
     typeof meta.octop_last_status === "string" ? meta.octop_last_status : "";
@@ -83,7 +80,6 @@ export function CronJobCard({
                 aria-label={t("cronJobs.executeNow")}
                 className={styles.cardIconButton}
                 onClick={() => onExecuteNow(job)}
-                disabled={!userCan(user, "tasks.use")}
               >
                 <Play size={15} />
               </button>
@@ -94,7 +90,6 @@ export function CronJobCard({
                 aria-label={t("common.edit")}
                 className={styles.cardIconButton}
                 onClick={() => onEdit(job)}
-                disabled={!userCan(user, "tasks.edit")}
               >
                 <Pencil size={15} />
               </button>
@@ -111,7 +106,6 @@ export function CronJobCard({
                   },
                   {
                     key: "delete",
-                    disabled: !userCan(user, "tasks.delete"),
                     label: t("common.delete"),
                     icon: <Trash2 size={15} />,
                     danger: true,
@@ -134,7 +128,6 @@ export function CronJobCard({
             checked={job.enabled}
             aria-label={job.enabled ? t("common.disable") : t("common.enable")}
             onChange={() => onToggleEnabled(job)}
-            disabled={!userCan(user, "tasks.edit")}
           />
         </div>
       </div>

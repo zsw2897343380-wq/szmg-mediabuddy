@@ -18,7 +18,6 @@ from octop_gateway.models import (
 from octop.api.common.agent import require_agent_row
 from octop.api.common.validators import validate_chat_mcp_servers, validate_chat_skills
 from octop.api.routers.chat.models import ChatTurnBody
-from octop.infra.agents.experts.access import assert_expert_use
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.media.attachment_hints import (
     inbound_attachments_from_parts,
@@ -33,7 +32,6 @@ from octop.infra.gateway.process.message_keys import (
 from octop.infra.gateway.process.usage_record import extract_usage_from_chunk
 from octop.infra.gateway.threads import ThreadRegistry
 from octop.infra.gateway.ws import WS_CHANNEL_ID
-from octop.infra.users.permissions import assert_permission, user_has_permission
 
 __all__ = [
     "COMPOSER_CTX_KEY",
@@ -57,7 +55,6 @@ class PreparedDashboardTurn:
     inbound_content: list[ContentPart]
     composer_context: dict[str, Any] | None
     inbound_attachments: list[dict[str, str]]
-    knowledge_base_ids: list[str] | None = None
 
 
 async def resolve_thread_id(
@@ -234,27 +231,15 @@ async def prepare_dashboard_turn(
     turn: ChatTurnBody,
 ) -> PreparedDashboardTurn:
     """Validate MCP/skills, resolve thread, return data for gateway enqueue."""
-    assert_permission(user, "chat.use")
-    if turn.mcp_servers:
-        assert_permission(user, "connectors.use")
-    if turn.skills:
-        assert_permission(user, "skills.use")
-    if turn.knowledge_base_ids:
-        assert_permission(user, "knowledge_bases.use")
     row = require_agent_row(agent_id, user=user, as_user=None, server=server)
-    assert_expert_use(user, row)
     default_model = (row.default_model or "").strip() or None
 
-    mcp_servers = await validate_chat_mcp_servers(
-        server,
-        user_id=user.id,
-        names=turn.mcp_servers if user_has_permission(user, "connectors.use") else [],
-    )
+    mcp_servers = await validate_chat_mcp_servers(server, user_id=user.id, names=turn.mcp_servers)
     skills = await validate_chat_skills(
         server,
         agent_id=agent_id,
         user=user,
-        names=turn.skills if user_has_permission(user, "skills.use") else [],
+        names=turn.skills,
     )
     if mcp_servers:
         failed = await server.app_runtime.agent_registry.prepare_chat_mcp(
@@ -315,9 +300,6 @@ async def prepare_dashboard_turn(
         inbound_content=inbound_content,
         composer_context=composer_ctx,
         inbound_attachments=inbound_attachments,
-        knowledge_base_ids=turn.knowledge_base_ids
-        if user_has_permission(user, "knowledge_bases.use")
-        else [],
     )
 
 
@@ -339,14 +321,9 @@ def build_dashboard_inbound(
     if prepared.mcp_servers is not None:
         # Including [] — Dashboard opt-out of default_open for this turn.
         metadata["mcp_servers"] = list(prepared.mcp_servers)
-    knowledge_base_ids = (
-        prepared.knowledge_base_ids
-        if prepared.knowledge_base_ids is not None
-        else turn.knowledge_base_ids
-    )
-    if knowledge_base_ids is not None:
+    if turn.knowledge_base_ids is not None:
         # Including [] — Dashboard opt-out of default_open knowledge bases for this turn.
-        metadata["knowledge_base_ids"] = list(knowledge_base_ids)
+        metadata["knowledge_base_ids"] = list(turn.knowledge_base_ids)
     if prepared.skills is not None:
         metadata["skills"] = prepared.skills
     if prepared.model_ref:

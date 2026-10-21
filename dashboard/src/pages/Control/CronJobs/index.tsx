@@ -29,8 +29,6 @@ import { showConfirmModal } from "../../../utils/confirmModal";
 import { OctopEmptyMascot } from "../../../components/EmptyState";
 import { ResizableTable } from "../../../components/ResizableTable";
 import PageShell from "../../../layouts/PageShell";
-import { useCurrentUser } from "../../../hooks/useCurrentUser";
-import { userCan } from "../../../utils/permissions";
 import { useAgent } from "../../../context/AgentContext";
 import { taskExampleColumns } from "./taskExamples";
 import { useTaskExamples } from "./useTaskExamples";
@@ -94,7 +92,6 @@ function CronJobsEmptyState({
 }
 
 function CronJobsPage() {
-  const user = useCurrentUser();
   const { t } = useTranslation();
   const { isMobile, viewMode, setViewMode, showCardView } =
     useCardTableView("card");
@@ -249,9 +246,6 @@ function CronJobsPage() {
   };
 
   const columns = createColumns({
-    canEdit: userCan(user, "tasks.edit"),
-    canRun: userCan(user, "tasks.use"),
-    canDelete: userCan(user, "tasks.delete"),
     onDetail: handleDetail,
     onToggleEnabled: handleToggleEnabled,
     onExecuteNow: handleExecuteNow,
@@ -347,7 +341,7 @@ function CronJobsPage() {
               type="primary"
               icon={<Plus size={15} />}
               onClick={handleCreate}
-              disabled={listStale || !userCan(user, "tasks.create")}
+              disabled={listStale}
             >
               {t("cronJobs.createJob")}
             </Button>

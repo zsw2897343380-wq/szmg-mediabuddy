@@ -445,7 +445,7 @@ def _arm_detach_cleanup(session: _PtySession) -> None:
 @router.get("/agents/{agent_id}/terminal/context")
 async def terminal_context(
     agent_id: str,
-    user: Any = Depends(require_permission("terminal.view")),
+    user: Any = Depends(require_permission("terminal")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return system context for the AI terminal panel."""
@@ -522,7 +522,7 @@ async def terminal_ws(
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return
-    if not user_has_permission(user, "terminal.use"):
+    if not user_has_permission(user, "terminal"):
         await websocket.close(code=4003, reason="permission required")
         return
     assert server.app_runtime is not None

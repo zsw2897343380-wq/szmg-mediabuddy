@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/desktop/uninstall")
 async def uninstall_desktop(
     request: Request,
-    _user: User = Depends(require_permission("desktop.edit")),
+    _user: User = Depends(require_permission("desktop")),
 ) -> StreamingResponse:
     """Stream virtual desktop uninstall progress as SSE (admin only)."""
     locale = resolve_request_locale(request)

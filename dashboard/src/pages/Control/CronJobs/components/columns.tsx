@@ -25,9 +25,6 @@ import styles from "../index.module.less";
 type CronJob = CronJobSpecOutput;
 
 interface ColumnHandlers {
-  canEdit?: boolean;
-  canRun?: boolean;
-  canDelete?: boolean;
   onDetail: (job: CronJob) => void;
   onToggleEnabled: (job: CronJob) => void;
   onExecuteNow: (job: CronJob) => void;
@@ -308,13 +305,13 @@ export const createColumns = (
           {
             key: "edit",
             label: handlers.t("common.edit"),
-            disabled: record.enabled || handlers.canEdit === false,
+            disabled: record.enabled,
             onClick: () => handlers.onEdit(record),
           },
           {
             key: "delete",
             label: handlers.t("common.delete"),
-            disabled: record.enabled || handlers.canDelete === false,
+            disabled: record.enabled,
             danger: true,
             onClick: () => handlers.onDelete(record.id),
           },
@@ -326,7 +323,6 @@ export const createColumns = (
               type="link"
               size="small"
               onClick={() => handlers.onToggleEnabled(record)}
-              disabled={handlers.canEdit === false}
             >
               {record.enabled
                 ? handlers.t("common.disable")
@@ -336,7 +332,6 @@ export const createColumns = (
               type="link"
               size="small"
               onClick={() => handlers.onExecuteNow(record)}
-              disabled={handlers.canRun === false}
             >
               {handlers.t("cronJobs.executeNow")}
             </Button>

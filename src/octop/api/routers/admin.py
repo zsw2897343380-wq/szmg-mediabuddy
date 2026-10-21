@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/overview")
 async def overview(
-    _: Any = Depends(require_permission("admin_console.view")), server: Any = Depends(get_server)
+    _: Any = Depends(require_permission("admin_console")), server: Any = Depends(get_server)
 ) -> dict[str, Any]:
     assert server.app_runtime is not None
     users = []
@@ -59,7 +59,7 @@ async def audit_log(
         le=AUDIT_LOG_MAX_LIMIT,
         description=f"Maximum rows to return, between 1 and {AUDIT_LOG_MAX_LIMIT}.",
     ),
-    _: Any = Depends(require_permission("admin_console.view")),
+    _: Any = Depends(require_permission("admin_console")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     rows = server.services.audit_repo.query(since=since, actor=actor, action=action, limit=limit)
@@ -78,7 +78,7 @@ async def audit_log(
 
 @router.get("/metrics")
 async def metrics(
-    _: Any = Depends(require_permission("admin_console.view")), server: Any = Depends(get_server)
+    _: Any = Depends(require_permission("admin_console")), server: Any = Depends(get_server)
 ) -> dict[str, Any]:
     from octop.infra.metrics import METRICS
 

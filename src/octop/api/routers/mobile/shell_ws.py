@@ -75,7 +75,7 @@ async def adb_shell_ws(
         await _send_json(websocket, {"type": "error", "message": f"auth failed: {exc}"})
         await websocket.close(code=4001, reason=f"auth failed: {exc}")
         return
-    if not user_has_permission(user, "mobile.use"):
+    if not user_has_permission(user, "mobile"):
         await _send_json(websocket, {"type": "error", "message": "permission required"})
         await websocket.close(code=4003, reason="permission required")
         return

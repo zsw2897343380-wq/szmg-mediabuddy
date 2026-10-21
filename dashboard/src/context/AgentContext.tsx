@@ -10,8 +10,6 @@ import {
 import type { ReactNode } from "react";
 import { setActiveAgentId } from "../api/request";
 import { agentApi as legacyAgentApi } from "../api/modules/agent";
-import { useCurrentUser } from "../hooks/useCurrentUser";
-import { userCan } from "../utils/permissions";
 import {
   retainDisconnectedBridgeAgents,
   toBridgeShadowAgentId,
@@ -255,7 +253,7 @@ interface FetchAgentsResult {
  * falls back to a direct request if the legacy module hasn't been
  * regenerated yet.
  */
-async function fetchAgents(canViewBridge: boolean): Promise<FetchAgentsResult> {
+async function fetchAgents(): Promise<FetchAgentsResult> {
   const candidate = legacyAgentApi as Partial<ListAgentsResponse> &
     Record<string, unknown>;
   let local: OctopAgent[] = [];
@@ -266,9 +264,7 @@ async function fetchAgents(canViewBridge: boolean): Promise<FetchAgentsResult> {
     const { request } = await import("../api/request");
     local = await request<OctopAgent[]>("/agents");
   }
-  const { remote, liveConnectionIds } = canViewBridge
-    ? await fetchBridgeShadowAgents()
-    : { remote: [], liveConnectionIds: new Set<string>() };
+  const { remote, liveConnectionIds } = await fetchBridgeShadowAgents();
   if (remote.length === 0) {
     return { agents: local, liveConnectionIds };
   }
@@ -408,8 +404,6 @@ export function mapBridgeAgent(
 }
 
 export function AgentProvider({ children }: { children: ReactNode }) {
-  const currentUser = useCurrentUser();
-  const canViewBridge = userCan(currentUser, "bridge.view");
   const [agents, setAgents] = useState<OctopAgent[]>([]);
   const [activeAgentId, setActiveAgentIdState] = useState<string | null>(null);
   const activeAgentIdRef = useRef<string | null>(null);
@@ -435,9 +429,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       }
       setError(null);
       try {
-        const { agents: list, liveConnectionIds } = await fetchAgents(
-          canViewBridge,
-        );
+        const { agents: list, liveConnectionIds } = await fetchAgents();
         // Only update state when content actually changed, to prevent
         // unnecessary re-renders of every component subscribed to this context
         // (the chat page polls every 10 s to refresh unread badges).
@@ -481,7 +473,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [canViewBridge, persistAndApply],
+    [persistAndApply],
   );
 
   // Initial fetch — fire once on mount. Login flow lives elsewhere; this

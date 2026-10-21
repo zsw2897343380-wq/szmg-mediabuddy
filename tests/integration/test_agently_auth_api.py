@@ -10,10 +10,8 @@ from tests.support.auth import create_user
 
 async def test_agently_auth_owner_routes_and_isolation(env_with_agent, monkeypatch):
     client, _, admin, _ = env_with_agent
-    owner = await create_user(client, admin, username="mail-owner", permissions=["connectors"])
-    stranger = await create_user(
-        client, admin, username="mail-stranger", permissions=["connectors"]
-    )
+    owner = await create_user(client, admin, username="mail-owner", permissions=[])
+    stranger = await create_user(client, admin, username="mail-stranger", permissions=[])
     response = await client.post(
         "/api/connector-instances",
         headers=owner,

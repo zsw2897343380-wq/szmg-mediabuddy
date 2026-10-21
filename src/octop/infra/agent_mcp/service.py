@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 
 from octop_gateway.models import ChannelSubject, InboundMessage, TextContent
 
-from octop.infra.agents.experts.access import assert_expert_use
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.hitl.coordinator import (
     HitlStreamContext,
@@ -15,7 +14,6 @@ from octop.infra.gateway.hitl.coordinator import (
 )
 from octop.infra.gateway.hitl.format import normalize_hitl_request
 from octop.infra.gateway.threads import ThreadRegistry
-from octop.infra.users.public_resources import PublicResourcePolicy
 from octop.infra.utils.ulid import new_ulid
 
 if TYPE_CHECKING:
@@ -34,16 +32,9 @@ _DECISION_TYPES = frozenset({"approve", "edit", "reject", "respond"})
 class AgentMcpGatewayService:
     """Expose accessible Octop experts through a small, isolated call surface."""
 
-    def __init__(
-        self,
-        *,
-        agent_manager: AgentManager,
-        gateway: Gateway,
-        resource_policy: PublicResourcePolicy,
-    ) -> None:
+    def __init__(self, *, agent_manager: AgentManager, gateway: Gateway) -> None:
         self._agent_manager = agent_manager
         self._gateway = gateway
-        self._resource_policy = resource_policy
 
     def list_experts(self, user: User) -> dict[str, Any]:
         experts = []
@@ -230,17 +221,13 @@ class AgentMcpGatewayService:
             raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"expert {expert_id!r} not found")
         if not self._can_access(row, user):
             raise OctopError(ErrorCode.FORBIDDEN, "expert is not accessible")
-        assert_expert_use(user, row)
         if not row.enabled:
             raise OctopError(ErrorCode.AGENT_NOT_RUNNING, "expert is disabled")
         return row
 
-    def _can_access(self, row: Any, user: User) -> bool:
-        return bool(
-            user.is_admin
-            or row.user_id == user.id
-            or (row.is_shared and self._resource_policy.allows("shared_expert", row.agent_id))
-        )
+    @staticmethod
+    def _can_access(row: Any, user: User) -> bool:
+        return bool(user.is_admin or row.user_id == user.id or row.is_shared)
 
     @staticmethod
     def _validate_message(message: str) -> str:

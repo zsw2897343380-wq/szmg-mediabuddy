@@ -2108,25 +2108,3 @@ def run_migrations(db: DatabasePool) -> None:
     _ensure_bridge_connections_schema(db)
     _grant_default_nav_permissions(db)
     _grant_personalization_tab_permissions(db)
-    _seed_media_role_presets(db)
-
-
-def _seed_media_role_presets(db: DatabasePool) -> None:
-    """Install presets once; preserve administrator edits and deletions."""
-    from octop.infra.users.role_presets import ROLE_PRESETS
-
-    if not _table_exists(db, "settings"):
-        return
-    flag = "media_role_presets_v1"
-    with db.transaction() as conn:
-        if conn.execute("SELECT value FROM settings WHERE key = ?", (flag,)).fetchone():
-            return
-        ts = int(time.time())
-        for role_id, name, description, permissions in ROLE_PRESETS:
-            conn.execute(
-                "INSERT INTO user_role("
-                "user_role_id, user_role_name, description, permissions, policies, created_at, updated_at"
-                ") VALUES (?, ?, ?, ?, '[]', ?, ?) ON CONFLICT DO NOTHING",
-                (role_id, name, description, json.dumps(sorted(permissions)), ts, ts),
-            )
-        conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)", (flag, "1"))

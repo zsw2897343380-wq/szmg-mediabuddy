@@ -27,7 +27,6 @@ import {
 import type { MinimalNavPane } from "./layoutModeStorage";
 import MinimalRecordsHost from "./MinimalRecordsHost";
 import SidebarCollapsedIconNav from "./SidebarCollapsedIconNav";
-import { userCan } from "../utils/permissions";
 import SidebarMinimalPaneToggle from "./SidebarMinimalPaneToggle";
 import { preferencesApi } from "../api/modules/preferences";
 import {
@@ -585,12 +584,10 @@ export default function Sidebar({
   );
 
   useEffect(() => {
-    if (isMinimal && !userCan(user, "records")) {
-      setMinimalPane("settings");
-    } else if (isMinimal && !settingsPaneLabel && minimalPane === "settings") {
+    if (isMinimal && !settingsPaneLabel && minimalPane === "settings") {
       setMinimalPane("records");
     }
-  }, [isMinimal, settingsPaneLabel, minimalPane, setMinimalPane, user]);
+  }, [isMinimal, settingsPaneLabel, minimalPane, setMinimalPane]);
 
   const paneToggle = settingsPaneLabel ? (
     <SidebarMinimalPaneToggle
@@ -598,7 +595,6 @@ export default function Sidebar({
       minimalPane={minimalPane}
       collapsed={isRailCollapsed}
       onSelect={selectMinimalPane}
-      recordsAllowed={userCan(user, "records")}
     />
   ) : null;
 
@@ -702,29 +698,25 @@ export default function Sidebar({
         className={styles.minimalRecordsPane}
         hidden={isRailCollapsed || minimalPane !== "records"}
       >
-        {!onChatPath && userCan(user, "records") ? (
-          <MinimalRecordsHost />
-        ) : null}
+        {!onChatPath ? <MinimalRecordsHost /> : null}
       </div>
     </div>
   );
 
   const navScrollBody = (
     <>
-      {userCan(user, "chat.use") && (
-        <button
-          type="button"
-          className={`${styles.newChatButton} ${
-            isRailCollapsed ? styles.newChatButtonCollapsed : ""
-          } ${onChatPath ? styles.newChatButtonActive : ""}`}
-          onClick={startNewChat}
-          aria-label={t("chatWelcome.newChat")}
-          title={t("chatWelcome.newChat")}
-        >
-          <MessageSquarePlus size={17} strokeWidth={1.8} />
-          {!isRailCollapsed && t("chatWelcome.newChat")}
-        </button>
-      )}
+      <button
+        type="button"
+        className={`${styles.newChatButton} ${
+          isRailCollapsed ? styles.newChatButtonCollapsed : ""
+        } ${onChatPath ? styles.newChatButtonActive : ""}`}
+        onClick={startNewChat}
+        aria-label={t("chatWelcome.newChat")}
+        title={t("chatWelcome.newChat")}
+      >
+        <MessageSquarePlus size={17} strokeWidth={1.8} />
+        {!isRailCollapsed && t("chatWelcome.newChat")}
+      </button>
       {isMinimal ? minimalNavBody : classicNavBody}
     </>
   );

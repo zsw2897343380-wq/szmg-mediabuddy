@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from octop.api.common.agent import assert_agent_access
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import current_user, get_server
 from octop.api.routers.chat.models import DefaultChatAgentResponse, HitlResumeBody, PolishBody
 from octop.api.routers.chat.sse import format_sse
 from octop.i18n.domains.stream import format_stream_error
@@ -67,7 +67,7 @@ _POLISH_SYSTEM_PROMPT = (
 )
 async def ensure_default_chat(
     request: Request,
-    user: Any = Depends(require_permission("chat.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> DefaultChatAgentResponse:
     assert server.app_runtime is not None
@@ -269,7 +269,7 @@ async def resume_hitl(
     agent_id: str,
     body: HitlResumeBody,
     request: Request,
-    user: Any = Depends(require_permission("chat.use")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     """Resume a paused human-in-the-loop tool approval and stream subsequent chunks."""
@@ -335,7 +335,7 @@ async def resume_hitl(
 async def polish_prompt(
     agent_id: str,
     body: PolishBody,
-    user: Any = Depends(require_permission("chat.use")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, str]:
     """One-shot prompt refinement without touching thread history."""

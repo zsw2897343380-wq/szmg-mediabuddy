@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_access, require_agent_row, user_owns_agent
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import current_user, get_server
 from octop.infra.agents.experts.catalog import resolve_agent_display_task_examples
 from octop.infra.cron.task_type import (
     normalize_cron_task_type,
@@ -107,7 +107,7 @@ async def cron_settings(
 )
 async def cron_examples(
     agent_id: str,
-    user: Any = Depends(require_permission("tasks.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> CronExamplesResponse:
     """Same resolution as ``GET …/chat/welcome`` ``task_examples`` (API compat)."""
@@ -125,7 +125,7 @@ async def cron_examples(
 @router.get("/agents/{agent_id}/cron", summary="List cron jobs")
 async def list_cron(
     agent_id: str,
-    user: Any = Depends(require_permission("tasks.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """List scheduled jobs for an agent."""
@@ -142,7 +142,7 @@ async def list_cron(
 async def create_cron(
     agent_id: str,
     body: CronCreateBody,
-    user: Any = Depends(require_permission("tasks.create")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Schedule a prompt on a timer or on new mail from a visible Agent Mail instance."""
@@ -187,7 +187,7 @@ async def list_cron_records(
     cron_id: str | None = Query(default=None, description="Filter to one visible task."),
     limit: int = Query(default=100, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    user: Any = Depends(require_permission("tasks.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> CronRunRecordsResponse:
     from octop.infra.cron.history import list_cron_run_records  # noqa: PLC0415
@@ -216,7 +216,7 @@ async def list_cron_records(
 async def get_cron(
     agent_id: str,
     cron_id: str,
-    user: Any = Depends(require_permission("tasks.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return one scheduled job by id."""
@@ -233,7 +233,7 @@ async def patch_cron(
     agent_id: str,
     cron_id: str,
     body: CronPatchBody,
-    user: Any = Depends(require_permission("tasks.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Update trigger, prompt, session binding, or enabled flag."""
@@ -278,7 +278,7 @@ async def patch_cron(
 async def delete_cron(
     agent_id: str,
     cron_id: str,
-    user: Any = Depends(require_permission("tasks.delete")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> None:
     """Remove a scheduled job."""
@@ -295,7 +295,7 @@ async def delete_cron(
 async def run_now(
     agent_id: str,
     cron_id: str,
-    user: Any = Depends(require_permission("tasks.use")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> None:
     """Trigger an immediate one-off run without waiting for the schedule."""

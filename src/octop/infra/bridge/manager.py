@@ -50,8 +50,6 @@ from octop.infra.db.repos.bridge_connections import BridgeConnectionRepo, Bridge
 from octop.infra.db.repos.secrets import SecretRepo
 from octop.infra.db.repos.users import UserRepo
 from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.users.identity import User
-from octop.infra.users.permissions import assert_permission
 from octop.infra.utils.ulid import new_short_id
 
 logger = logging.getLogger(__name__)
@@ -556,7 +554,6 @@ class BridgeManager:
             access_token_blob=token_blob,
             token_expires_at=expires_at,
             status="connecting" if connect else "disconnected",
-            auto_reconnect=connect,
         )
         if not connect:
             return self._repo.get(connection_id) or row
@@ -587,19 +584,6 @@ class BridgeManager:
         await self.disconnect(connection_id)
         self._repo.delete(connection_id)
 
-    def _assert_owner_can_connect(self, user_id: int) -> None:
-        row = self._users.get(user_id)
-        if row is None or row.disabled:
-            raise OctopError(ErrorCode.USER_DISABLED, "connection owner is not active")
-        user = User(
-            id=row.id,
-            username=row.username,
-            role=str(row.role),
-            display_name=row.display_name,
-            permissions=list(row.permissions),
-        )
-        assert_permission(user, "bridge.use")
-
     async def connect(self, connection_id: str, *, owner_user_id: int) -> BridgeConnectionRow:
         row = self.get_owned(connection_id, owner_user_id)
         if _is_inbound(row):
@@ -607,7 +591,6 @@ class BridgeManager:
                 ErrorCode.BRIDGE_INBOUND_PASSIVE,
                 "inbound bridge cannot dial out",
             )
-        self._assert_owner_can_connect(owner_user_id)
         self._user_stopped.discard(connection_id)
         async with self._lock:
             existing = self._sessions.get(connection_id)
@@ -844,12 +827,6 @@ class BridgeManager:
                 return
             row = self._repo.get(connection_id)
             if row is None:
-                return
-            try:
-                self._assert_owner_can_connect(row.owner_user_id)
-            except OctopError:
-                self._repo.set_auto_reconnect(connection_id, False)
-                self._repo.update_status(connection_id, status="disconnected")
                 return
             try:
                 token = await self._ensure_peer_token(row, force_refresh=retried_auth)

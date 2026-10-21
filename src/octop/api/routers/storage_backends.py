@@ -92,7 +92,7 @@ def _row_to_dict(r: Any) -> dict[str, Any]:
 
 @admin_router.get("")
 async def list_storage_backends(
-    _: Any = Depends(require_permission("storage_backends.view")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     return [_row_to_dict(r) for r in server.services.storage_backend_repo.list_all()]
@@ -101,7 +101,7 @@ async def list_storage_backends(
 @admin_router.post("", status_code=201)
 async def create_storage_backend(
     body: StorageBackendCreateBody,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     if server.services.storage_backend_repo.get_by_name(body.name) is not None:
@@ -125,7 +125,7 @@ async def create_storage_backend(
 async def patch_storage_backend(
     backend_id: int,
     body: StorageBackendPatchBody,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     row = server.services.storage_backend_repo.get(backend_id)
@@ -185,7 +185,7 @@ async def patch_storage_backend(
 @admin_router.delete("/{backend_id}", status_code=204)
 async def delete_storage_backend(
     backend_id: int,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> None:
     row = server.services.storage_backend_repo.get(backend_id)
@@ -208,7 +208,7 @@ async def delete_storage_backend(
 @admin_router.post("/probe")
 async def probe_storage_backend_config(
     body: StorageBackendProbeBody,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Probe connectivity from unsaved form values (optional merge with stored row)."""
@@ -255,7 +255,7 @@ def _storage_browse_octop_error(exc: BaseException) -> OctopError:
 async def list_storage_backend_tree(
     backend_id: int,
     path: str = "/",
-    _: Any = Depends(require_permission("storage_backends.view")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """Single-level directory listing for a configured storage backend."""
@@ -279,7 +279,7 @@ async def list_storage_backend_tree(
 async def read_storage_backend_file(
     backend_id: int,
     path: str = Query(..., min_length=1),
-    _: Any = Depends(require_permission("storage_backends.view")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read a UTF-8 text file for the storage browse preview pane."""
@@ -302,7 +302,7 @@ async def download_storage_backend_file(
     backend_id: int,
     path: str = Query(..., min_length=1),
     preview: bool = Query(default=False),
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> Response:
     """Return file bytes for media / document preview and download."""
@@ -333,7 +333,7 @@ async def download_storage_backend_file(
 @admin_router.delete("/{backend_id}/browse", status_code=204)
 async def close_storage_backend_browse(
     backend_id: int,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> None:
     """Release the cached browse backend (Docker container + temp dir)."""
@@ -348,7 +348,7 @@ async def close_storage_backend_browse(
 @admin_router.post("/{backend_id}/test")
 async def test_storage_backend(
     backend_id: int,
-    _: Any = Depends(require_permission("storage_backends.edit")),
+    _: Any = Depends(require_permission("storage_backends")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Best-effort connectivity / configuration probe for one backend."""

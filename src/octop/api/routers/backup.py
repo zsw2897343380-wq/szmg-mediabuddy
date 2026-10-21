@@ -212,7 +212,7 @@ async def _rehydrate_runtime_after_restore(server: Any) -> None:
 
 @router.get("/backup/list", summary="List stored backup archives")
 async def list_backups(
-    _: Any = Depends(require_permission("backup.view")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """List ``.tar.gz`` files in ``~/.octop/backups/``.
@@ -228,7 +228,7 @@ async def list_backups(
 
 @router.get("/backup/status", summary="Whether a backup or restore is in progress")
 async def get_backup_status(
-    _: Any = Depends(require_permission("backup.view")),
+    _: Any = Depends(require_permission("backup")),
 ) -> dict[str, Any]:
     """Return lock state for dashboard busy UI across navigation / refresh."""
     return backup_status_payload()
@@ -236,7 +236,7 @@ async def get_backup_status(
 
 @router.get("/backup/auto", summary="Get automatic backup settings")
 async def get_auto_backup_settings(
-    _: Any = Depends(require_permission("backup.view")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return auto-backup config and whether the system job is currently scheduled."""
@@ -246,7 +246,7 @@ async def get_auto_backup_settings(
 @router.put("/backup/auto", summary="Update automatic backup settings")
 async def put_auto_backup_settings(
     body: AutoBackupSettingsBody,
-    _: Any = Depends(require_permission("backup.edit")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Persist auto-backup settings and reschedule the in-process system job."""
@@ -257,7 +257,7 @@ async def put_auto_backup_settings(
 
 @router.post("/backup/auto/run", summary="Run automatic backup now")
 async def run_auto_backup_now(
-    _: Any = Depends(require_permission("backup.create")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create one automatic backup immediately (same path as the scheduled job)."""
@@ -274,7 +274,7 @@ async def run_auto_backup_now(
 @router.post("/backup/create", summary="Create backup and save to backups dir")
 async def create_backup(
     body: CreateBackupBody | None = None,
-    _: Any = Depends(require_permission("backup.create")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create a selected-content backup and persist it under ``backups_dir``."""
@@ -300,7 +300,7 @@ async def create_backup(
 )
 async def download_backup_file(
     filename: str,
-    _: Any = Depends(require_permission("backup.export")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> FileResponse:
     """Stream a backup file from ``backups_dir`` without loading it into memory."""
@@ -318,7 +318,7 @@ async def download_backup_file(
 async def restore_backup_file(
     filename: str,
     restore_config: bool = Query(default=True),
-    user: Any = Depends(require_permission("backup.restore")),
+    user: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Restore database and workspaces from a file in ``backups_dir``.
@@ -361,7 +361,7 @@ async def restore_backup_file(
 @router.delete("/backup/files/{filename}", summary="Delete a stored backup", status_code=204)
 async def remove_backup_file(
     filename: str,
-    _: Any = Depends(require_permission("backup.delete")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> None:
     """Remove a backup archive from ``backups_dir``."""
@@ -382,7 +382,7 @@ async def export_backup(
     include_plugins: bool = Query(default=True),
     include_knowledge: bool = Query(default=True),
     include_chats: bool = Query(default=False),
-    _: Any = Depends(require_permission("backup.export")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> FileResponse:
     """Create and stream a backup without persisting to ``backups_dir``."""
@@ -416,7 +416,7 @@ async def export_backup(
 @router.post("/backup/import", summary="Upload backup archive to backups dir")
 async def import_backup(
     file: UploadFile = File(...),  # noqa: B008
-    _: Any = Depends(require_permission("backup.restore")),
+    _: Any = Depends(require_permission("backup")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Save an uploaded ``.tar.gz`` into ``backups_dir`` (does not restore)."""

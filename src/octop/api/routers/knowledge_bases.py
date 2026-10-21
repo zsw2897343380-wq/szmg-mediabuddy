@@ -57,7 +57,6 @@ from octop.infra.knowledge.service import (
 )
 from octop.infra.server import OctopServer
 from octop.infra.users.identity import User
-from octop.infra.users.permissions import assert_permission
 from octop.infra.utils.locale import resolve_request_locale
 
 router = APIRouter(prefix="/knowledge-bases")
@@ -329,7 +328,7 @@ async def embedding_options(
         description="Include the full local ONNX catalog instead of the three recommended models",
     ),
     server: OctopServer = Depends(get_server),
-    _admin: User = Depends(require_permission("knowledge_settings.view")),
+    _admin: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     assert server.services is not None
     remote = []
@@ -361,7 +360,7 @@ async def embedding_options(
 @router.get("/ocr-options", summary="List knowledge OCR backend options")
 async def ocr_options(
     server: OctopServer = Depends(get_server),
-    _admin: User = Depends(require_permission("knowledge_settings.view")),
+    _admin: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     assert server.services is not None
     remote = []
@@ -394,7 +393,7 @@ async def put_feature(
     body: FeatureBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    _admin: User = Depends(require_permission("knowledge_settings.edit")),
+    _admin: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     assert server.services is not None
     previous = get_capability(server.services.settings_repo.get, server.services.provider_repo)
@@ -475,7 +474,7 @@ async def put_feature(
 async def start_onnx_download(
     body: OnnxDownloadBody,
     request: Request,
-    _: User = Depends(require_permission("knowledge_settings.edit")),
+    _: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     try:
         state = await DOWNLOAD_MANAGER.start_download(body.model.strip())
@@ -486,7 +485,7 @@ async def start_onnx_download(
 
 @router.get("/onnx-download-status", summary="Poll ONNX embedding model download progress")
 async def onnx_download_status(
-    _: User = Depends(require_permission("knowledge_settings.view")),
+    _: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     return DOWNLOAD_MANAGER.state.to_dict()
 
@@ -496,7 +495,7 @@ async def activate_onnx_service(
     body: OnnxDownloadBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    _: User = Depends(require_permission("knowledge_settings.edit")),
+    _: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     try:
         await ensure_local_embedding_deps_async(allow_install=True)
@@ -512,7 +511,7 @@ async def activate_onnx_service(
 @router.post("/onnx-test", summary="Probe the selected local ONNX embedding model")
 async def test_onnx_model(
     body: OnnxDownloadBody,
-    _: User = Depends(require_permission("knowledge_settings.edit")),
+    _: User = Depends(require_permission("knowledge_settings")),
 ) -> dict[str, Any]:
     """Verify the model actually embeds, on-device.
 
@@ -525,7 +524,7 @@ async def test_onnx_model(
 @router.get("", summary="List visible knowledge bases")
 async def list_bases(
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.view")),
+    user: User = Depends(current_user),
 ) -> list[dict[str, Any]]:
     return [
         _base_payload(server, base)
@@ -540,10 +539,8 @@ async def create_base(
     body: CreateBaseBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.create")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
-    if body.shared:
-        assert_permission(user, "knowledge_bases.publish")
     locale = resolve_request_locale(request)
     try:
         _require_usable(server, request)
@@ -583,7 +580,7 @@ async def get_base(
     kb_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.view")),
+    user: User = Depends(current_user),
 ) -> dict[str, Any]:
     try:
         return _base_payload(
@@ -604,10 +601,8 @@ async def update_base(
     body: UpdateBaseBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.edit")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
-    if body.shared is not None:
-        assert_permission(user, "knowledge_bases.publish")
     try:
         return _base_payload(
             server,
@@ -636,7 +631,7 @@ async def delete_base(
     kb_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.delete")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> None:
     try:
         _knowledge_service(server).delete_base(
@@ -657,7 +652,7 @@ async def list_documents(
         description="When set, only immediate children of this relative folder path.",
     ),
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.view")),
+    user: User = Depends(current_user),
 ) -> list[dict[str, Any]]:
     try:
         return [
@@ -682,7 +677,7 @@ async def create_folder(
     body: CreateFolderBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.upload")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     try:
         folder = _knowledge_service(server).create_folder(
@@ -705,7 +700,7 @@ async def create_text_document(
     body: CreateTextDocumentBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.upload")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     locale = resolve_request_locale(request)
     try:
@@ -741,7 +736,7 @@ async def upload_document(
         description="Optional relative path including filename (for nested folders).",
     ),
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.upload")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     locale = resolve_request_locale(request)
     try:
@@ -776,7 +771,7 @@ async def preview_document(
     doc_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.view")),
+    user: User = Depends(current_user),
 ) -> dict[str, Any]:
     try:
         return _knowledge_service(server).preview_document(
@@ -803,7 +798,7 @@ async def download_document_file(
         description="Content-Disposition type: attachment (download) or inline (preview).",
     ),
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.export")),
+    user: User = Depends(current_user),
 ) -> FileResponse:
     try:
         path, filename, content_type = _knowledge_service(server).resolve_document_file(
@@ -829,7 +824,7 @@ async def get_text_document(
     doc_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.view")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     try:
         return _knowledge_service(server).read_text_document(
@@ -851,7 +846,7 @@ async def update_text_document(
     body: UpdateTextDocumentBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.edit")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     locale = resolve_request_locale(request)
     try:
@@ -880,7 +875,7 @@ async def rename_document(
     body: RenameDocumentBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.edit")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     try:
         document = _knowledge_service(server).rename_document(
@@ -907,7 +902,7 @@ async def delete_document(
     doc_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.delete")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> None:
     try:
         _knowledge_service(server).delete_document(
@@ -928,7 +923,7 @@ async def reindex_document(
     doc_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.edit")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, Any]:
     try:
         _require_usable(server, request)
@@ -949,7 +944,7 @@ async def reindex_base(
     kb_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: User = Depends(require_permission("knowledge_bases.edit")),
+    user: User = Depends(require_permission("knowledge_bases")),
 ) -> dict[str, int]:
     try:
         _require_usable(server, request)

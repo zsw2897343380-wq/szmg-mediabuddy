@@ -111,11 +111,7 @@ def _decode(server: OctopServer, token: str) -> dict[str, Any]:
 def resolve_user_from_token(server: OctopServer, token: str) -> User:
     payload = _decode(server, token)
     assert server.user_manager is not None
-    try:
-        user_id = int(payload["sub"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise OctopError(ErrorCode.AUTH_FAILED, "invalid token subject") from exc
-    user = server.user_manager.get_by_id(user_id)
+    user = server.user_manager.get_by_id(int(payload["sub"]))
     if user is None:
         raise OctopError(ErrorCode.USER_DISABLED, "user not active")
     return user
@@ -198,21 +194,6 @@ def require_admin() -> Callable[..., Awaitable[User]]:
     async def _dep(user: User = Depends(current_user)) -> User:
         if not user.is_admin:
             raise OctopError(ErrorCode.FORBIDDEN, "admin required")
-        return user
-
-    return _dep
-
-
-def require_any_permission(*keys: str) -> Callable[..., Awaitable[User]]:
-    """Require one of several operations sharing an HTTP resource."""
-    if not keys or any(key not in PERMISSIONS for key in keys):
-        raise RuntimeError(f"unknown permission keys: {keys}")
-
-    async def _dep(user: User = Depends(current_user)) -> User:
-        if not any(user_has_permission(user, key) for key in keys):
-            raise OctopError(
-                ErrorCode.FORBIDDEN, "permission required", details={"permissions": list(keys)}
-            )
         return user
 
     return _dep

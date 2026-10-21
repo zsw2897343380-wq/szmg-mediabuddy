@@ -311,7 +311,7 @@ async def list_atoms(
     agent_id: str,
     body: _ListAtomsBody = Body(default_factory=_ListAtomsBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -332,7 +332,7 @@ async def list_raw_events(
     agent_id: str,
     body: _ListRawEventsBody = Body(default_factory=_ListRawEventsBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -353,7 +353,7 @@ async def list_entities(
     agent_id: str,
     body: _ListEntitiesBody = Body(default_factory=_ListEntitiesBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -374,7 +374,7 @@ async def list_episodes(
     agent_id: str,
     body: _ListEpisodesBody = Body(default_factory=_ListEpisodesBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -395,7 +395,7 @@ async def list_journal(
     agent_id: str,
     body: _ListJournalBody = Body(default_factory=_ListJournalBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -416,7 +416,7 @@ async def list_candidates(
     agent_id: str,
     body: _ListCandidatesBody = Body(default_factory=_ListCandidatesBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -442,7 +442,7 @@ async def get_raw_event(
     agent_id: str,
     event_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -463,7 +463,7 @@ async def get_candidate(
     agent_id: str,
     candidate_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -484,7 +484,7 @@ async def get_atom(
     agent_id: str,
     atom_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -505,7 +505,7 @@ async def get_entity(
     agent_id: str,
     entity_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -526,7 +526,7 @@ async def get_episode(
     agent_id: str,
     episode_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -551,7 +551,7 @@ async def get_episode(
 async def stats_counts(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -572,7 +572,7 @@ async def stats_growth(
     agent_id: str,
     days: int = Query(default=7, ge=1, le=90),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -592,7 +592,7 @@ async def stats_growth(
 async def stats_atom_kinds(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -613,7 +613,7 @@ async def recent_journal(
     agent_id: str,
     limit: int = Query(default=5, ge=1, le=100),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -639,7 +639,7 @@ async def promote_candidate(
     agent_id: str,
     candidate_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -661,7 +661,7 @@ async def reject_candidate(
     candidate_id: str,
     body: _RejectCandidateBody = Body(default_factory=_RejectCandidateBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     params = _strip_none({"candidate_id": candidate_id, **body.model_dump()})
@@ -684,7 +684,7 @@ async def deprecate_atom(
     atom_id: str,
     body: _DeprecateAtomBody = Body(default_factory=_DeprecateAtomBody),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     params = _strip_none({"atom_id": atom_id, **body.model_dump()})
@@ -713,7 +713,7 @@ async def create_atom(
     agent_id: str,
     body: _CreateAtomBody,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     return cast(
@@ -742,7 +742,7 @@ async def replace_atom(
     atom_id: str,
     body: _ReplaceAtomBody,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     params = _strip_none({"atom_id": atom_id, **body.model_dump()})
@@ -890,7 +890,7 @@ def _coerce_aux_extra_body(value: Any) -> dict[str, Any] | None:
 async def get_extract_config(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("memory.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Return memory extraction timing and independent model call options."""
@@ -905,7 +905,7 @@ async def get_extract_config(
 async def put_extract_config(
     agent_id: str,
     body: _ExtractConfigBody = Body(default_factory=_ExtractConfigBody),
-    user: Any = Depends(require_permission("memory.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Persist the extraction-trigger config and hot-reload the agent.

@@ -206,7 +206,7 @@ async def update_status(
 
 @router.post("/check")
 async def check_for_updates(
-    _: Any = Depends(require_permission("update.edit")),
+    _: Any = Depends(require_permission("update")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     stable_only = _read_stable_only(server)
@@ -235,7 +235,7 @@ async def check_for_updates(
 async def update_settings(
     body: UpdateSettingsBody,
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("update.edit")),
+    _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
     """Persist whether automatic checks should ignore pre-release versions."""
     server.services.settings_repo.set(_STABLE_ONLY_KEY, "true" if body.stable_only else "false")
@@ -326,7 +326,7 @@ async def trigger_upgrade(
     request: Request,
     body: UpgradeBody = Body(default_factory=UpgradeBody),
     server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("update.edit")),
+    _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
     if get_editable_path() is not None:
         raise OctopError(
@@ -362,7 +362,7 @@ async def trigger_upgrade(
 @router.get("/progress")
 async def upgrade_progress(
     task_id: str = Query(...),
-    _: Any = Depends(require_permission("update.view")),
+    _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
     task = await get_task(task_id)
     if task is None:
@@ -414,7 +414,7 @@ def _restart_service_task(runtime: ServiceRuntime) -> None:
 async def restart_service_endpoint(
     background_tasks: BackgroundTasks,
     server: OctopServer = Depends(get_server),
-    _: Any = Depends(require_permission("update.edit")),
+    _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
     if _is_desktop_process():
         background_tasks.add_task(_restart_desktop_process, server)

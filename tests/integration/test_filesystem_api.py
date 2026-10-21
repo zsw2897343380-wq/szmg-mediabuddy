@@ -204,13 +204,7 @@ async def test_non_admin_can_list_outside_home(
     monkeypatch.setattr("octop.infra.utils.host_dirs.Path.home", lambda: home)
     monkeypatch.setenv("OCTOP_IN_CONTAINER", "0")
 
-    user_auth = await create_user(
-        client,
-        admin_auth,
-        username="alice",
-        password="TestPass12",
-        permissions=["storage_backends.edit"],
-    )
+    user_auth = await create_user(client, admin_auth, username="alice", password="TestPass12")
 
     defaults = await client.get("/api/filesystem/defaults", headers=user_auth)
     assert defaults.status_code == 200, defaults.text
@@ -375,13 +369,7 @@ async def test_filesystem_respects_user_workspace_root(
     nested.mkdir()
     outside.mkdir()
 
-    user_auth = await create_user(
-        client,
-        admin_auth,
-        username="fs_policy",
-        password=TEST_PASSWORD,
-        permissions=["storage_backends.edit"],
-    )
+    user_auth = await create_user(client, admin_auth, username="fs_policy", password=TEST_PASSWORD)
     listed = (await client.get("/api/users", headers=admin_auth)).json()
     uid = next(u["id"] for u in listed if u["username"] == "fs_policy")
     patched = await client.patch(

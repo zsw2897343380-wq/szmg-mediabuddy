@@ -99,26 +99,3 @@ def test_cli_and_seed_follow_preset_user_role(tmp_path: Path) -> None:
     assert assignment is not None
     assert assignment[0] == "user"
     db.close()
-
-
-def test_media_presets_are_explicit_and_preserve_changes(tmp_path: Path) -> None:
-    from octop.infra.users.permissions import validate_permission_keys
-    from octop.infra.users.role_presets import ROLE_PRESETS
-
-    db = SqlitePool(tmp_path / "presets.db")
-    run_migrations(db)
-    roles = UserRoleRepo(db)
-    for role_id, name, _, permissions in ROLE_PRESETS:
-        role = roles.get(role_id)
-        assert role is not None and role.user_role_name == name
-        assert set(role.permissions) == permissions
-        validate_permission_keys(role.permissions)
-        assert all("." in key for key in permissions)
-        assert "users.permissions" not in permissions
-    assert "token_usage.all" not in roles.get("media_reader").permissions
-    assert "public_resources.skills" in roles.get("media_operator").permissions
-    roles.update("media_reader", permissions=["chat.view"])
-    roles.delete("media_creator")
-    run_migrations(db)
-    assert roles.get("media_reader").permissions == ["chat.view"]
-    assert roles.get("media_creator") is None

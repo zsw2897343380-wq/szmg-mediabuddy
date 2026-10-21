@@ -105,14 +105,7 @@ export default function AssistantsPage() {
     personal[0];
   const selectedId = selected?.agent_id;
   const selectedState = selected?.state;
-  const canManage =
-    userCan(user, "assistants.edit") || userCan(user, "experts.edit");
-  const canCreate =
-    userCan(user, "assistants.create") || userCan(user, "experts.create");
-  const canDelete =
-    userCan(user, "assistants.delete") || userCan(user, "experts.delete");
-  const canRun =
-    userCan(user, "assistants.use") || userCan(user, "experts.use");
+  const canManage = userCan(user, "experts");
   const canChannels = userCan(user, "channels");
   const canMemory = userCan(user, "memory");
 
@@ -277,7 +270,7 @@ export default function AssistantsPage() {
       ),
       onClick: () => togglePin(agent.agent_id),
     },
-    ...(canDelete && agent.agent_id !== "main" && !isDefaultChatAgent(agent)
+    ...(canManage && agent.agent_id !== "main" && !isDefaultChatAgent(agent)
       ? [
           {
             key: "delete",
@@ -328,7 +321,7 @@ export default function AssistantsPage() {
             />
             {t("assistants.myAssistants")} ({specialists.length})
           </button>
-          {canCreate && (
+          {canManage && (
             <Button
               type="text"
               size="small"
@@ -414,7 +407,7 @@ export default function AssistantsPage() {
             <Bot size={48} />
             <h2>{t("assistants.emptyTitle")}</h2>
             <p>{t("assistants.emptyDescription")}</p>
-            {canCreate && (
+            {canManage && (
               <Button type="primary" icon={<Plus size={16} />} onClick={create}>
                 {t("assistants.create")}
               </Button>
@@ -516,11 +509,7 @@ export default function AssistantsPage() {
                           type="primary"
                           icon={<MessageSquare size={16} />}
                           onClick={openChat}
-                          disabled={
-                            selected.state !== "running" ||
-                            !userCan(user, "chat.use") ||
-                            !canRun
-                          }
+                          disabled={selected.state !== "running"}
                         >
                           {t("assistants.startChat")}
                         </Button>
@@ -529,7 +518,7 @@ export default function AssistantsPage() {
                             {t("assistants.edit")}
                           </Button>
                         )}
-                        {canRun && (
+                        {canManage && (
                           <Button
                             loading={busy}
                             disabled={["starting", "stopping"].includes(
@@ -653,11 +642,7 @@ export default function AssistantsPage() {
                     <Button
                       type="primary"
                       icon={<Plus size={16} />}
-                      disabled={
-                        selected.state !== "running" ||
-                        !userCan(user, "chat.use") ||
-                        !canRun
-                      }
+                      disabled={selected.state !== "running"}
                       onClick={openChat}
                     >
                       {t("assistants.newTask")}
@@ -735,9 +720,7 @@ export default function AssistantsPage() {
                                   icon={<Trash2 size={16} />}
                                   aria-label={t("assistants.deleteTask")}
                                   disabled={Boolean(
-                                    thread.turn_active ||
-                                      thread.awaiting_user ||
-                                      !userCan(user, "records.delete"),
+                                    thread.turn_active || thread.awaiting_user,
                                   )}
                                   onClick={() => deleteTask(thread)}
                                 />

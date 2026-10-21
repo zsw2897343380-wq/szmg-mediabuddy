@@ -21,7 +21,7 @@ from octop.api.common.workspace import (
     require_running_workspace,
     workspace_api_path,
 )
-from octop.api.deps import get_server, require_permission
+from octop.api.deps import current_user, get_server
 from octop.infra.backend.tree_listing import dedupe_tree_rows
 from octop.infra.backup.workspace_archive import export_workspace_zip, import_workspace_zip
 from octop.infra.errors import ErrorCode, OctopError
@@ -124,7 +124,7 @@ async def list_tree(
     path: str = "/",
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """Single-level directory listing under ``path`` (agent must be running)."""
@@ -159,7 +159,7 @@ async def read_file(
     path: str,
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read a UTF-8 text file."""
@@ -177,7 +177,7 @@ async def write_file(
     path: str,
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Overwrite ``path`` with ``body.content`` (text)."""
@@ -224,7 +224,7 @@ async def mkdir_workspace_dir(
         description="Mutating endpoints always treat paths as workspace-relative.",
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create a directory (and parents) under the agent workspace."""
@@ -254,7 +254,7 @@ async def delete_workspace_file(
         description="Mutating endpoints always treat paths as workspace-relative.",
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.delete")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> Response:
     """Remove a file or directory tree from the agent workspace."""
@@ -283,7 +283,7 @@ async def move_workspace_file(
         description="Mutating endpoints always treat paths as workspace-relative.",
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Move ``path`` to ``body.destination`` (rename when the parent directory is unchanged)."""
@@ -308,7 +308,7 @@ async def upload_file(
     path: str | None = Query(default=None),
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.upload")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Upload a binary file via multipart ``file=@...``."""
@@ -333,7 +333,7 @@ async def download_file(
     path: str,
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.export")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     """Stream ``path`` back as application/octet-stream.
@@ -372,7 +372,7 @@ async def read_doc(
     path: str,
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Read an editable document (e.g. ``.docx``) as Markdown for online editing."""
@@ -402,16 +402,14 @@ async def write_doc(
         description="Mutating endpoints always treat paths as workspace-relative.",
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.edit")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Convert Markdown *content* back to the document format and overwrite *path*."""
     _ = from_workspace  # Mutations always use workspace-relative paths.
     rel = _assert_workspace_mutable(path)
     converter = _ensure_editable_doc(path)
-    ws = await require_running_workspace(
-        agent_id, user=user, as_user=as_user, server=server, owner_only=True
-    )
+    ws = await require_running_workspace(agent_id, user=user, as_user=as_user, server=server)
     try:
         data = converter.from_markdown(body.content)
     except Exception as exc:
@@ -436,7 +434,7 @@ async def preview_media(
     source: str = Query(..., description="``file://`` URL or workspace-relative path"),
     mime_type: str | None = Query(default=None, alias="mime_type"),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     """Stream an image or video inline for dashboard tool-result previews."""
@@ -474,7 +472,7 @@ async def glob_files(
     path: str = "/",
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     ws = await require_running_workspace(
@@ -509,7 +507,7 @@ async def grep_files(
     path: str = "/",
     from_workspace: bool = Query(default=False, description=_FROM_WORKSPACE_DESC),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     ws = await require_running_workspace(
@@ -533,7 +531,7 @@ _MAX_WORKSPACE_ARCHIVE_BYTES = 200 * 1024 * 1024
 async def export_workspace_archive(
     agent_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.export")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     """Pack workspace files into a zip archive."""
@@ -558,7 +556,7 @@ async def import_workspace_archive(
     file: UploadFile = File(...),  # noqa: B008
     mode: Literal["merge", "replace"] = Query(default="merge"),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("workspace.upload")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Import a zip archive into the workspace (merge or replace)."""

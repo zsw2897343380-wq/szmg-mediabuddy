@@ -22,14 +22,12 @@ from typing import Any, cast
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
 from octop.api.common.content_disposition import content_disposition
 from octop.api.common.usage_xlsx import build_usage_xlsx
-from octop.api.deps import get_server, require_permission
+from octop.api.deps import current_user, get_server
 from octop.i18n import tr
 from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.users.permissions import user_has_permission
 from octop.infra.utils.locale import normalize_locale, resolve_request_locale
 
 router = APIRouter()
@@ -52,7 +50,7 @@ def _resolve_user_scope(
     id."""
     if as_user is None or as_user == user.id:
         return int(user.id)
-    if not user_has_permission(user, "token_usage.all"):
+    if not user.is_admin:
         raise OctopError(ErrorCode.FORBIDDEN, "as_user requires admin")
     target = server.user_manager.get_by_id(as_user)
     if target is None:
@@ -220,7 +218,7 @@ async def user_summary(
     granularity: str = "by_day",
     agent_id: str | None = None,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("token_usage.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     user_id = _resolve_user_scope(user=user, as_user=as_user, server=server)
@@ -247,7 +245,7 @@ async def user_export(
     window: str = "last_30d",
     agent_id: str | None = None,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("token_usage.export")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     user_id = _resolve_user_scope(user=user, as_user=as_user, server=server)
@@ -261,28 +259,6 @@ async def user_export(
     )
 
 
-class UsageUserResponse(BaseModel):
-    id: int
-    username: str
-    display_name: str | None
-
-
-@router.get(
-    "/usage/users",
-    summary="List user labels for usage filters",
-    response_model=list[UsageUserResponse],
-    description="Requires token_usage.all. Returns user labels for filtering statistics without granting user-management access.",
-)
-async def usage_users(
-    _: Any = Depends(require_permission("token_usage.all")),
-    server: Any = Depends(get_server),
-) -> list[UsageUserResponse]:
-    return [
-        UsageUserResponse(id=row.id, username=row.username, display_name=row.display_name)
-        for row in server.user_manager.list_all(include_disabled=True)
-    ]
-
-
 # --- admin --------------------------------------------------------------
 
 admin_router = APIRouter()
@@ -294,12 +270,12 @@ async def admin_summary(
     granularity: str = "by_day",
     user_id: int | None = None,
     agent_id: str | None = None,
-    user: Any = Depends(require_permission("token_usage.all")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Global usage roll-up. Optional ``user_id`` / ``agent_id`` narrow
     the scope; absent both fields mean *all rows*. Admin only."""
-    if not user_has_permission(user, "token_usage.all"):
+    if not user.is_admin:
         raise OctopError(ErrorCode.FORBIDDEN, "admin required")
     return _label_agent_buckets(
         server,
@@ -323,12 +299,10 @@ async def admin_export(
     window: str = "last_30d",
     user_id: int | None = None,
     agent_id: str | None = None,
-    user: Any = Depends(require_permission("token_usage.all")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
-    if not user_has_permission(user, "token_usage.all") or not user_has_permission(
-        user, "token_usage.export"
-    ):
+    if not user.is_admin:
         raise OctopError(ErrorCode.FORBIDDEN, "admin required")
     return _export_response(
         request=request,

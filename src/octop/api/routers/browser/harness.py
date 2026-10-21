@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from octop.api.deps import require_permission
+from octop.api.deps import current_user
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.utils.browser_media import user_browser_profile
 
@@ -290,9 +290,7 @@ async def harness_sessions_payload(profile_name: str) -> dict[str, Any]:
 
 
 @router.get("/browser/harness-sessions")
-async def list_harness_sessions(
-    user: Any = Depends(require_permission("browser.view")),
-) -> dict[str, Any]:
+async def list_harness_sessions(user: Any = Depends(current_user)) -> dict[str, Any]:
     """List the current user's live octop-browser profile."""
     return await harness_sessions_payload(user_browser_profile(user.id))
 
@@ -301,7 +299,7 @@ async def list_harness_sessions(
 async def handoff(
     session_id: str,
     body: HandoffBody,
-    user: Any = Depends(require_permission("browser.use")),
+    user: Any = Depends(current_user),
 ) -> dict[str, Any]:
     """Switch control of a browser session between the agent and the user.
 
@@ -345,9 +343,7 @@ async def handoff(
     "/browser/shutdown",
     summary="Stop the local Chrome process for an octop-browser profile",
 )
-async def shutdown_browser(
-    user: Any = Depends(require_permission("browser.use")),
-) -> dict[str, Any]:
+async def shutdown_browser(user: Any = Depends(current_user)) -> dict[str, Any]:
     """Terminate the current user's Octop-managed Chrome. Cookies stay on disk."""
     try:
         from octop_browser.tool_interface import browser_tool

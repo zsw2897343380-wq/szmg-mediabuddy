@@ -1,4 +1,3 @@
-import { DEFAULT_OPEN_MODULES } from "../../../utils/permissions";
 import {
   useCallback,
   useEffect,
@@ -362,10 +361,7 @@ export default function RolesPanel() {
                       {row.system_role === "admin"
                         ? t("adminUsers.permAll")
                         : t("adminUsers.permCount", {
-                            count: row.permissions.filter(
-                              (key) =>
-                                !DEFAULT_OPEN_MODULES.has(key.split(".")[0]),
-                            ).length,
+                            count: row.permissions.length,
                           })}
                       <span className={styles.userCardMetaSep}>·</span>
                       {limited
@@ -457,9 +453,7 @@ export default function RolesPanel() {
                 row.system_role === "admin"
                   ? t("adminUsers.permAll")
                   : t("adminUsers.permCount", {
-                      count: row.permissions.filter(
-                        (key) => !DEFAULT_OPEN_MODULES.has(key.split(".")[0]),
-                      ).length,
+                      count: row.permissions.length,
                     }),
             },
             {

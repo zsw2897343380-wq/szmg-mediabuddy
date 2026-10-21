@@ -149,7 +149,7 @@ function ChatPageInner() {
   const user = useCurrentUser();
   const { layoutMode } = useLayoutMode();
   const isMinimalLayout = layoutMode === "minimal";
-  const canTerminal = userCan(user, "terminal.use");
+  const canTerminal = userCan(user, "terminal");
   const canConfigureModels = navAllowed(user, "models");
   const chatHistoryRail = useChatHistoryRail();
   const [browserRecording, setBrowserRecording] = useState(false);

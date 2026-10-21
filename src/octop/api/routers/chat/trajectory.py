@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from octop.api.common.content_disposition import content_disposition
-from octop.api.deps import get_server, require_permission
+from octop.api.deps import current_user, get_server
 from octop.api.routers.chat.history import _require_thread
 from octop.api.routers.chat.sse import format_sse
 from octop.infra.errors import ErrorCode, OctopError
@@ -250,7 +250,7 @@ async def get_thread_trajectory(
     ),
     kinds: str | None = Query(default=None, description="Comma-separated event kinds to include."),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("records.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> TrajectoryHistoryOut:
     """Return a page of trajectory events for a thread (newest page by default).
@@ -293,7 +293,7 @@ async def get_trajectory_event(
     thread_id: str,
     event_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("records.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> TrajectoryEventOut:
     """Return one trajectory event with its full payload."""
@@ -313,7 +313,7 @@ async def get_trajectory_metrics(
     agent_id: str,
     thread_id: str,
     as_user: int | None = None,
-    user: Any = Depends(require_permission("records.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> TrajectoryMetricsOut:
     """Return aggregated session metrics for a thread's trajectory ledger."""
@@ -336,7 +336,7 @@ async def stream_thread_trajectory(
         default=None, description="Replay events with seq greater than this, then follow live."
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("records.view")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse:
     """Subscribe to live trajectory events for a thread.
@@ -376,7 +376,7 @@ async def export_thread_trajectory(
         description="Download format. Default is JSON Lines with full payloads.",
     ),
     as_user: int | None = None,
-    user: Any = Depends(require_permission("records.export")),
+    user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> StreamingResponse | JSONResponse:
     """Download the full trajectory ledger. Default ``jsonl``; ``json`` returns an array."""

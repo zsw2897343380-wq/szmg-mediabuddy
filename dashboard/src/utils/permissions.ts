@@ -8,23 +8,7 @@ export type PermissionHolder = {
 /** Any-of module keys, or ``"admin"`` for role-only. */
 export type PermissionKeys = readonly string[] | "admin";
 
-export const DEFAULT_OPEN_MODULES: ReadonlySet<string> = new Set([
-  "chat",
-  "assistants",
-  "records",
-  "experts",
-  "tasks",
-  "skills",
-  "skill_packages",
-  "connectors",
-  "knowledge_bases",
-]);
-
 export const PERM = {
-  chat: ["chat"],
-  assistants: ["assistants"],
-  records: ["records"],
-  bridge: ["bridge"],
   skills: ["skills"],
   subagents: ["subagents"],
   tools: ["tools"],
@@ -67,9 +51,6 @@ export const PERSONALIZATION_TAB_PERMISSIONS = {
 } as const;
 
 export const NAV_PERMISSIONS = {
-  chat: PERM.assistants,
-  records: PERM.records,
-  bridge: PERM.bridge,
   experts: PERM.experts,
   tasks: PERM.tasks,
   "token-usage": PERM.tokenUsage,
@@ -81,8 +62,8 @@ export const NAV_PERMISSIONS = {
   workbench: PERM.workbench,
   "remote-desktop": ["desktop", "mobile"],
   "remote-phone": PERM.mobile,
-  acp: ["acp"],
-  "admin-public-resources": ["public_resources"],
+  acp: "admin",
+  "admin-public-resources": "admin",
   "admin-users": PERM.usersPage,
   models: PERM.modelsPage,
   "admin-storage": PERM.storage,
@@ -94,8 +75,8 @@ export const NAV_PERMISSIONS = {
 export type NavPermissionKey = keyof typeof NAV_PERMISSIONS;
 
 export const USERS_TAB_PERMISSIONS = {
-  local: "users.view",
-  roles: "users.roles",
+  local: "users",
+  roles: "users",
   feishu: "sso",
   wecom: "sso",
   dingtalk: "sso",
@@ -128,14 +109,7 @@ export function userCan(
 ): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
-  if (DEFAULT_OPEN_MODULES.has(key.split(".")[0])) return true;
-  const held = user.permissions ?? [];
-  if (held.includes(key)) return true;
-  if (key === "token_usage.all") return false;
-  const dot = key.indexOf(".");
-  return dot >= 0
-    ? held.includes(key.slice(0, dot))
-    : held.some((permission) => permission.startsWith(`${key}.`));
+  return (user.permissions ?? []).includes(key);
 }
 
 /** True when the user holds any of the given keys (admin bypasses). */
@@ -145,7 +119,8 @@ export function userCanAny(
 ): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
-  return keys.some((k) => userCan(user, k));
+  const held = new Set(user.permissions ?? []);
+  return keys.some((k) => held.has(k));
 }
 
 export function canAccessKeys(
@@ -172,15 +147,10 @@ export function userCanKey(
 
 /**
  * Permissions that unlock a dashboard path (any-of).
- * ``"admin"`` means role===admin only for uncatalogued administration routes.
+ * ``"admin"`` means role===admin only (no module key this round).
  * ``null`` means no special gate.
  */
 export function pathPermissionKeys(pathname: string): PermissionKeys | null {
-  if (pathname === "/assistants") return PERM.assistants;
-  if (pathname === "/chat" || pathname.startsWith("/chat/"))
-    return ["chat", "records"];
-  if (pathname.startsWith("/admin/public-resources"))
-    return ["public_resources"];
   if (pathname.startsWith("/admin/users") || pathname === "/admin/sso") {
     return PERM.usersPage;
   }
@@ -264,7 +234,7 @@ export function pathPermissionKeys(pathname: string): PermissionKeys | null {
     return PERM.knowledgeBasesPage;
   }
   if (pathname === "/bridge" || pathname.startsWith("/bridge/")) {
-    return PERM.bridge;
+    return null;
   }
   if (pathname === "/remote-desktop/desktop") {
     return PERM.desktop;
@@ -293,9 +263,9 @@ export function pathPermissionKeys(pathname: string): PermissionKeys | null {
   if (pathname === "/workbench" || pathname.startsWith("/workbench/")) {
     return PERM.workbench;
   }
-  // ACP has its own configurable module and operation grants.
+  // ACP: no module key this round — admin role only.
   if (pathname === "/acp" || pathname.startsWith("/acp/")) {
-    return ["acp"];
+    return "admin";
   }
   if (pathname === "/experts" || pathname.startsWith("/experts/")) {
     return PERM.experts;

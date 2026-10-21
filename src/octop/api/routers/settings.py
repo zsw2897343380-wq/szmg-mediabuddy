@@ -246,7 +246,7 @@ class CaptchaSettingsPut(BaseModel):
     response_model=CaptchaSettingsResponse,
 )
 async def get_captcha_settings(
-    _admin: User = Depends(require_permission("captcha.view")),
+    _admin: User = Depends(require_permission("captcha")),
     server: Any = Depends(get_server),
 ) -> CaptchaSettingsResponse:
     """Return the stored captcha catalog. Secrets are never included."""
@@ -265,7 +265,7 @@ async def get_captcha_settings(
 )
 async def put_captcha_settings(
     body: CaptchaSettingsPut,
-    admin: User = Depends(require_permission("captcha.edit")),
+    admin: User = Depends(require_permission("captcha")),
     server: Any = Depends(get_server),
 ) -> CaptchaSettingsResponse:
     """Merge captcha settings. Empty secret keeps the stored ciphertext."""

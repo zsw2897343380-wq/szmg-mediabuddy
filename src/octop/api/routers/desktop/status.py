@@ -16,7 +16,7 @@ router = APIRouter()
 @router.get("/desktop/status")
 async def get_desktop_status(
     request: Request,
-    _user: User = Depends(require_permission("desktop.view")),
+    _user: User = Depends(require_permission("desktop")),
 ) -> dict[str, object]:
     locale = resolve_request_locale(request)
     status = desktop_status(locale=locale)

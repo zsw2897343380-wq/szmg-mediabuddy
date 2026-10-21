@@ -32,7 +32,7 @@ describe("pathPermissionKeys", () => {
       ...PERM.mobile,
     ]);
     expect(pathPermissionKeys("/remote-phone")).toEqual([...PERM.mobile]);
-    expect(pathPermissionKeys("/acp")).toEqual(["acp"]);
+    expect(pathPermissionKeys("/acp")).toBe("admin");
   });
 
   it("keeps sso on users page, not advanced", () => {
@@ -45,7 +45,7 @@ describe("pathPermissionKeys", () => {
     expect(NAV_PERMISSIONS["admin-advanced"]).toEqual(PERM.advancedPage);
     expect(ADVANCED_TAB_PERMISSIONS.captcha).toBe("captcha");
     expect("bridge" in ADVANCED_TAB_PERMISSIONS).toBe(false);
-    expect(pathPermissionKeys("/bridge")).toEqual(["bridge"]);
+    expect(pathPermissionKeys("/bridge")).toBeNull();
     expect([...PERM.advancedPage]).toContain("captcha");
   });
 
@@ -59,21 +59,20 @@ describe("pathPermissionKeys", () => {
     expect(NAV_PERMISSIONS.models).toEqual(PERM.modelsPage);
   });
 
-  it("gates chat and bridge while keeping redirect aliases available", () => {
-    expect(pathPermissionKeys("/chat")).toEqual(["chat", "records"]);
-    expect(pathPermissionKeys("/bridge")).toEqual(["bridge"]);
+  it("does not gate common pages", () => {
+    expect(pathPermissionKeys("/chat")).toBeNull();
+    expect(pathPermissionKeys("/bridge")).toBeNull();
     expect(pathPermissionKeys("/personalization/acp")).toBeNull();
   });
 
-  it("opens business pages but keeps Token statistics gated", () => {
+  it("gates ungrouped pages except chat", () => {
     expect(pathPermissionKeys("/experts")).toEqual([...PERM.experts]);
     expect(pathPermissionKeys("/tasks")).toEqual([...PERM.tasks]);
     expect(pathPermissionKeys("/token-usage")).toEqual([...PERM.tokenUsage]);
     const user = { role: "user", permissions: ["experts"] };
     expect(canAccessPath(user, "/experts")).toBe(true);
-    expect(canAccessPath(user, "/tasks")).toBe(true);
+    expect(canAccessPath(user, "/tasks")).toBe(false);
     expect(canAccessPath(user, "/chat")).toBe(true);
-    expect(canAccessPath(user, "/token-usage")).toBe(false);
   });
 
   it("gates settings modules", () => {
@@ -152,7 +151,7 @@ describe("unknown dashboard paths", () => {
 });
 
 describe("combined capability center routes", () => {
-  it("selects one navigation entry while opening business resources by default", () => {
+  it("selects one navigation entry while keeping per-resource permissions", () => {
     for (const path of [
       "/experts",
       "/skills",
@@ -163,13 +162,13 @@ describe("combined capability center routes", () => {
       expect(routeConfigs.some((rc) => rc.path === path)).toBe(true);
     }
     expect(canAccessPath({ role: "user", permissions: [] }, "/skills")).toBe(
-      true,
+      false,
     );
     expect(
       canAccessPath({ role: "user", permissions: [] }, "/connectors"),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       canAccessPath({ role: "user", permissions: [] }, "/skill-packages"),
-    ).toBe(true);
+    ).toBe(false);
   });
 });

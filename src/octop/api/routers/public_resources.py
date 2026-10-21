@@ -8,10 +8,8 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
-from octop.api.deps import current_user, get_server, require_permission
+from octop.api.deps import get_server, require_admin
 from octop.api.routers.connectors import _connector_service
-from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.users.permissions import user_has_permission
 from octop.infra.users.public_resource_catalog import PublicResourceCatalog
 from octop.infra.users.public_resources import PublicResourceType
 from octop.infra.utils.locale import resolve_request_locale
@@ -49,9 +47,7 @@ def _catalog(server: Any) -> PublicResourceCatalog:
     response_model=list[PublicResourceResponse],
 )
 async def list_public_resources(
-    request: Request,
-    server: Any = Depends(get_server),
-    _: Any = Depends(require_permission("public_resources.view")),
+    request: Request, server: Any = Depends(get_server), _: Any = Depends(require_admin())
 ) -> list[PublicResourceResponse]:
     if server.app_runtime is not None:
         await server.app_runtime.agent_registry.refresh_builtin_skill_inventory()
@@ -64,28 +60,15 @@ async def list_public_resources(
 @router.put(
     "/{resource_type}",
     summary="Publish or withdraw public resources",
-    description="Requires publication permission for the resource category. Withdrawn public resources disappear from user catalogs and live public references stop working. Independent private copies are retained.",
+    description="Superadministrator only. Withdrawn public resources disappear from user catalogs and live public references stop working. Independent private copies are retained.",
     status_code=204,
 )
 async def update_public_resources(
     resource_type: PublicResourceType,
     body: PublicResourceUpdate,
     server: Any = Depends(get_server),
-    user: Any = Depends(current_user),
+    _: Any = Depends(require_admin()),
 ) -> None:
-    category = (
-        "experts"
-        if resource_type in {"expert_template", "published_expert", "shared_expert"}
-        else "skills"
-        if resource_type in {"builtin_skill", "package_skill"}
-        else "connectors"
-    )
-    if not user_has_permission(user, f"public_resources.{category}"):
-        raise OctopError(
-            ErrorCode.FORBIDDEN,
-            "permission required",
-            details={"permission": f"public_resources.{category}"},
-        )
     if resource_type == "builtin_skill" and server.app_runtime is not None:
         await server.app_runtime.agent_registry.refresh_builtin_skill_inventory()
     await asyncio.get_running_loop().run_in_executor(

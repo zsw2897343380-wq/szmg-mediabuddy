@@ -164,7 +164,7 @@ async def get_tool_settings(
     agent_id: str,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: Any = Depends(require_permission("tools.view")),
+    user: Any = Depends(require_permission("tools")),
 ) -> ToolSettingsResponse:
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.get_row(agent_id)
@@ -219,7 +219,7 @@ async def put_tool_settings(
     body: ToolSettingsPutBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: Any = Depends(require_permission("tools.edit")),
+    user: Any = Depends(require_permission("tools")),
 ) -> ToolSettingsResponse:
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.get_row(agent_id)
@@ -255,7 +255,7 @@ async def patch_tool_setting(
     body: ToolSettingPatchBody,
     request: Request,
     server: OctopServer = Depends(get_server),
-    user: Any = Depends(require_permission("tools.edit")),
+    user: Any = Depends(require_permission("tools")),
 ) -> ToolSettingsResponse:
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.get_row(agent_id)

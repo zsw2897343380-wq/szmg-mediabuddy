@@ -50,15 +50,15 @@ async def test_install_and_pause_are_private_to_the_authenticated_user(env: Any)
     }
 
 
-async def test_library_is_open_and_rejects_unknown_packages(env: Any) -> None:
+async def test_library_requires_package_permission_and_rejects_unknown_packages(env: Any) -> None:
     client, _server, admin = env
     restricted = await create_user(client, admin, username="restricted", permissions=["skills"])
     response = await client.get("/api/skill-packages/library", headers=restricted)
-    assert response.status_code == 200
+    assert response.status_code == 403
     response = await client.put(
         "/api/skill-packages/library/absent", headers=restricted, json={"installed": True}
     )
-    assert response.status_code == 404
+    assert response.status_code == 403
     response = await client.put(
         "/api/skill-packages/library/absent", headers=admin, json={"installed": True}
     )
@@ -210,7 +210,7 @@ async def test_individual_preference_permission_and_missing_skill(env: Any) -> N
     ).json()["id"]
     restricted = await create_user(client, admin, username="limited-single", permissions=["skills"])
     path = f"/api/skill-packages/library/{package_id}/skills/absent"
-    assert (await client.put(path, headers=restricted, json={"installed": True})).status_code == 404
+    assert (await client.put(path, headers=restricted, json={"installed": True})).status_code == 403
     assert (await client.put(path, headers=admin, json={"installed": True})).status_code == 404
 
 

@@ -8,10 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from octop_harness.security.models import DEFAULT_HITL_TOOLS, SecurityPolicy
 from pydantic import BaseModel, Field
 
-from octop.api.deps import get_server, require_any_permission, require_permission
+from octop.api.deps import get_server, require_permission
 from octop.i18n.domains.tools import hitl_tool_catalog
 from octop.infra.db.repos.audit import ACTOR_ADMIN
-from octop.infra.users.permissions import assert_permission, user_has_permission
 
 router = APIRouter()
 
@@ -45,7 +44,7 @@ def _to_response(policy: SecurityPolicy) -> SecurityPolicyResponse:
 
 @router.get("", summary="Get global security policy")
 async def get_security_policy(
-    _: Any = Depends(require_permission("security.view")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> SecurityPolicyResponse:
     return _to_response(server.app_runtime.agent_registry.security.load())
@@ -54,21 +53,9 @@ async def get_security_policy(
 @router.put("", summary="Update global security policy")
 async def put_security_policy(
     body: SecurityPolicyBody,
-    user: Any = Depends(
-        require_any_permission(
-            "security.edit",
-            "security.hitl",
-            "security.filesystem",
-            "security.pii",
-            "security.tool_guard",
-            "security.skill_scan",
-        )
-    ),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> SecurityPolicyResponse:
-    if not user_has_permission(user, "security.edit"):
-        for section in body.model_fields_set:
-            assert_permission(user, f"security.{section}")
     current = server.app_runtime.agent_registry.security.load().to_dict()
     payload = {**current}
     if body.hitl is not None:
@@ -140,7 +127,7 @@ def _rules_store(server: Any) -> Any:
 
 @router.get("/tool-guard/rules", summary="List active command guard rules")
 async def get_tool_guard_rules(
-    _: Any = Depends(require_permission("security.view")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesResponse:
     store = _rules_store(server)
@@ -155,7 +142,7 @@ async def get_tool_guard_rules(
 
 @router.get("/tool-guard/rules/raw", summary="Get editable command guard rules YAML")
 async def get_tool_guard_rules_raw(
-    _: Any = Depends(require_permission("security.view")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesRawResponse:
     store = _rules_store(server)
@@ -165,7 +152,7 @@ async def get_tool_guard_rules_raw(
 @router.put("/tool-guard/rules/raw", summary="Save command guard rules YAML")
 async def put_tool_guard_rules_raw(
     body: ToolGuardRulesRawBody,
-    _: Any = Depends(require_any_permission("security.edit", "security.tool_guard")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesSaveResponse:
     store = _rules_store(server)
@@ -185,7 +172,7 @@ async def put_tool_guard_rules_raw(
 
 @router.post("/tool-guard/rules/reset", summary="Reset command guard rules to shipped defaults")
 async def post_tool_guard_rules_reset(
-    _: Any = Depends(require_any_permission("security.edit", "security.tool_guard")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesRawResponse:
     store = _rules_store(server)
@@ -202,7 +189,7 @@ async def post_tool_guard_rules_reset(
 
 @router.get("/defaults", summary="Security defaults and active rule catalogs")
 async def get_security_defaults(
-    _: Any = Depends(require_permission("security.view")),
+    _: Any = Depends(require_permission("security")),
     server: Any = Depends(get_server),
 ) -> SecurityDefaultsResponse:
     store = _rules_store(server)
