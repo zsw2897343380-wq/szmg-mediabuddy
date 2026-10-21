@@ -165,7 +165,7 @@ async def get_tool_guard_rules_raw(
 @router.put("/tool-guard/rules/raw", summary="Save command guard rules YAML")
 async def put_tool_guard_rules_raw(
     body: ToolGuardRulesRawBody,
-    _: Any = Depends(require_permission("security.edit")),
+    _: Any = Depends(require_any_permission("security.edit", "security.tool_guard")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesSaveResponse:
     store = _rules_store(server)
@@ -185,7 +185,7 @@ async def put_tool_guard_rules_raw(
 
 @router.post("/tool-guard/rules/reset", summary="Reset command guard rules to shipped defaults")
 async def post_tool_guard_rules_reset(
-    _: Any = Depends(require_permission("security.edit")),
+    _: Any = Depends(require_any_permission("security.edit", "security.tool_guard")),
     server: Any = Depends(get_server),
 ) -> ToolGuardRulesRawResponse:
     store = _rules_store(server)

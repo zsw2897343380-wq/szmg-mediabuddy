@@ -111,7 +111,11 @@ def _decode(server: OctopServer, token: str) -> dict[str, Any]:
 def resolve_user_from_token(server: OctopServer, token: str) -> User:
     payload = _decode(server, token)
     assert server.user_manager is not None
-    user = server.user_manager.get_by_id(int(payload["sub"]))
+    try:
+        user_id = int(payload["sub"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise OctopError(ErrorCode.AUTH_FAILED, "invalid token subject") from exc
+    user = server.user_manager.get_by_id(user_id)
     if user is None:
         raise OctopError(ErrorCode.USER_DISABLED, "user not active")
     return user

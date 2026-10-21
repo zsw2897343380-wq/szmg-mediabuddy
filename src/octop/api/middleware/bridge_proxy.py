@@ -20,6 +20,7 @@ from octop.infra.bridge.ids import (
     rewrite_tunneled_json,
 )
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import assert_permission
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +232,9 @@ def install(app: Any, server: Any) -> None:
             return await call_next(request)
 
         try:
+            assert_permission(
+                user, "bridge.view" if request.method in ("GET", "HEAD") else "bridge.use"
+            )
             local = (
                 _local_bridge_shadow_response(
                     method=request.method,

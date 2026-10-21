@@ -18,6 +18,7 @@ from octop_gateway.models import (
 from octop.api.common.agent import require_agent_row
 from octop.api.common.validators import validate_chat_mcp_servers, validate_chat_skills
 from octop.api.routers.chat.models import ChatTurnBody
+from octop.infra.agents.experts.access import assert_expert_use
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.media.attachment_hints import (
     inbound_attachments_from_parts,
@@ -241,6 +242,7 @@ async def prepare_dashboard_turn(
     if turn.knowledge_base_ids:
         assert_permission(user, "knowledge_bases.use")
     row = require_agent_row(agent_id, user=user, as_user=None, server=server)
+    assert_expert_use(user, row)
     default_model = (row.default_model or "").strip() or None
 
     mcp_servers = await validate_chat_mcp_servers(

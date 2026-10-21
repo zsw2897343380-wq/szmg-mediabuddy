@@ -70,7 +70,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
     assert renamed.status_code == 200, renamed.text
     kept = await c.get(f"/api/users/{uid}", headers=auth)
     assert kept.json()["role_name"] == "分析师"
-    assert kept.json()["permissions"] == ["browser"]
+    assert kept.json()["permissions"] == ["desktop"]
     assert kept.json()["token_quota"] == 1000
 
     # Still assigned — delete must be refused.

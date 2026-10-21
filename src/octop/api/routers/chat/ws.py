@@ -154,6 +154,10 @@ async def dashboard_chat_ws(
                     await send_frame({**frame, "thread_id": thread_id})
                 continue
 
+            if msg_type in ("cancel", "steer_remove") and not user_has_permission(user, "chat.use"):
+                await send_frame({"type": "error", "message": "permission required"})
+                continue
+
             if msg_type == "cancel":
                 thread_id = str(payload.get("thread_id") or "").strip()
                 if not thread_id:

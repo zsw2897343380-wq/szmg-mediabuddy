@@ -14,7 +14,7 @@ from starlette.websockets import WebSocketState
 
 from octop.api.deps import get_server, require_permission, resolve_user_from_token
 from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.users.permissions import user_has_permission
+from octop.infra.users.permissions import assert_permission, user_has_permission
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +124,8 @@ async def create_connection(
     user: Any = Depends(require_permission("bridge.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    if body.connect:
+        assert_permission(user, "bridge.use")
     mgr = _bridge(server)
     row = await mgr.create_connection(
         owner_user_id=user.id,
@@ -228,6 +230,25 @@ async def patch_connection(
 ) -> dict[str, Any]:
     mgr = _bridge(server)
     fields_set = body.model_fields_set
+    if body.auto_reconnect is True:
+        assert_permission(user, "bridge.use")
+    if fields_set & {"peer_base_url", "peer_username", "password"}:
+        current = mgr.get_owned(connection_id, user.id)
+        credentials_changed = (
+            (
+                body.peer_base_url is not None
+                and body.peer_base_url.strip().rstrip("/") != current.peer_base_url.rstrip("/")
+            )
+            or (
+                body.peer_username is not None
+                and body.peer_username.strip() != current.peer_username
+            )
+            or bool(body.password and body.password.strip())
+        )
+        if credentials_changed and (
+            current.auto_reconnect or current.status in ("connected", "connecting")
+        ):
+            assert_permission(user, "bridge.use")
     row = None
     meta_keys = {
         "display_name",

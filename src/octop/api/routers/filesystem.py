@@ -23,7 +23,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from octop.api.deps import current_user, get_server
+from octop.api.deps import current_user, get_server, require_any_permission, require_permission
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.identity import User
 from octop.infra.users.resource_policy import (
@@ -152,7 +152,16 @@ async def list_host_dirs(
 @router.post("/probe")
 async def probe_host_dir(
     body: ProbeBody,
-    user: User = Depends(current_user),
+    user: User = Depends(
+        require_any_permission(
+            "storage_backends.edit",
+            "users.permissions",
+            "experts.create",
+            "experts.edit",
+            "assistants.create",
+            "assistants.edit",
+        )
+    ),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Check whether Octop can use *path* as a local backend root_dir."""
@@ -170,7 +179,7 @@ async def probe_host_dir(
     summary="Best-effort ensure bubblewrap for scoped root_dir",
 )
 async def ensure_bwrap(
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("storage_backends.edit")),
 ) -> dict[str, Any]:
     """Ensure ``bwrap`` is available when saving a non-host-root backend.
 
@@ -200,7 +209,7 @@ async def get_docker_status(
     summary="Best-effort ensure Docker Engine for sandbox backends",
 )
 async def post_ensure_docker(
-    _: Any = Depends(current_user),
+    _: Any = Depends(require_permission("storage_backends.edit")),
 ) -> dict[str, Any]:
     """Detect Docker; on Linux with passwordless sudo, try package install.
 
@@ -213,7 +222,16 @@ async def post_ensure_docker(
 @router.post("/mkdir")
 async def mkdir_host_dir(
     body: MkdirBody,
-    user: User = Depends(current_user),
+    user: User = Depends(
+        require_any_permission(
+            "storage_backends.edit",
+            "users.permissions",
+            "experts.create",
+            "experts.edit",
+            "assistants.create",
+            "assistants.edit",
+        )
+    ),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Create a child directory under *path* for root_dir pickers."""
@@ -233,7 +251,16 @@ async def mkdir_host_dir(
 @router.post("/rename")
 async def rename_host_directory(
     body: RenameBody,
-    user: User = Depends(current_user),
+    user: User = Depends(
+        require_any_permission(
+            "storage_backends.edit",
+            "users.permissions",
+            "experts.create",
+            "experts.edit",
+            "assistants.create",
+            "assistants.edit",
+        )
+    ),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Rename a host directory (basename only) for root_dir pickers."""

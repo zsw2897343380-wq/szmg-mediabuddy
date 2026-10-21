@@ -75,9 +75,13 @@ import {
 import { authApi } from "../../../api/modules/auth";
 import { preferencesApi } from "../../../api/modules/preferences";
 import type { SidebarNavLayout } from "../../../layouts/sidebarNavLayout";
+import { userCan } from "../../../utils/permissions";
 import { buildPermissionPickerGroups } from "./permissionPickerLayout";
 import { useCardTableView } from "../../../hooks/useCardTableView";
-import { useSetCurrentUser } from "../../../hooks/useCurrentUser";
+import {
+  useCurrentUser,
+  useSetCurrentUser,
+} from "../../../hooks/useCurrentUser";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { useServerTimezone } from "../../../hooks/useServerTimezone";
 import { apiErrorMessage } from "../../../utils/apiError";
@@ -1297,7 +1301,12 @@ export default function UsersListPanel() {
   const [resetSubmitting, setResetSubmitting] = useState(false);
   const [resetForm] = Form.useForm<ResetValues>();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [actorIsAdmin, setActorIsAdmin] = useState(true);
+  const currentActor = useCurrentUser();
+  const canEditProfile = userCan(currentActor, "users.edit");
+  const canAssignPermissions = userCan(currentActor, "users.permissions");
+  const [actorIsAdmin, setActorIsAdmin] = useState(
+    currentActor?.role === "admin",
+  );
   const [agentDrawerUser, setAgentDrawerUser] = useState<UserRow | null>(null);
   const [editAgent, setEditAgent] = useState<OctopAgent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1589,7 +1598,9 @@ export default function UsersListPanel() {
   const refreshAgents = useCallback(async () => {
     setAgentsLoading(true);
     try {
-      const data = await request<OctopAgent[]>("/agents?scope=all");
+      const data = await request<OctopAgent[]>(
+        actorIsAdmin ? "/agents?scope=all" : "/agents",
+      );
       setAgents(data);
     } catch (err) {
       message.error(
@@ -1599,7 +1610,7 @@ export default function UsersListPanel() {
     } finally {
       setAgentsLoading(false);
     }
-  }, [t]);
+  }, [actorIsAdmin, t]);
 
   const patchAgent = useCallback(
     (agentId: string, patch: Partial<OctopAgent>) => {
@@ -1820,12 +1831,21 @@ export default function UsersListPanel() {
       await request(`/users/${editTarget.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          display_name: values.display_name?.trim() || null,
-          email: values.email?.trim() || null,
-          role: values.role,
-          permissions: values.role === "admin" ? [] : values.permissions ?? [],
-          role_name: values.role_name?.trim() || null,
-          ...policyPayload(values, { workspaceRootAllowed }),
+          ...(canEditProfile
+            ? {
+                display_name: values.display_name?.trim() || null,
+                email: values.email?.trim() || null,
+              }
+            : {}),
+          ...(canAssignPermissions
+            ? {
+                role: values.role,
+                permissions:
+                  values.role === "admin" ? [] : values.permissions ?? [],
+                role_name: values.role_name?.trim() || null,
+                ...policyPayload(values, { workspaceRootAllowed }),
+              }
+            : {}),
         }),
       });
       setEditTarget(null);
@@ -2555,6 +2575,7 @@ export default function UsersListPanel() {
               <ProfileAvatarPicker
                 kind="user"
                 avatarUrl={editTarget.avatar_url}
+                disabled={!canEditProfile}
                 icon={editTarget.avatar_icon}
                 onSelectIcon={async (icon) => {
                   try {
@@ -2616,7 +2637,10 @@ export default function UsersListPanel() {
               label={t("adminUsers.formDisplayName")}
               name="display_name"
             >
-              <Input prefix={<IdCard {...FIELD_ICON_PROPS} />} />
+              <Input
+                disabled={!canEditProfile}
+                prefix={<IdCard {...FIELD_ICON_PROPS} />}
+              />
             </Form.Item>
             <Form.Item
               label={t("adminUsers.formEmail")}
@@ -2629,6 +2653,7 @@ export default function UsersListPanel() {
               ]}
             >
               <Input
+                disabled={!canEditProfile}
                 prefix={<Mail {...FIELD_ICON_PROPS} />}
                 type="email"
                 autoComplete="email"
@@ -2651,7 +2676,10 @@ export default function UsersListPanel() {
               workspaceRootAllowed={workspaceRootAllowed}
               confirmOverwrite
               actorIsAdmin={actorIsAdmin}
-              disabled={Boolean(editTarget && isSelfAdmin(editTarget))}
+              disabled={
+                !canAssignPermissions ||
+                Boolean(editTarget && isSelfAdmin(editTarget))
+              }
               diverged={
                 Boolean(editTarget) &&
                 userRoleDrift(editTarget as UserRow, userRoles) === "changed"
@@ -2693,17 +2721,22 @@ export default function UsersListPanel() {
                     name="permissions"
                     className={styles.createUserPermItem}
                   >
-                    <PermissionCheckboxPicker catalog={permCatalog} />
+                    <PermissionCheckboxPicker
+                      catalog={permCatalog}
+                      disabled={!canAssignPermissions}
+                    />
                   </Form.Item>
                 );
               }}
             </Form.Item>
           </div>
 
-          <ResourcePolicyFields
-            fsTreeRoots={fsTreeRoots}
-            workspaceRootAllowed={workspaceRootAllowed}
-          />
+          {canAssignPermissions && (
+            <ResourcePolicyFields
+              fsTreeRoots={fsTreeRoots}
+              workspaceRootAllowed={workspaceRootAllowed}
+            />
+          )}
         </Form>
       </Drawer>
 

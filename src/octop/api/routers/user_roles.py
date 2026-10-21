@@ -268,6 +268,8 @@ async def patch_user_role(
     current = _repo(server).get(user_role_id)
     if current is None:
         raise OctopError(ErrorCode.NOT_FOUND, "role not found")
+    if current.is_admin and not actor.is_admin:
+        raise OctopError(ErrorCode.FORBIDDEN, "administrator role requires administrator")
     name = _clean_name(body.user_role_name) if body.user_role_name is not None else None
     description: str | None | object = ...
     if "description" in body.model_fields_set:
@@ -319,6 +321,10 @@ async def patch_user_role(
         _name_taken(exc)
         raise
     assert updated is not None
+    if permissions is not None:
+        await server.user_manager.sync_role_permissions(
+            user_role_id, list(current.permissions), permissions
+        )
     server.services.audit_repo.write(
         actor=actor.username,
         action="user_role.update",

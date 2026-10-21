@@ -30,6 +30,7 @@ from octop.api.deps import (
 )
 from octop.i18n.domains.voice import realtime_error_message
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import user_has_permission
 from octop.infra.utils.locale import Locale, normalize_locale, resolve_request_locale
 from octop.infra.voice import realtime
 from octop.infra.voice.manager import VoiceManager
@@ -57,15 +58,24 @@ def _active_payload(mgr: VoiceManager) -> dict[str, Any]:
     return active
 
 
-def _row_to_dict(r: Any) -> dict[str, Any]:
+def _row_to_dict(r: Any, *, include_secrets: bool = True) -> dict[str, Any]:
+    extra = r.get_extra()
+    configured = bool(r.api_key or extra.get("secret_key"))
+    if not include_secrets:
+        extra = {
+            key: value
+            for key, value in extra.items()
+            if key not in {"secret_id", "secret_key", "api_key", "access_token", "password"}
+        }
     return {
         "id": r.id,
         "name": r.name,
         "kind": r.kind,
         "capability": r.capability,
         "base_url": r.base_url,
-        "api_key": r.api_key,
-        "extra": r.get_extra(),
+        "api_key": r.api_key if include_secrets else None,
+        "api_key_set": configured,
+        "extra": extra,
         "note": r.note,
         "enabled": bool(r.enabled),
     }
@@ -120,10 +130,13 @@ async def list_voice_presets(
 
 @router.get("/providers")
 async def list_voice_providers(
-    _: Any = Depends(require_permission("voice.view")),
+    actor: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
-    return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
+    return [
+        _row_to_dict(r, include_secrets=user_has_permission(actor, "voice.edit"))
+        for r in server.services.voice_provider_repo.list_all()
+    ]
 
 
 @router.get("/active")
@@ -335,10 +348,13 @@ async def stream_transcription(
 
 @admin_router.get("")
 async def admin_list_voice_providers(
-    _: Any = Depends(require_permission("voice.view")),
+    actor: Any = Depends(require_permission("voice.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
-    return [_row_to_dict(r) for r in server.services.voice_provider_repo.list_all()]
+    return [
+        _row_to_dict(r, include_secrets=user_has_permission(actor, "voice.edit"))
+        for r in server.services.voice_provider_repo.list_all()
+    ]
 
 
 @admin_router.post("", status_code=201)

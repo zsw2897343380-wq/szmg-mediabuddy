@@ -42,6 +42,7 @@ from octop.infra.agents.providers.store import (
     resolve_provider_stream_usage,
 )
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.permissions import user_has_permission
 from octop.infra.utils.locale import resolve_request_locale
 from octop.infra.utils.ulid import new_ulid
 
@@ -169,7 +170,7 @@ async def _maybe_refresh_codex_row(server: Any, row: Any) -> Any:
     return row
 
 
-def _row_to_dict(r: Any) -> dict[str, Any]:
+def _row_to_dict(r: Any, *, include_secrets: bool = True) -> dict[str, Any]:
     models: list[dict[str, Any]] = []
     for stored in r.get_models():
         model = dict(stored)
@@ -184,7 +185,8 @@ def _row_to_dict(r: Any) -> dict[str, Any]:
         "name": r.name,
         "kind": r.kind,
         "base_url": r.base_url,
-        "api_key": r.api_key,
+        "api_key": r.api_key if include_secrets else None,
+        "api_key_set": bool(r.api_key),
         "models": models,
         "note": r.note,
         "enabled": bool(r.enabled),
@@ -256,10 +258,13 @@ admin_router = APIRouter()
 
 @admin_router.get("")
 async def admin_list_providers(
-    _: Any = Depends(require_permission("providers.view")),
+    actor: Any = Depends(require_permission("providers.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
-    return [_row_to_dict(r) for r in server.services.provider_repo.list_all()]
+    return [
+        _row_to_dict(r, include_secrets=user_has_permission(actor, "providers.edit"))
+        for r in server.services.provider_repo.list_all()
+    ]
 
 
 @admin_router.post("", status_code=201)

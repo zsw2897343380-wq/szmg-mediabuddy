@@ -21,6 +21,7 @@ from octop.infra.users.invites import (
     check_invite_rate_limit,
     invite_path,
 )
+from octop.infra.users.permissions import assert_permission
 from octop.infra.utils.locale import resolve_request_locale
 
 admin_router = APIRouter()
@@ -77,11 +78,11 @@ class InviteRedeemBody(BaseModel):
 @admin_router.get("", summary="List user invites")
 async def list_invites(
     request: Request,
-    _: Any = Depends(require_permission("users.view")),
+    actor: User = Depends(require_permission("users.view")),
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     base = _public_base(request)
-    return [_with_url(row, base_url=base) for row in _service(server).list_all()]
+    return [_with_url(row, base_url=base) for row in _service(server).list_visible(actor)]
 
 
 @admin_router.post("", status_code=201, summary="Create a user invite")
@@ -91,6 +92,7 @@ async def create_invite(
     actor: User = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    assert_permission(actor, "users.permissions")
     role_name: str | None = None
     role_id: str | None = None
     if body.role is not None:
@@ -129,6 +131,7 @@ async def revoke_invite(
     actor: User = Depends(require_permission("users.create")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    _service(server).assert_revoke_allowed(actor, invite_id)
     payload = _service(server).revoke(invite_id, actor_username=actor.username)
     return _with_url(payload, base_url=_public_base(request))
 

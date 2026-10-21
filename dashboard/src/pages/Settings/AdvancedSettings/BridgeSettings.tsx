@@ -46,6 +46,8 @@ import { useNavigate } from "react-router-dom";
 import { OctopEmptyMascot } from "../../../components/EmptyState";
 import StreamSetupGuide from "../../../components/StreamSetupGuide/StreamSetupGuide";
 import { useAgent } from "../../../context/AgentContext";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { userCan } from "../../../utils/permissions";
 import { useCardTableView } from "../../../hooks/useCardTableView";
 import { apiErrorMessage } from "../../../utils/apiError";
 import { ExpertIcon, iconForName } from "../../Experts/components/iconForName";
@@ -432,6 +434,7 @@ function BridgeDisconnectButton({
   onConnect: (row: BridgeConnection) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const allowed = userCan(useCurrentUser(), "bridge.use");
   const inbound = isInboundConnection(row);
   const buttonType = link ? "link" : "text";
   if (inbound) {
@@ -459,7 +462,7 @@ function BridgeDisconnectButton({
         type={buttonType}
         icon={<Cloudy size={14} />}
         loading={busy}
-        disabled={busy}
+        disabled={busy || !allowed}
         onClick={() => void onConnect(row)}
       >
         {t("advancedSettings.bridge.connect")}
@@ -482,7 +485,7 @@ function BridgeDisconnectButton({
         type={buttonType}
         icon={<Unplug size={14} />}
         loading={busy}
-        disabled={busy}
+        disabled={busy || !allowed}
       >
         {t("advancedSettings.bridge.disconnect")}
       </Button>
@@ -504,6 +507,7 @@ function BridgeDeleteButton({
   onDelete: (row: BridgeConnection) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const allowed = userCan(useCurrentUser(), "bridge.delete");
   const inbound = isInboundConnection(row);
   const locked = inbound && connected;
   const button = (
@@ -511,7 +515,7 @@ function BridgeDeleteButton({
       size="small"
       type={link ? "link" : "text"}
       danger
-      disabled={locked || busy}
+      disabled={locked || busy || !allowed}
       loading={busy}
       icon={<Trash2 size={14} />}
       aria-label={t("advancedSettings.bridge.delete")}
@@ -558,12 +562,20 @@ function AutoReconnectControl({
   onToggle: (row: BridgeConnection, enabled: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const currentUser = useCurrentUser();
+  const canEdit = userCan(currentUser, "bridge.edit");
+  const canUse = userCan(currentUser, "bridge.use");
   const inbound = isInboundConnection(row);
   const control = (
     <span className={labeled ? styles.autoReconnectInline : undefined}>
       <Switch
         size="small"
-        disabled={inbound || busy}
+        disabled={
+          inbound ||
+          busy ||
+          !canEdit ||
+          (row.auto_reconnect === false && !canUse)
+        }
         loading={busy}
         checked={inbound ? false : row.auto_reconnect !== false}
         onChange={(checked) => void onToggle(row, checked)}
@@ -593,6 +605,7 @@ function BridgeConnectionCard({
   actions: ConnectionActions;
 }) {
   const { t } = useTranslation();
+  const canEdit = userCan(useCurrentUser(), "bridge.edit");
   const connected = row.status === "connected";
   return (
     <section
@@ -679,6 +692,7 @@ function BridgeConnectionCard({
               size="small"
               type="text"
               icon={<Pencil size={14} />}
+              disabled={!canEdit}
               aria-label={t("common.edit")}
               onClick={() => actions.onEdit(row)}
             />
@@ -714,6 +728,10 @@ export default function BridgeSettingsPanel({
   asPage?: boolean;
 }) {
   const { t } = useTranslation();
+  const currentUser = useCurrentUser();
+  const canCreate = userCan(currentUser, "bridge.create");
+  const canUse = userCan(currentUser, "bridge.use");
+  const canEdit = userCan(currentUser, "bridge.edit");
   const navigate = useNavigate();
   const { refresh: refreshAgents } = useAgent();
   const { viewMode, setViewMode, showCardView } = useCardTableView("card");
@@ -896,7 +914,7 @@ export default function BridgeSettingsPanel({
         display_name: values.display_name,
         notes: values.notes || undefined,
         icon_name: values.icon_name || DEFAULT_BRIDGE_ICON,
-        connect: true,
+        connect: canUse,
       });
       message.success(t("advancedSettings.bridge.created"));
       closeCreateDrawer();
@@ -1183,6 +1201,7 @@ export default function BridgeSettingsPanel({
               size="small"
               type="link"
               icon={<Pencil size={14} />}
+              disabled={!canEdit}
               onClick={() => actions.onEdit(row)}
             >
               {t("common.edit")}
@@ -1206,7 +1225,7 @@ export default function BridgeSettingsPanel({
         ),
       },
     ],
-    [actions, agentsByConn, t],
+    [actions, agentsByConn, canEdit, t],
   );
 
   const viewToggle = (
@@ -1256,7 +1275,7 @@ export default function BridgeSettingsPanel({
         <Button
           type="primary"
           icon={<Plus size={14} />}
-          disabled={atConnectionLimit}
+          disabled={atConnectionLimit || !canCreate}
           onClick={() => setCreateOpen(true)}
         >
           {t("advancedSettings.bridge.add")}
@@ -1317,7 +1336,7 @@ export default function BridgeSettingsPanel({
             label: t("advancedSettings.bridge.add"),
             onClick: () => setCreateOpen(true),
             icon: <Plus size={14} />,
-            disabled: atConnectionLimit,
+            disabled: atConnectionLimit || !canCreate,
             title: atConnectionLimit
               ? t("advancedSettings.bridge.addDisabled", {
                   limit: MAX_BRIDGE_CONNECTIONS,
@@ -1395,11 +1414,11 @@ export default function BridgeSettingsPanel({
             <Button
               type="primary"
               loading={creating}
-              disabled={atConnectionLimit}
+              disabled={atConnectionLimit || !canCreate}
               icon={<Cloudy size={14} />}
               onClick={() => void onCreate()}
             >
-              {t("advancedSettings.bridge.addConfirm")}
+              {t(canUse ? "advancedSettings.bridge.addConfirm" : "common.save")}
             </Button>
           </div>
         }
