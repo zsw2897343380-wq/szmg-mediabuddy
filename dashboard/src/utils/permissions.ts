@@ -8,6 +8,18 @@ export type PermissionHolder = {
 /** Any-of module keys, or ``"admin"`` for role-only. */
 export type PermissionKeys = readonly string[] | "admin";
 
+export const DEFAULT_OPEN_MODULES: ReadonlySet<string> = new Set([
+  "chat",
+  "assistants",
+  "records",
+  "experts",
+  "tasks",
+  "skills",
+  "skill_packages",
+  "connectors",
+  "knowledge_bases",
+]);
+
 export const PERM = {
   chat: ["chat"],
   assistants: ["assistants"],
@@ -116,6 +128,7 @@ export function userCan(
 ): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
+  if (DEFAULT_OPEN_MODULES.has(key.split(".")[0])) return true;
   const held = user.permissions ?? [];
   if (held.includes(key)) return true;
   if (key === "token_usage.all") return false;

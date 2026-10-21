@@ -6149,7 +6149,7 @@
     "colPermissions": "Permissions",
     "permAll": "All (admin)",
     "permAllHint": "Admins automatically have every module permission; no need to select them.",
-    "permEditHint": "Controls whether certain pages or features are available.",
+    "permEditHint": "Configure Settings, Control and Administration only. Chat, experts/teams, skills, connectors, knowledge bases and scheduled tasks are available by default; ownership and sharing rules still apply.",
     "permGroupSettings": "Settings",
     "permGroupControl": "Control",
     "permGroupAdmin": "Admin",

@@ -5,14 +5,13 @@ const viewer = (permissions: string[]) => ({ role: "user", permissions });
 
 describe("operation permissions", () => {
   it("keeps legacy grants while separating read-only operations", () => {
-    expect(userCan(viewer(["experts"]), "experts.delete")).toBe(true);
-    expect(userCan(viewer(["experts.view"]), "experts")).toBe(true);
-    expect(userCan(viewer(["experts.view"]), "experts.delete")).toBe(false);
+    expect(userCan(viewer(["bridge"]), "bridge.delete")).toBe(true);
+    expect(userCan(viewer(["bridge.view"]), "bridge")).toBe(true);
+    expect(userCan(viewer(["bridge.view"]), "bridge.delete")).toBe(false);
     expect(userCan(viewer(["token_usage"]), "token_usage.all")).toBe(false);
   });
 
   it.each([
-    ["chat", "/assistants", "assistants.view"],
     ["bridge", "/bridge", "bridge.view"],
     ["acp", "/acp", "acp.view"],
     [
@@ -29,4 +28,19 @@ describe("operation permissions", () => {
       expect(canAccessPath(viewer([permission]), path)).toBe(true);
     },
   );
+});
+
+it("keeps basic business pages open to an authenticated user", () => {
+  for (const key of [
+    "chat.use",
+    "experts.create",
+    "skills.use",
+    "connectors.create",
+    "knowledge_bases.edit",
+    "tasks.create",
+    "records.delete",
+  ])
+    expect(userCan(viewer([]), key)).toBe(true);
+  expect(canAccessPath(viewer([]), "/assistants")).toBe(true);
+  expect(userCan(null, "experts.create")).toBe(false);
 });

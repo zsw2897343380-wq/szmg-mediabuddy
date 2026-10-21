@@ -137,7 +137,7 @@ describe("sidebarNavLayout", () => {
     ];
     expect(shown).not.toContain("admin-users");
     expect(shown).not.toContain("channels");
-    expect(shown).not.toContain("chat");
+    expect(shown).toContain("chat");
     expect(shown).not.toContain("personalization");
     expect(
       visibleEditorGroups(editor, sections).map((group) => group.id),

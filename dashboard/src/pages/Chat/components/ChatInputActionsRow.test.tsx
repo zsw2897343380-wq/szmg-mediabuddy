@@ -62,8 +62,8 @@ const baseProps = {
 };
 
 describe("ChatInputActionsRow plus menu", () => {
-  it("disables sending and uploading for a read-only chat grant", async () => {
-    auth.user = { role: "user", permissions: ["chat.view"] };
+  it("allows sending and uploading without explicit business grants", async () => {
+    auth.user = { role: "user", permissions: [] };
     try {
       render(
         <MemoryRouter>
@@ -75,11 +75,11 @@ describe("ChatInputActionsRow plus menu", () => {
           />
         </MemoryRouter>,
       );
-      expect(screen.getByTitle(/^(Send|chat\.send)$/)).toBeDisabled();
+      expect(screen.getByTitle(/^(Send|chat\.send)$/)).not.toBeDisabled();
       fireEvent.click(screen.getByTestId("composer-plus"));
       expect(
         await screen.findByRole("button", { name: /^(Files|upload\.files)$/ }),
-      ).toBeDisabled();
+      ).not.toBeDisabled();
     } finally {
       auth.user = { role: "admin", permissions: [] };
     }

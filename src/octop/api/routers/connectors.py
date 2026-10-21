@@ -1128,7 +1128,7 @@ async def connector_cli_status(
 )
 async def connector_install_cli(
     kind: str,
-    _: Any = Depends(require_permission("connectors.edit")),
+    _: Any = Depends(require_permission("plugins.create")),
 ) -> dict[str, Any]:
     """Run ``npm install -g`` for the connector CLI on the Octop host (admin only).
 

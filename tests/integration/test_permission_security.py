@@ -114,7 +114,9 @@ async def test_host_writes_require_grant_and_still_work_when_granted(
 
     client, _server, admin = env
     empty = await create_user(client, admin, username="empty", permissions=[])
-    editor = await create_user(client, admin, username="editor", permissions=["experts.create"])
+    editor = await create_user(
+        client, admin, username="editor", permissions=["storage_backends.edit"]
+    )
     body = {"path": str(tmp_path), "base_name": "folder"}
     assert (await client.post("/api/filesystem/mkdir", headers=empty, json=body)).status_code == 403
     assert not (tmp_path / "folder").exists()
@@ -159,11 +161,12 @@ async def test_expert_use_covers_dashboard_mcp_and_preserves_default_chat(
     aid = await create_agent(client, admin)
     await server.app_runtime.agent_registry.set_shared(aid, True)
     user = server.user_manager.get("chatter")
-    with pytest.raises(OctopError) as denied:
-        await prepare_dashboard_turn(
-            server, agent_id=aid, user=user, turn=ChatTurnBody(text="test")
-        )
-    assert denied.value.status == 403
+    prepared = await prepare_dashboard_turn(
+        server, agent_id=aid, user=user, turn=ChatTurnBody(text="test")
+    )
+    assert prepared.thread_id
+    agent = server.app_runtime.agent_registry.get_agent(aid)
+    agent.chunks = [{"type": "token", "content": "allowed"}]
     payload = {
         "jsonrpc": "2.0",
         "id": 1,
@@ -174,7 +177,7 @@ async def test_expert_use_covers_dashboard_mcp_and_preserves_default_chat(
         },
     }
     response = await client.post("/api/mcp/agents", headers=auth, json=payload)
-    assert response.json()["result"]["isError"] is True
+    assert response.json()["result"]["structuredContent"]["response"] == "allowed"
     default = await client.post("/api/chat/default-agent", headers=auth)
     assert default.status_code == 200
     prepared = await prepare_dashboard_turn(
@@ -490,7 +493,7 @@ async def test_existing_live_connection_closes_after_authorization_change(
         task.cancel()
 
 
-async def test_readonly_chat_observer_cannot_cancel(
+async def test_business_user_can_cancel_own_chat_without_extra_grants(
     env_with_provider: Any, monkeypatch: Any
 ) -> None:
     import json
@@ -543,8 +546,8 @@ async def test_readonly_chat_observer_cannot_cancel(
             return json.dumps({"type": "cancel", "thread_id": tid})
 
     await ws.dashboard_chat_ws(Socket(), aid, token="test")
-    assert calls == []
-    assert any(frame.get("type") == "error" for frame in frames)
+    assert len(calls) == 1
+    assert not any(frame.get("type") == "error" for frame in frames)
 
 
 async def test_security_specialist_can_edit_rules_without_global_edit(env: Any) -> None:

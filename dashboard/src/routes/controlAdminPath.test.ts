@@ -65,14 +65,15 @@ describe("pathPermissionKeys", () => {
     expect(pathPermissionKeys("/personalization/acp")).toBeNull();
   });
 
-  it("gates all ungrouped pages", () => {
+  it("opens business pages but keeps Token statistics gated", () => {
     expect(pathPermissionKeys("/experts")).toEqual([...PERM.experts]);
     expect(pathPermissionKeys("/tasks")).toEqual([...PERM.tasks]);
     expect(pathPermissionKeys("/token-usage")).toEqual([...PERM.tokenUsage]);
     const user = { role: "user", permissions: ["experts"] };
     expect(canAccessPath(user, "/experts")).toBe(true);
-    expect(canAccessPath(user, "/tasks")).toBe(false);
-    expect(canAccessPath(user, "/chat")).toBe(false);
+    expect(canAccessPath(user, "/tasks")).toBe(true);
+    expect(canAccessPath(user, "/chat")).toBe(true);
+    expect(canAccessPath(user, "/token-usage")).toBe(false);
   });
 
   it("gates settings modules", () => {
@@ -151,7 +152,7 @@ describe("unknown dashboard paths", () => {
 });
 
 describe("combined capability center routes", () => {
-  it("selects one navigation entry while keeping per-resource permissions", () => {
+  it("selects one navigation entry while opening business resources by default", () => {
     for (const path of [
       "/experts",
       "/skills",
@@ -162,13 +163,13 @@ describe("combined capability center routes", () => {
       expect(routeConfigs.some((rc) => rc.path === path)).toBe(true);
     }
     expect(canAccessPath({ role: "user", permissions: [] }, "/skills")).toBe(
-      false,
+      true,
     );
     expect(
       canAccessPath({ role: "user", permissions: [] }, "/connectors"),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canAccessPath({ role: "user", permissions: [] }, "/skill-packages"),
-    ).toBe(false);
+    ).toBe(true);
   });
 });

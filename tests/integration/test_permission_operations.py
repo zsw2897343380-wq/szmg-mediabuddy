@@ -10,19 +10,10 @@ from tests.support.auth import create_user
 @pytest.mark.parametrize(
     ("permission", "method", "path", "body"),
     [
-        ("experts.view", "POST", "/api/experts/published/missing/install", {}),
-        (
-            "tasks.view",
-            "POST",
-            "/api/agents/missing/cron",
-            {"prompt": "x", "trigger": "interval:60"},
-        ),
-        ("connectors.view", "POST", "/api/connector-instances", {"kind": "missing", "name": "x"}),
         ("bridge.view", "DELETE", "/api/bridge/connections/missing", None),
         ("acp.view", "PUT", "/api/acp/custom", {"command": "echo"}),
         ("backup.view", "POST", "/api/admin/backup/create", {}),
         ("workspace.view", "DELETE", "/api/agents/missing/workspace/file?path=x", None),
-        ("records.view", "DELETE", "/api/agents/missing/threads/missing", None),
     ],
 )
 async def test_viewer_cannot_mutate(
@@ -86,18 +77,34 @@ async def test_permission_catalog_contains_all_menus_without_legacy_all_access(e
     assert response.status_code == 200
     keys = {item["key"] for item in response.json()}
     assert {
-        "assistants.view",
-        "chat.use",
-        "records.view",
+        "token_usage.view",
         "bridge.view",
         "acp.view",
         "public_resources.view",
         "workspace.view",
     } <= keys
     assert "users" not in keys
+    assert not any(
+        key.split(".")[0]
+        in {
+            "experts",
+            "chat",
+            "records",
+            "tasks",
+            "skills",
+            "skill_packages",
+            "connectors",
+            "knowledge_bases",
+            "assistants",
+        }
+        for key in keys
+    )
+    assert {item["category"] for item in response.json()} <= {"settings", "control", "admin"}
 
 
-async def test_chat_does_not_default_to_ungranted_capabilities(env_with_provider: Any) -> None:
+async def test_chat_keeps_business_defaults_and_respects_explicit_opt_out(
+    env_with_provider: Any,
+) -> None:
     from octop.api.routers.chat.models import ChatTurnBody
     from octop.api.routers.chat.turn import build_dashboard_inbound, prepare_dashboard_turn
 
@@ -110,6 +117,11 @@ async def test_chat_does_not_default_to_ungranted_capabilities(env_with_provider
     user = server.user_manager.get("chat_only")
     turn = ChatTurnBody(text="hello")
     agent_id = response.json()["agent_id"]
+    prepared = await prepare_dashboard_turn(server, agent_id=agent_id, user=user, turn=turn)
+    assert prepared.skills is None
+    assert prepared.mcp_servers is None
+    assert prepared.knowledge_base_ids is None
+    turn = ChatTurnBody(text="hello", skills=[], mcp_servers=[], knowledge_base_ids=[])
     prepared = await prepare_dashboard_turn(server, agent_id=agent_id, user=user, turn=turn)
     assert prepared.skills == []
     assert prepared.mcp_servers == []

@@ -13,6 +13,7 @@ from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.account_access import assert_admin_remains, assert_manageable_account
 from octop.infra.users.identity import Role, User
 from octop.infra.users.permissions import (
+    DEFAULT_OPEN_MODULES,
     PERMISSIONS,
     expand_permissions,
     user_has_permission,
@@ -209,7 +210,9 @@ def _assert_can_assign(actor: User, permissions: list[str]) -> None:
     """Non-admin actors may only grant permissions they themselves hold."""
     if actor.is_admin:
         return
-    missing = sorted(expand_permissions(permissions) - expand_permissions(actor.permissions or []))
+    missing = sorted(
+        key for key in expand_permissions(permissions) if not user_has_permission(actor, key)
+    )
     if missing:
         raise OctopError(
             ErrorCode.FORBIDDEN,
@@ -258,7 +261,7 @@ async def list_permission_catalog(
     items: list[dict[str, str]] = []
     zh = locale.startswith("zh")
     for key, p in PERMISSIONS.items():
-        if not p.parent:
+        if not p.parent or p.parent in DEFAULT_OPEN_MODULES:
             continue
         labels = [(p.label_zh, p.label_en), *p.extra_tabs]
         for label_zh, label_en in labels:

@@ -56,11 +56,11 @@ describe("sidebarNav", () => {
 
   it.each([
     ["experts", "/experts"],
-    ["skills", "/skills"],
-    ["skill_packages", "/skill-packages"],
-    ["connectors", "/connectors"],
+    ["skills", "/experts"],
+    ["skill_packages", "/experts"],
+    ["connectors", "/experts"],
   ])(
-    "opens the permitted center resource for %s-only users",
+    "opens the default business center regardless of legacy %s grants",
     (permission, path) => {
       const user = { ...adminUser, role: "user", permissions: [permission] };
       const items = buildNavSections(user).flatMap((section) => section.items);

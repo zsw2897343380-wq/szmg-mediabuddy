@@ -9,6 +9,7 @@ import pytest
 from octop.infra.users.permissions import (
     ALL_PERMISSION_KEYS,
     BASELINE_PERMISSIONS,
+    DEFAULT_OPEN_MODULES,
     PERMISSIONS,
     effective_permissions,
     expand_permissions,
@@ -67,6 +68,7 @@ def test_categories_match_nav_groups() -> None:
     for p in PERMISSIONS.values():
         assert p.category in allowed
     assert {k for k, p in PERMISSIONS.items() if not p.parent and p.category == "settings"} == {
+        "token_usage",
         "skills",
         "subagents",
         "tools",
@@ -112,7 +114,7 @@ def test_effective_permissions_admin_gets_catalog() -> None:
     assert effective_permissions(admin) == sorted(ALL_PERMISSION_KEYS)
 
 
-@pytest.mark.parametrize("module", ["experts", "skills", "connectors", "tasks", "users", "backup"])
+@pytest.mark.parametrize("module", ["users", "backup", "bridge", "workspace", "token_usage"])
 def test_view_does_not_grant_mutations(module: str) -> None:
     user = _FakeUser(False, [f"{module}.view"])
     assert user_has_permission(user, module)
@@ -127,3 +129,11 @@ def test_legacy_grants_expand_without_escalating_usage_scope() -> None:
     assert not user_has_permission(user, "token_usage.all")
     assert "users.permissions" in expand_permissions(user.permissions or [])
     assert "token_usage.all" not in expand_permissions(user.permissions or [])
+
+
+@pytest.mark.parametrize("module", sorted(DEFAULT_OPEN_MODULES))
+def test_business_operations_do_not_require_grants(module: str) -> None:
+    user = _FakeUser(False, [])
+    for key in PERMISSIONS:
+        if key == module or key.startswith(module + "."):
+            assert user_has_permission(user, key)

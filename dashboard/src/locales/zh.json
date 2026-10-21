@@ -6149,7 +6149,7 @@
     "colPermissions": "权限",
     "permAll": "全部（管理员）",
     "permAllHint": "管理员自动拥有全部模块权限，无需单独勾选。",
-    "permEditHint": "用于控制某些页面或功能是否可用。",
+    "permEditHint": "仅配置设置、控制和管理权限。聊天、专家/专家团、技能、连接器、知识库及定时任务默认可用；资源归属和共享范围仍生效。",
     "permGroupSettings": "设置",
     "permGroupControl": "控制",
     "permGroupAdmin": "管理",

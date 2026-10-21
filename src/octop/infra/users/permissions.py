@@ -51,7 +51,7 @@ PERMISSIONS: dict[str, PermissionDef] = {
     "assistants": _p("assistants", "nav", "媒体助理", "Media assistants"),
     "records": _p("records", "nav", "任务记录", "Chat history"),
     "tasks": _p("tasks", "nav", "定时任务", "Scheduled tasks"),
-    "token_usage": _p("token_usage", "nav", "Token 统计", "Token usage"),
+    "token_usage": _p("token_usage", "settings", "Token 统计", "Token usage"),
     # --- settings (nav.settings) — listed & default-selected for new users ---
     # Personalization tabs. ``channels`` is also a sidebar item; the rest are
     # tabs on the personalization page. ``agent_plugins`` is per-agent plugin
@@ -350,6 +350,22 @@ for _module, _actions in PERMISSION_ACTIONS.items():
 
 ALL_PERMISSION_KEYS: set[str] = set(PERMISSIONS)
 
+# Business functions are available to every authenticated account. Keep legacy
+# keys valid for stored roles/API clients, but do not expose them as grant knobs.
+DEFAULT_OPEN_MODULES: frozenset[str] = frozenset(
+    {
+        "chat",
+        "assistants",
+        "records",
+        "experts",
+        "tasks",
+        "skills",
+        "skill_packages",
+        "connectors",
+        "knowledge_bases",
+    }
+)
+
 # Pre-checked for new users. Stored explicitly — not granted unless written.
 # ``nav`` pages used to be open to everyone, so they stay in the default set.
 BASELINE_PERMISSIONS: set[str] = {
@@ -365,6 +381,8 @@ def user_has_permission(user: PermissionUser, key: str) -> bool:
     if key not in PERMISSIONS:
         return False
     if user.is_admin:
+        return True
+    if key.split(".", 1)[0] in DEFAULT_OPEN_MODULES:
         return True
     held = set(user.permissions or [])
     definition = PERMISSIONS[key]

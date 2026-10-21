@@ -41,7 +41,6 @@ import { ResizableTable } from "@/components/ResizableTable";
 
 import {
   Bot,
-  Check,
   CircleHelp,
   Coins,
   IdCard,
@@ -73,10 +72,8 @@ import {
   type UserRole,
 } from "../../../api/modules/userRoles";
 import { authApi } from "../../../api/modules/auth";
-import { preferencesApi } from "../../../api/modules/preferences";
-import type { SidebarNavLayout } from "../../../layouts/sidebarNavLayout";
-import { userCan } from "../../../utils/permissions";
-import { buildPermissionPickerGroups } from "./permissionPickerLayout";
+import { DEFAULT_OPEN_MODULES, userCan } from "../../../utils/permissions";
+import { PermissionCheckboxPicker } from "./PermissionTreePicker";
 import { useCardTableView } from "../../../hooks/useCardTableView";
 import {
   useCurrentUser,
@@ -736,241 +733,7 @@ export function ResourcePolicyFields({
   );
 }
 
-interface PermissionCheckboxPickerProps {
-  value?: string[];
-  onChange?: (value: string[]) => void;
-  catalog: PermissionCatalogItem[];
-  disabled?: boolean;
-}
-
-export function PermissionCheckboxPicker({
-  value,
-  onChange,
-  catalog,
-  disabled,
-}: PermissionCheckboxPickerProps) {
-  const { t } = useTranslation();
-  const selected = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          (value ?? []).flatMap((key) => {
-            const operations = catalog.filter(
-              (item) =>
-                item.key.startsWith(`${key}.`) &&
-                item.key !== "token_usage.all",
-            );
-            return operations.length
-              ? operations.map((item) => item.key)
-              : [key];
-          }),
-        ),
-      ),
-    [value, catalog],
-  );
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
-  const [navLayout, setNavLayout] = useState<SidebarNavLayout | null>(null);
-  const [navReady, setNavReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void preferencesApi
-      .get()
-      .then((prefs) => {
-        if (!cancelled) setNavLayout(prefs.sidebar_nav ?? null);
-      })
-      .catch(() => {
-        // Keep the default groups when preferences cannot be loaded.
-      })
-      .finally(() => {
-        if (!cancelled) setNavReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const groups = useMemo(
-    () => buildPermissionPickerGroups(catalog, navLayout, t),
-    [catalog, navLayout, t],
-  );
-
-  const toggle = (key: string, checked: boolean) => {
-    if (disabled) return;
-    if (checked) {
-      const viewKey = `${key.split(".")[0]}.view`;
-      onChange?.(
-        Array.from(
-          new Set([
-            ...selected,
-            key,
-            ...(catalog.some((item) => item.key === viewKey) ? [viewKey] : []),
-          ]),
-        ),
-      );
-      return;
-    }
-    onChange?.(
-      selected.filter(
-        (k) =>
-          k !== key &&
-          !(key.endsWith(".view") && k.startsWith(`${key.split(".")[0]}.`)),
-      ),
-    );
-  };
-
-  const setGroup = (keys: string[], checked: boolean) => {
-    if (disabled) return;
-    if (checked) {
-      const next = new Set(selected);
-      for (const k of keys) next.add(k);
-      onChange?.(Array.from(next));
-      return;
-    }
-    const drop = new Set(keys);
-    onChange?.(selected.filter((k) => !drop.has(k)));
-  };
-
-  if (catalog.length === 0) {
-    return (
-      <div className={styles.permEmpty}>
-        <Text type="secondary">{t("adminUsers.permCatalogEmpty")}</Text>
-      </div>
-    );
-  }
-
-  if (!navReady) return null;
-
-  return (
-    <div
-      className={`${styles.permPicker} ${
-        disabled ? styles.permPickerDisabled : ""
-      }`}
-    >
-      {groups.map((group) => {
-        const keys = group.blocks.flatMap((block) =>
-          block.kind === "page"
-            ? block.items.map((item) => item.key)
-            : block.items.flatMap((chip) =>
-                chip.kind === "permission" ? [chip.item.key] : [],
-              ),
-        );
-        const checkedCount = keys.filter((k) => selectedSet.has(k)).length;
-        const allChecked = checkedCount === keys.length && keys.length > 0;
-        const indeterminate = checkedCount > 0 && !allChecked;
-        const renderChips = (
-          items: (
-            | { kind: "permission"; item: PermissionCatalogItem }
-            | { kind: "always"; key: string; label: string }
-          )[],
-        ) => (
-          <div className={styles.permGrid} role="group">
-            {items.map((chip) => {
-              if (chip.kind === "always") {
-                return (
-                  <div
-                    key={chip.key}
-                    className={`${styles.permChip} ${styles.permChipAlways}`}
-                    title={t("adminUsers.permAlwaysOn")}
-                  >
-                    <span className={styles.permChipLabel}>{chip.label}</span>
-                    <span className={styles.permChipAlwaysTag}>
-                      {t("adminUsers.permAlwaysOn")}
-                    </span>
-                  </div>
-                );
-              }
-              const item = chip.item;
-              const checked = selectedSet.has(item.key);
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  disabled={disabled}
-                  aria-pressed={checked}
-                  className={`${styles.permChip} ${
-                    checked ? styles.permChipSelected : ""
-                  }`}
-                  onClick={() => toggle(item.key, !checked)}
-                >
-                  <span className={styles.permChipCheck} aria-hidden>
-                    {checked ? <Check size={12} strokeWidth={2.5} /> : null}
-                  </span>
-                  <span className={styles.permChipLabel}>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-        return (
-          <section key={group.id} className={styles.permGroup}>
-            <div className={styles.permGroupHeader}>
-              {keys.length > 0 ? (
-                <Checkbox
-                  checked={allChecked}
-                  indeterminate={indeterminate}
-                  disabled={disabled}
-                  onChange={(e) => setGroup(keys, e.target.checked)}
-                >
-                  <span className={styles.permGroupTitle}>{group.label}</span>
-                </Checkbox>
-              ) : (
-                <span className={styles.permGroupTitle}>{group.label}</span>
-              )}
-              {keys.length > 0 ? (
-                <span className={styles.permGroupCount}>
-                  {checkedCount}/{keys.length}
-                </span>
-              ) : null}
-            </div>
-            {group.blocks.map((block) => {
-              if (block.kind === "chips") {
-                const chipKey = block.items
-                  .map((chip) =>
-                    chip.kind === "always" ? chip.key : chip.item.key,
-                  )
-                  .join(",");
-                return <div key={chipKey}>{renderChips(block.items)}</div>;
-              }
-              const pageKeys = block.items.map((item) => item.key);
-              const pageChecked = pageKeys.filter((k) =>
-                selectedSet.has(k),
-              ).length;
-              const pageAll =
-                pageChecked === pageKeys.length && pageKeys.length > 0;
-              const pageIndeterminate = pageChecked > 0 && !pageAll;
-              return (
-                <div key={block.id} className={styles.permPage}>
-                  <div className={styles.permPageHeader}>
-                    <Checkbox
-                      checked={pageAll}
-                      indeterminate={pageIndeterminate}
-                      disabled={disabled}
-                      onChange={(e) => setGroup(pageKeys, e.target.checked)}
-                    >
-                      <span className={styles.permPageTitle}>
-                        {block.title}
-                      </span>
-                    </Checkbox>
-                    <span className={styles.permGroupCount}>
-                      {pageChecked}/{pageKeys.length}
-                    </span>
-                  </div>
-                  {renderChips(
-                    block.items.map((item) => ({
-                      kind: "permission" as const,
-                      item,
-                    })),
-                  )}
-                </div>
-              );
-            })}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
+export { PermissionCheckboxPicker };
 
 function PermissionSummary({
   row,
@@ -987,7 +750,9 @@ function PermissionSummary({
       </span>
     );
   }
-  const keys = row.permissions ?? [];
+  const keys = (row.permissions ?? []).filter(
+    (key) => !DEFAULT_OPEN_MODULES.has(key.split(".")[0]),
+  );
   if (keys.length === 0) {
     return <span className={styles.permBadgeMuted}>—</span>;
   }

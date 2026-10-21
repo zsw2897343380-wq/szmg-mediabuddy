@@ -35,7 +35,9 @@ async def test_builtin_preferences_without_an_expert_are_private_and_validated(e
 
 
 @pytest.mark.parametrize("method", ["GET", "PUT"])
-async def test_builtin_preferences_require_auth_and_skill_permission(env: Any, method: str) -> None:
+async def test_builtin_preferences_require_auth_but_no_business_grant(
+    env: Any, method: str
+) -> None:
     client, _server, admin = env
     kwargs = {"json": {"slugs": ["apple-notes"], "enabled": False}} if method == "PUT" else {}
     assert (await client.request(method, "/api/skills/builtin", **kwargs)).status_code == 401
@@ -43,7 +45,7 @@ async def test_builtin_preferences_require_auth_and_skill_permission(env: Any, m
         client, admin, username="presets-denied", permissions=["skill_packages"]
     )
     response = await client.request(method, "/api/skills/builtin", headers=restricted, **kwargs)
-    assert response.status_code == 403
+    assert response.status_code == (204 if method == "PUT" else 200)
 
 
 async def test_bulk_toggle_hot_updates_and_survives_restart_without_overwriting_expert_config(

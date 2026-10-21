@@ -152,19 +152,10 @@ async def list_host_dirs(
 @router.post("/probe")
 async def probe_host_dir(
     body: ProbeBody,
-    user: User = Depends(
-        require_any_permission(
-            "storage_backends.edit",
-            "users.permissions",
-            "experts.create",
-            "experts.edit",
-            "assistants.create",
-            "assistants.edit",
-        )
-    ),
+    user: User = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
-    """Check whether Octop can use *path* as a local backend root_dir."""
+    """Check a creator's selected root; path restrictions still apply."""
     allowed = _user_workspace_root(server, user)
     return await asyncio.to_thread(
         probe_host_root_dir,
@@ -226,10 +217,6 @@ async def mkdir_host_dir(
         require_any_permission(
             "storage_backends.edit",
             "users.permissions",
-            "experts.create",
-            "experts.edit",
-            "assistants.create",
-            "assistants.edit",
         )
     ),
     server: Any = Depends(get_server),
@@ -255,10 +242,6 @@ async def rename_host_directory(
         require_any_permission(
             "storage_backends.edit",
             "users.permissions",
-            "experts.create",
-            "experts.edit",
-            "assistants.create",
-            "assistants.edit",
         )
     ),
     server: Any = Depends(get_server),

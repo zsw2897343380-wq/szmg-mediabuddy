@@ -148,16 +148,17 @@ describe("combined capability center", () => {
     );
   });
 
-  it("hides restricted resources for a user without their permissions", async () => {
-    state.user = { role: "user", permissions: ["skills"] };
+  it("opens all business resource tabs without explicit grants", async () => {
+    state.user = { role: "user", permissions: [] };
     setup("/skills");
-    expect(await screen.findByText("skills-agent-one")).toBeVisible();
     expect(
-      screen.queryByRole("link", { name: "nav.connectors" }),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("textbox", { name: "library-draft" }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "nav.connectors" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "nav.experts" })).toBeVisible();
     expect(
-      screen.queryByRole("link", { name: "capabilityCenter.skillPackages" }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("link", { name: "capabilityCenter.skillPackages" }),
+    ).toBeVisible();
   });
 
   it("opens the unified library for package-only users without an expert", async () => {
@@ -170,32 +171,33 @@ describe("combined capability center", () => {
     expect(screen.queryByText("skills-agent-one")).not.toBeInTheDocument();
   });
 
-  it("does not mount skills or experts for connector-only users", async () => {
+  it("keeps unselected resources unmounted while exposing their tabs", async () => {
     state.user = { role: "user", permissions: ["connectors"] };
     setup("/connectors");
     await screen.findByRole("textbox", { name: "connector-draft" });
-    expect(
-      screen.queryByRole("link", { name: "nav.skills" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "nav.skills" })).toBeVisible();
     expect(
       screen.queryByRole("textbox", { name: "expert-filter" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("skills-agent-one")).not.toBeInTheDocument();
   });
 
-  it("rejects a direct skill URL without permission", () => {
+  it("opens a direct skill URL without business grants", async () => {
     state.user = { role: "user", permissions: [] };
     setup("/skills");
-    expect(screen.getByText("forbidden")).toBeVisible();
+    expect(
+      await screen.findByRole("textbox", { name: "library-draft" }),
+    ).toBeVisible();
+    expect(screen.queryByText("forbidden")).not.toBeInTheDocument();
   });
 
-  it("rejects a direct connector URL without permission", () => {
+  it("opens a direct connector URL without business grants", async () => {
     state.user = { role: "user", permissions: [] };
     setup("/connectors?oauth_state=example");
-    expect(screen.getByText("forbidden")).toBeVisible();
     expect(
-      screen.queryByRole("textbox", { name: "connector-draft" }),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("textbox", { name: "connector-draft" }),
+    ).toBeVisible();
+    expect(screen.queryByText("forbidden")).not.toBeInTheDocument();
   });
 
   it("preserves OAuth callback parameters on the existing connector URL", async () => {

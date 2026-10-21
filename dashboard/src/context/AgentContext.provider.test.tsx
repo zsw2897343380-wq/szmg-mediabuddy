@@ -3,10 +3,18 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentProvider, useAgent, type OctopAgent } from "./AgentContext";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn(), setActiveAgentId: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  list: vi.fn(),
+  setActiveAgentId: vi.fn(),
+  bridgeList: vi.fn(),
+  user: { role: "user", permissions: [] as string[] },
+}));
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => mocks.user,
+}));
 vi.mock("../api/modules/agent", () => ({ agentApi: { list: mocks.list } }));
 vi.mock("../api/modules/bridge", () => ({
-  bridgeApi: { list: async () => [] },
+  bridgeApi: { list: mocks.bridgeList },
 }));
 vi.mock("../api/request", () => ({ setActiveAgentId: mocks.setActiveAgentId }));
 
@@ -36,9 +44,29 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   mocks.list.mockResolvedValue([agent("A"), agent("B")]);
+  mocks.bridgeList.mockResolvedValue([]);
+  mocks.user.permissions = [];
 });
 
 describe("agent refresh during browser workflows", () => {
+  it("loads local experts without requesting unauthorized bridge connections", async () => {
+    const { result } = renderHook(() => useAgent(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(() => result.current.refresh());
+    expect(result.current.agents.map((item) => item.agent_id)).toEqual([
+      "A",
+      "B",
+    ]);
+    expect(mocks.bridgeList).not.toHaveBeenCalled();
+  });
+
+  it("still loads bridge connections when view permission is granted", async () => {
+    mocks.user.permissions = ["bridge.view"];
+    const { result } = renderHook(() => useAgent(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(mocks.bridgeList).toHaveBeenCalledOnce();
+  });
+
   it("updates saved assistant role and responsibilities immediately", async () => {
     const { result } = renderHook(() => useAgent(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));

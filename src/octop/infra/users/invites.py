@@ -125,7 +125,6 @@ class InviteService:
             user_has_permission(actor, key) for key in ("users.create", "users.permissions")
         ):
             return []
-        allowed = expand_permissions(actor.permissions)
         result = []
         for row in self._repo.list_all():
             if row.created_by != actor.id:
@@ -137,7 +136,9 @@ class InviteService:
             except OctopError:
                 # Removed templates make old invitations unusable.
                 continue
-            if role_id != Role.ADMIN and expand_permissions(grants) <= allowed:
+            if role_id != Role.ADMIN and all(
+                user_has_permission(actor, key) for key in expand_permissions(grants)
+            ):
                 result.append(invite_status_payload(row))
         return result
 
