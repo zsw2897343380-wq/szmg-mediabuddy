@@ -1219,12 +1219,15 @@
       "moreManagement": "更多专家管理"
     },
     "mediaCategories": {
-      "topic-planning": "选题策划",
-      "article-production": "稿件生产",
-      "viral-creation": "爆款创作",
+      "topic-planning": "策划能手",
+      "outline-planning": "提纲巧手",
+      "article-production": "写稿专家",
+      "fact-checking": "信息核查官",
+      "viral-creation": "爆款标题王",
       "international-communication": "国际传播",
       "content-operations": "内容运营",
       "data-analysis": "数据分析",
+      "spoken-script": "口播脚本",
       "office-collaboration": "办公协作",
       "review-proofreading": "审核校对"
     }

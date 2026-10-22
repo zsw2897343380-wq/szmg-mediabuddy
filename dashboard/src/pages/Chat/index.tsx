@@ -11,7 +11,6 @@ import {
   Terminal,
   FolderOpen,
   Activity,
-  MessageCircle,
 } from "lucide-react";
 import { Alert, Button, Tooltip } from "antd";
 import { message as antMessage } from "@/utils/antdMessage";
@@ -254,11 +253,7 @@ function ChatPageInner() {
     : isTeamChat
     ? t("chat.agentProfile.openTeam")
     : t("chat.agentProfile.open");
-  const ProfileIcon = generalChat
-    ? MessageCircle
-    : isTeamChat
-    ? Users
-    : GraduationCap;
+  const ProfileIcon = isTeamChat ? Users : GraduationCap;
   const noAgents = !agentsLoading && agents.length === 0;
 
   // Sidebar only lists "enabled" experts (harness running). Stopped / failed
@@ -1486,7 +1481,16 @@ function ChatPageInner() {
                       title={profileOpenLabel}
                       aria-label={profileOpenLabel}
                     >
-                      <ProfileIcon size={18} strokeWidth={1.8} />
+                      {generalChat ? (
+                        <img
+                          src="/experts/avatars/general-assistant.svg?v=f20f9ba3"
+                          width={18}
+                          height={18}
+                          alt=""
+                        />
+                      ) : (
+                        <ProfileIcon size={18} strokeWidth={1.8} />
+                      )}
                     </button>
                     <button
                       className={styles.menuBtn}
@@ -1664,7 +1668,16 @@ function ChatPageInner() {
                             onClick={() => setAgentProfileOpen(true)}
                             aria-label={profileOpenLabel}
                           >
-                            <ProfileIcon size={20} strokeWidth={2.1} />
+                            {generalChat ? (
+                              <img
+                                src="/experts/avatars/general-assistant.svg?v=f20f9ba3"
+                                width={20}
+                                height={20}
+                                alt=""
+                              />
+                            ) : (
+                              <ProfileIcon size={20} strokeWidth={2.1} />
+                            )}
                           </button>
                         </span>
                       </Tooltip>

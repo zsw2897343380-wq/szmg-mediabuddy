@@ -1219,12 +1219,15 @@
       "moreManagement": "More expert management"
     },
     "mediaCategories": {
-      "topic-planning": "Topic planning",
-      "article-production": "News production",
-      "viral-creation": "Viral content creation",
+      "topic-planning": "Story planning",
+      "outline-planning": "Outline planning",
+      "article-production": "Writing experts",
+      "fact-checking": "Information verification",
+      "viral-creation": "Headline specialists",
       "international-communication": "International communication",
       "content-operations": "Content operations",
       "data-analysis": "Data analysis",
+      "spoken-script": "Spoken scripts",
       "office-collaboration": "Office collaboration",
       "review-proofreading": "Review and proofreading"
     }

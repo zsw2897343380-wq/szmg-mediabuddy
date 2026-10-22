@@ -13,6 +13,7 @@
     "en": "Share what's on your mind — work or life"
   },
   "icon_name": "zap",
+  "icon_url": "/experts/avatars/general-assistant.svg?v=f20f9ba3",
   "color": "#6366f1",
   "prompt_files": [
     "SOUL.md"

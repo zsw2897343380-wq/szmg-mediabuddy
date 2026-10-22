@@ -285,9 +285,9 @@ describe("WorkBuddy expert center", () => {
     );
     expect(
       screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),
-    ).toHaveLength(6);
+    ).toHaveLength(5);
     fireEvent.change(screen.getByRole("textbox"), {
-      target: { value: "媒体模板 40" },
+      target: { value: "媒体模板 36" },
     });
     expect(
       screen.getAllByText("experts.workbuddy.summon", { selector: "button" }),

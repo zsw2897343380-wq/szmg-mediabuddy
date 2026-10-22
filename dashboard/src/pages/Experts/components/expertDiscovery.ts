@@ -16,14 +16,82 @@ export type DiscoverySort = "reco" | "popular" | "newest";
 
 export const MEDIA_EXPERT_CATEGORIES = [
   "topic-planning",
+  "outline-planning",
   "article-production",
+  "fact-checking",
   "viral-creation",
-  "international-communication",
-  "content-operations",
   "data-analysis",
+  "spoken-script",
+  "content-operations",
   "office-collaboration",
-  "review-proofreading",
 ] as const;
+
+// MediaBuddy catalog order from the approved expert naming document.
+const MEDIA_EXPERT_SLUG_ORDER = [
+  // 策划能手
+  "workbuddy-global-topic-planner",
+  "workbuddy-cn-topic-planner",
+  "workbuddy-trendradar-forecast",
+  "workbuddy-geo-strategy-architect",
+  "workbuddy-daily-topic-recommender",
+  "workbuddy-weekly-review-forecaster",
+  "workbuddy-shenzhen-event-planner",
+  // 提纲巧手
+  "workbuddy-info-distillation",
+  "workbuddy-executive-interview-architect",
+  "workbuddy-hot-event-timeline",
+  // 写稿专家
+  "workbuddy-hot-news-writer",
+  "workbuddy-global-affairs-commentator",
+  "workbuddy-longform-content-slicer",
+  "workbuddy-ad-copywriter",
+  "workbuddy-manuscript-polish-editor",
+  "workbuddy-content-expansion-writer",
+  "workbuddy-bilingual-news-editor",
+  "workbuddy-sea-languages-translator",
+  "workbuddy-cn-en-bilingual-translator",
+  "workbuddy-deai-tone-editor",
+  // 信息核查官
+  "workbuddy-multi-engine-search",
+  "workbuddy-youtube-video-scout",
+  "workbuddy-hot-asset-harvester",
+  // 爆款标题王
+  "workbuddy-viral-title-generator",
+  "workbuddy-multiplatform-rewriter",
+  "workbuddy-douyin-viral-alchemist",
+  "workbuddy-douyin-hook-designer",
+  // 数据分析
+  "workbuddy-global-hotspot-radar",
+  "workbuddy-cn-hotspot-radar",
+  "workbuddy-account-data-analyst",
+  // 口播脚本
+  "workbuddy-viral-video-analyzer",
+  "workbuddy-shortvideo-storyboard",
+  "workbuddy-ai-image-prompt",
+  "workbuddy-ai-video-prompt",
+  "workbuddy-suno-music-composer",
+  // 内容运营
+  "workbuddy-cn-social-operator",
+  "workbuddy-global-social-strategist",
+  "workbuddy-weibo-trend-copywriter",
+  "workbuddy-xiaohongshu-note-writer",
+  // 办公协作
+  "workbuddy-official-letter-writer",
+  "workbuddy-work-report-assistant",
+  "workbuddy-meeting-minutes-assistant",
+] as const;
+
+const mediaExpertRanks = new Map<string, number>(
+  MEDIA_EXPERT_SLUG_ORDER.map((slug, index) => [slug, index]),
+);
+
+export function orderMediaExperts(items: DiscoveryExpert[]): DiscoveryExpert[] {
+  const rank = (item: DiscoveryExpert) =>
+    item.source.kind === "published"
+      ? mediaExpertRanks.get(item.source.expert.slug ?? "") ?? Infinity
+      : Infinity;
+  return [...items].sort((a, b) => rank(a) - rank(b));
+}
 
 export function matchesInstalledSource(
   agent: OctopAgent,

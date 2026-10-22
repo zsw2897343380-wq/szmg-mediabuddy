@@ -51,7 +51,7 @@ describe("index.html boot theme", () => {
   });
 
   it("uses the MediaBuddy logo in the splash", () => {
-    expect(INDEX_HTML).toContain('src="/mediabuddy-logo.png"');
+    expect(INDEX_HTML).toContain('src="/mediabuddy-brand-f20f9ba3.png"');
   });
 
   it("keeps a stored light preference over OS dark", () => {

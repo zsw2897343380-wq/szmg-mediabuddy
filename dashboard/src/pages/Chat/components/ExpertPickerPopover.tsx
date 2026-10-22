@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, GraduationCap, Info, MessageCircle } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Info } from "lucide-react";
 import SearchablePickerPanel, {
   pickerStyles,
 } from "../../../components/ChatPicker/SearchablePickerPanel";
@@ -101,7 +101,13 @@ export default function ExpertPickerPopover({
               onNavigateAway?.();
             }}
           >
-            <MessageCircle size={20} aria-hidden />
+            <img
+              src="/experts/avatars/general-assistant.svg?v=f20f9ba3"
+              width={20}
+              height={20}
+              alt=""
+              aria-hidden
+            />
             <span className={pickerStyles.itemName}>
               {t("chat.generalChat.label")}
             </span>

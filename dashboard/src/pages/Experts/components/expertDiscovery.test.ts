@@ -5,6 +5,7 @@ import {
   filterDiscoveryExperts,
   matchesInstalledSource,
   MEDIA_EXPERT_CATEGORIES,
+  orderMediaExperts,
 } from "./expertDiscovery";
 import type { CreateFromTemplateSource } from "./CreateFromExpertDrawer";
 
@@ -45,6 +46,37 @@ const published: CreateFromTemplateSource = {
 };
 
 describe("expert discovery", () => {
+  it("follows document order across categories and within each category, independent of names and API order", () => {
+    const entry = (slug: string, name: string) =>
+      discoveryExpert(
+        {
+          ...published,
+          expert: { ...published.expert, slug, name },
+        } as CreateFromTemplateSource,
+        [],
+        "zh",
+      );
+    const items = [
+      entry("workbuddy-hot-event-timeline", "热点新闻脉络梳理"),
+      entry("workbuddy-new-expert", "新增专家"),
+      entry("workbuddy-cn-topic-planner", "国内热点策划"),
+      entry("workbuddy-executive-interview-architect", "高端访谈提纲策划师"),
+      entry("workbuddy-global-topic-planner", "改名后的国际策划"),
+      entry("workbuddy-info-distillation", "信息精炼师"),
+    ];
+    const ordered = orderMediaExperts(items);
+    expect(ordered.map((item) => item.name)).toEqual([
+      "改名后的国际策划",
+      "国内热点策划",
+      "信息精炼师",
+      "高端访谈提纲策划师",
+      "热点新闻脉络梳理",
+      "新增专家",
+    ]);
+    expect(items[0]?.name).toBe("热点新闻脉络梳理");
+    expect(filterDiscoveryExperts(ordered, "", "", "reco")).toEqual(ordered);
+  });
+
   it("matches installed market experts using canonical ids and published experts using their column", () => {
     expect(
       matchesInstalledSource(
@@ -88,13 +120,14 @@ describe("expert discovery", () => {
   it("uses the site category order and keeps uncategorized experts only in all", () => {
     expect(MEDIA_EXPERT_CATEGORIES).toEqual([
       "topic-planning",
+      "outline-planning",
       "article-production",
+      "fact-checking",
       "viral-creation",
-      "international-communication",
-      "content-operations",
       "data-analysis",
+      "spoken-script",
+      "content-operations",
       "office-collaboration",
-      "review-proofreading",
     ]);
     const general = discoveryExpert(
       {

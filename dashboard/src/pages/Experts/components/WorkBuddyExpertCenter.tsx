@@ -30,6 +30,7 @@ import {
   filterDiscoveryExperts,
   matchesInstalledSource,
   MEDIA_EXPERT_CATEGORIES,
+  orderMediaExperts,
   type DiscoveryExpert,
   type DiscoverySort,
 } from "./expertDiscovery";
@@ -98,8 +99,8 @@ export default function WorkBuddyExpertCenter({
   );
 
   // The restored WorkBuddy collection keeps its original publication slugs.
-  const entries = useMemo(
-    () => [
+  const entries = useMemo(() => {
+    const items = [
       ...(section === "expert"
         ? [
             ...experts.map((expert) =>
@@ -119,9 +120,9 @@ export default function WorkBuddyExpertCenter({
         .map((expert) =>
           discoveryExpert({ kind: "published", expert }, agents, lang),
         ),
-    ],
-    [experts, publishedExperts, market, agents, lang, section],
-  );
+    ];
+    return section === "expert" ? items : orderMediaExperts(items);
+  }, [experts, publishedExperts, market, agents, lang, section]);
   const categories =
     section === "expert"
       ? Array.from(

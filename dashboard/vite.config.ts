@@ -183,8 +183,8 @@ export default defineConfig(({ mode }) => {
         // Include the offline fallback in the SW precache.
         includeAssets: [
           "offline.html",
-          "mediabuddy-logo.png",
-          "mediabuddy-app-icon.svg",
+          "mediabuddy-brand-f20f9ba3.png",
+          "mediabuddy-brand-f20f9ba3.svg",
         ],
         workbox: {
           // Precache hashed entry + vendor chunks. Do NOT precache index.html:

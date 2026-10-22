@@ -255,7 +255,7 @@ export default function SetupPage() {
           <div className={styles.wizardHeaderTop}>
             <div className={styles.wizardHeaderBrand}>
               <img
-                src="/mediabuddy-logo.png"
+                src="/mediabuddy-brand-f20f9ba3.png"
                 alt="MediaBuddy"
                 className={styles.wizardHeaderLogo}
               />

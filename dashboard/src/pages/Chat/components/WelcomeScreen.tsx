@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ANIMATED_MASCOT_SRC } from "../../../assets/mascot";
 import {
   ChevronLeft,
   ChevronRight,
@@ -205,7 +204,7 @@ export function WelcomeComposerHeader({
       </div>
       <img
         className={styles.welcomeMascot}
-        src={ANIMATED_MASCOT_SRC}
+        src="/mediabuddy-brand-f20f9ba3.png"
         alt=""
         draggable={false}
       />

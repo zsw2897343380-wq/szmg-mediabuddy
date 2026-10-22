@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import AvatarDropdown from "../components/AvatarDropdown";
 import AppVersionBadge from "../components/AppVersionBadge";
-import CurrentVersionBadge from "../components/CurrentVersionBadge";
 import {
   ArrowRightLeft,
   ChevronDown,
@@ -520,7 +519,9 @@ export default function Sidebar({
     <>
       <img
         src={
-          isRailCollapsed ? "/mediabuddy-app-icon.svg" : "/mediabuddy-logo.png"
+          isRailCollapsed
+            ? "/mediabuddy-brand-f20f9ba3.svg"
+            : "/mediabuddy-brand-f20f9ba3.png"
         }
         alt="MediaBuddy"
         style={{
@@ -528,7 +529,7 @@ export default function Sidebar({
           width: isRailCollapsed ? 32 : "auto",
           maxWidth: isRailCollapsed ? 32 : isMobile ? 190 : 160,
           objectFit: "contain",
-          display: !isRailCollapsed && !isMobile ? "none" : "block",
+          display: "block",
           flexShrink: 0,
           borderRadius: isRailCollapsed ? 8 : undefined,
         }}
@@ -537,7 +538,6 @@ export default function Sidebar({
         <div className={styles.brandWordmark}>
           <strong>MediaBuddy</strong>
           <div className={styles.brandVersions}>
-            <CurrentVersionBadge isMobile={isMobile} />
             <AppVersionBadge isMobile={isMobile} />
           </div>
         </div>
