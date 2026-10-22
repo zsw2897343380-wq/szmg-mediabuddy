@@ -202,12 +202,6 @@ export function WelcomeComposerHeader({
           </button>
         )}
       </div>
-      <img
-        className={styles.welcomeMascot}
-        src="/mediabuddy-brand-f20f9ba3.png"
-        alt=""
-        draggable={false}
-      />
     </div>
   );
 }
