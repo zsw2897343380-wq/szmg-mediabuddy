@@ -717,6 +717,7 @@
     }
   },
   "agents": {
+    "mcp_tool_failed": "MCP tool {tool} failed (code {code}): {detail}. The remote MCP service returned an error; this call produced no usable result. Do not repeat this call automatically.",
     "output_language_instruction": "Language requirement: use English by default for user-visible thinking summaries, progress updates, action explanations and final answers; follow any explicit request for another language. Preserve code, commands, paths, identifiers and necessary source quotations. Provide only brief thinking summaries without revealing internal reasoning.",
     "state": {
       "running": "Running",

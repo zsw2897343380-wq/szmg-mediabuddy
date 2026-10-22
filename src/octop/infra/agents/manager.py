@@ -4267,6 +4267,7 @@ class AgentManager:
 
         from octop.infra.agents.middleware.binary_read_guard import BinaryReadGuardMiddleware
         from octop.infra.agents.middleware.browser_profile import BrowserProfileMiddleware
+        from octop.infra.agents.middleware.mcp_errors import McpErrorsMiddleware
         from octop.infra.agents.middleware.octop_ui_offload import OctopUiOffloadMiddleware
         from octop.infra.agents.middleware.reasoning import ReasoningRequestMiddleware
         from octop.infra.agents.middleware.thread_artifacts import ThreadArtifactsMiddleware
@@ -4292,6 +4293,7 @@ class AgentManager:
             ReasoningRequestMiddleware(),
             KnowledgeSearchHintMiddleware(),
             BrowserProfileMiddleware(),
+            McpErrorsMiddleware(agent_id=row.agent_id),
             BinaryReadGuardMiddleware(),
             WorkspaceImageMaterializeMiddleware(workspace=ws),
             ThreadArtifactsMiddleware(
