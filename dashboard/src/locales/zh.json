@@ -4009,13 +4009,13 @@
     "viewEpisodes": "去看情绪日记 →"
   },
   "chatWelcome": {
-    "greeting": "MediaBuddy, 我帮你",
+    "greeting": "MediaBuddy",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "团队",
     "mascotSwitchHint": "点一下换个表情～",
     "descriptionWithAgentSuffix": "无论工作还是生活，说出你的想法",
     "descriptionWithTeamSuffix": "这是一个专家团队，成员会一起回答你的问题",
-    "description": "从选题、采编到发布复盘，随时调用媒体专家、专业技能与平台工具。",
+    "description": "媒体人的AI工作台",
     "newChat": "新建任务",
     "inputPlaceholder": "今天需要我帮你完成什么？可引用资料、选择专家或调用媒体连接器",
     "aiDisclaimer": "AI 生成内容，请注意甄别",

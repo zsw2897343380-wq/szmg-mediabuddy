@@ -4009,13 +4009,13 @@
     "viewEpisodes": "Open Episodes →"
   },
   "chatWelcome": {
-    "greeting": "MediaBuddy, here to help",
+    "greeting": "MediaBuddy",
     "teamHeading": "#{{name}}",
     "teamNameFallback": "Team",
     "mascotSwitchHint": "Tap to switch the mascot",
     "descriptionWithAgentSuffix": "— share what's on your mind, work or life",
     "descriptionWithTeamSuffix": "— an expert team that answers together",
-    "description": "From story planning and reporting to publishing and review, work with media experts, specialist skills and platform tools.",
+    "description": "The AI workspace for media professionals",
     "newChat": "New task",
     "inputPlaceholder": "What media task can I help with? Reference material, choose an expert or use a media connector.",
     "aiDisclaimer": "AI-generated content. Please verify carefully.",
